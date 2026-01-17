@@ -255,6 +255,49 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Request rematch - restart the game
+  socket.on('request_rematch', ({ odId, roomId }) => {
+    const room = rooms.get(roomId || socket.roomId);
+    if (!room) return;
+
+    // Mark player as ready for rematch
+    if (!room.rematchVotes) room.rematchVotes = new Set();
+    room.rematchVotes.add(odId);
+
+    // If all players voted for rematch
+    if (room.rematchVotes.size >= room.players.length) {
+      room.rematchVotes.clear();
+
+      // Reinitialize game based on type
+      if (room.gameType === 'rps') {
+        room.state = { choices: {}, scores: {} };
+        room.players.forEach(p => room.state.scores[p.odId] = 0);
+        io.to(room.id).emit('game_start', { room });
+      } else if (room.gameType === 'tictactoe') {
+        room.state = Array(9).fill(null);
+        room.currentTurn = room.players[0].odId;
+        io.to(room.id).emit('game_start', { room });
+      } else if (room.gameType === 'battleship') {
+        room.state = { grids: {}, shots: {}, phase: 'placement' };
+        io.to(room.id).emit('game_start', { room });
+      } else if (room.gameType === 'durak') {
+        initDurakGame(room);
+      } else if (room.gameType === 'uno') {
+        initUnoGame(room);
+      } else if (room.gameType === 'monopoly') {
+        initMonopolyGame(room);
+      }
+
+      console.log(`Rematch started in room ${room.id}`);
+    } else {
+      // Notify others that player wants rematch
+      io.to(room.id).emit('rematch_request', {
+        playerName: room.players.find(p => p.odId === odId)?.name,
+        votesNeeded: room.players.length - room.rematchVotes.size
+      });
+    }
+  });
+
   // TicTacToe: Make move
   socket.on('ttt_move', ({ odId, index }) => {
     const room = rooms.get(socket.roomId);

@@ -384,6 +384,32 @@ function showCopyFeedback() {
     }
 }
 
+// Global game over functions
+function playAgain() {
+    // Remove game over overlay
+    const overlay = document.querySelector('.game-over-overlay');
+    if (overlay) overlay.remove();
+
+    // Request rematch from server
+    if (Multiplayer.socket) {
+        Multiplayer.socket.emit('request_rematch', {
+            odId: App.userId,
+            roomId: App.roomId
+        });
+    }
+    App.haptic('medium');
+}
+
+function exitToMenu() {
+    // Remove game over overlay
+    const overlay = document.querySelector('.game-over-overlay');
+    if (overlay) overlay.remove();
+
+    // Disconnect and go back
+    Multiplayer.disconnect();
+    App.goBack();
+}
+
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     App.init();

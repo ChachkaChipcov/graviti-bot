@@ -112,13 +112,16 @@ const RPS = {
         const gameEl = document.getElementById('rps-game');
         if (gameEl) {
             const overlay = document.createElement('div');
-            overlay.className = 'rps-game-over-overlay';
+            overlay.className = 'game-over-overlay';
             overlay.innerHTML = `
-                <div class="rps-game-over">
+                <div class="game-over-modal">
                     <h2>${isWinner ? '🎉 Вы победили!' : '😔 Вы проиграли'}</h2>
                     <p>Счёт: ${data.scores[App.userId] || 0} - ${data.scores[Object.keys(data.scores).find(k => k !== App.userId)] || 0}</p>
                     <p>${isWinner ? 'Поздравляем!' : data.winnerName + ' победил!'}</p>
-                    <button class="btn primary" onclick="App.goBack()">🔙 В меню</button>
+                    <div class="game-over-buttons">
+                        <button class="btn primary" onclick="playAgain()">🔄 Играть снова</button>
+                        <button class="btn secondary" onclick="exitToMenu()">🏠 В меню</button>
+                    </div>
                 </div>
             `;
             gameEl.appendChild(overlay);

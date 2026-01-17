@@ -220,6 +220,66 @@ body {
   border: 1px solid var(--glass-border);
 }
 
+/* Game Over Overlay */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.game-over-modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  animation: scaleIn 0.3s ease;
+}
+
+.game-over-modal h2 {
+  font-size: 1.8rem;
+  margin-bottom: 16px;
+}
+
+.game-over-modal p {
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.game-over-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.game-over-buttons .btn {
+  width: 100%;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .back-btn {
   background: var(--glass);
   border: 1px solid var(--glass-border);
