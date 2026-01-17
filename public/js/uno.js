@@ -272,12 +272,15 @@ const UNO = {
         const gameEl = document.getElementById('uno-game');
         if (gameEl) {
             const overlay = document.createElement('div');
-            overlay.className = 'u-result-overlay';
+            overlay.className = 'game-over-overlay';
             overlay.innerHTML = `
-                <div class="u-result">
+                <div class="game-over-modal">
                     <h2>${isWinner ? '🎉 Победа!' : '😔 Поражение'}</h2>
-                    <p>${isWinner ? 'Вы выиграли!' : (data.winnerName || 'Противник') + ' победил!'}</p>
-                    <button class="btn primary" onclick="App.goBack()">🔙 В меню</button>
+                    <p>${isWinner ? 'Вы выиграли UNO!' : (data.winnerName || 'Противник') + ' победил!'}</p>
+                    <div class="game-over-buttons">
+                        <button class="btn primary" onclick="playAgain()">🔄 Играть снова</button>
+                        <button class="btn secondary" onclick="exitToMenu()">🏠 В меню</button>
+                    </div>
                 </div>
             `;
             gameEl.appendChild(overlay);

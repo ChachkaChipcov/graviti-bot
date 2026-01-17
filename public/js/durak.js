@@ -268,12 +268,15 @@ const Durak = {
         const gameEl = document.getElementById('durak-game');
         if (gameEl) {
             const overlay = document.createElement('div');
-            overlay.className = 'd-result-overlay';
+            overlay.className = 'game-over-overlay';
             overlay.innerHTML = `
-                <div class="d-result">
+                <div class="game-over-modal">
                     <h2>${isLoser ? '😅 Вы Дурак!' : '🎉 Победа!'}</h2>
                     <p>${isLoser ? 'Вы остались с картами' : (data.loserName || 'Противник') + ' - Дурак!'}</p>
-                    <button class="btn primary" onclick="App.goBack()">🔙 В меню</button>
+                    <div class="game-over-buttons">
+                        <button class="btn primary" onclick="playAgain()">🔄 Играть снова</button>
+                        <button class="btn secondary" onclick="exitToMenu()">🏠 В меню</button>
+                    </div>
                 </div>
             `;
             gameEl.appendChild(overlay);

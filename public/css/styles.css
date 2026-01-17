@@ -1455,21 +1455,23 @@ body {
 /* Hand */
 #uno-hand {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: flex-end;
-  padding: 15px 10px 20px;
-  min-height: 140px;
-  overflow-x: auto;
+  padding: 10px 5px 15px;
+  min-height: 100px;
+  max-height: 220px;
+  overflow-y: auto;
+  gap: 4px;
   background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.15) 100%);
   border-radius: var(--radius);
 }
 
 .u-card {
-  width: 55px;
-  height: 85px;
+  width: 48px;
+  height: 72px;
   flex-shrink: 0;
   cursor: pointer;
-  transform: rotate(var(--rotation, 0deg));
   transition: all 0.2s ease;
   position: relative;
 }
