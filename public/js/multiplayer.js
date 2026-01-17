@@ -151,11 +151,12 @@ const Multiplayer = {
         });
     },
 
-    createRoom(gameType) {
+    createRoom(gameType, settings = {}) {
         this.socket.emit('create_room', {
             gameType,
             odId: App.userId,
-            userName: App.userName
+            userName: App.userName,
+            settings
         });
     },
 

@@ -23,48 +23,62 @@ const rooms = new Map();
 // ========== BOT COMMANDS ==========
 
 bot.command('start', async (ctx) => {
-  const webAppUrl = process.env.WEBAPP_URL || 'https://your-app.ngrok.io';
+  try {
+    console.log('Received /start command from user:', ctx.from?.id);
+    const webAppUrl = process.env.WEBAPP_URL || 'https://your-app.ngrok.io';
+    console.log('Using WEBAPP_URL:', webAppUrl);
 
-  // Check for deep link parameter (e.g., /start join_ROOM123)
-  const startParam = ctx.message.text.split(' ')[1];
+    // Check for deep link parameter (e.g., /start join_ROOM123)
+    const startParam = ctx.message.text.split(' ')[1];
+    console.log('Start parameter:', startParam);
 
-  if (startParam && startParam.startsWith('join_')) {
-    const roomId = startParam.replace('join_', '');
+    if (startParam && startParam.startsWith('join_')) {
+      const roomId = startParam.replace('join_', '');
+      console.log('Invite link detected, room ID:', roomId);
 
-    // Always open Mini App with room parameter
-    // Room existence will be checked when connecting via WebSocket
+      // Always open Mini App with room parameter
+      // Room existence will be checked when connecting via WebSocket
+      await ctx.reply(
+        '🎮 *Вас пригласили в игру\\!*\n\n' +
+        'Нажмите кнопку ниже чтобы присоединиться\\.',
+        {
+          parse_mode: 'MarkdownV2',
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🚀 Присоединиться к игре', web_app: { url: `${webAppUrl}?room=${roomId}` } }]
+            ]
+          }
+        }
+      );
+      return;
+    }
+
+    // Default welcome message
     await ctx.reply(
-      '🎮 *Вас пригласили в игру\\!*\n\n' +
-      'Нажмите кнопку ниже чтобы присоединиться\\.',
+      '🎮 *Добро пожаловать в Game Zone\\!*\n\n' +
+      'Выберите игру для игры с друзьями:\n\n' +
+      '✊ *Камень\\-Ножницы\\-Бумага* \\- классика\\!\n' +
+      '❌⭕ *Крестики\\-Нолики* \\- стратегия\n' +
+      '🚢 *Морской Бой* \\- морская битва\n\n' +
+      'Нажмите кнопку ниже, чтобы начать\\!',
       {
         parse_mode: 'MarkdownV2',
         reply_markup: {
           inline_keyboard: [
-            [{ text: '🚀 Присоединиться к игре', web_app: { url: `${webAppUrl}?room=${roomId}` } }]
+            [{ text: '🎮 Открыть игры', web_app: { url: webAppUrl } }]
           ]
         }
       }
     );
-    return;
-  }
-
-  // Default welcome message
-  await ctx.reply(
-    '🎮 *Добро пожаловать в Game Zone\\!*\n\n' +
-    'Выберите игру для игры с друзьями:\n\n' +
-    '✊ *Камень\\-Ножницы\\-Бумага* \\- классика\\!\n' +
-    '❌⭕ *Крестики\\-Нолики* \\- стратегия\n' +
-    '🚢 *Морской Бой* \\- морская битва\n\n' +
-    'Нажмите кнопку ниже, чтобы начать\\!',
-    {
-      parse_mode: 'MarkdownV2',
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🎮 Открыть игры', web_app: { url: webAppUrl } }]
-        ]
-      }
+    console.log('Welcome message sent successfully');
+  } catch (error) {
+    console.error('Error in /start command:', error);
+    try {
+      await ctx.reply('🎮 Добро пожаловать! Произошла ошибка, попробуйте ещё раз.');
+    } catch (e) {
+      console.error('Failed to send error message:', e);
     }
-  );
+  }
 });
 
 // Handle game invites via deep linking
@@ -146,24 +160,29 @@ io.on('connection', (socket) => {
       if (room.gameType === 'tictactoe') {
         room.state = Array(9).fill(null);
         room.currentTurn = room.players[0].odId;
+        io.to(roomId).emit('game_start', { room });
       } else if (room.gameType === 'battleship') {
         room.state = {
           grids: {},
           shots: {},
           phase: 'placement'
         };
+        io.to(roomId).emit('game_start', { room });
       } else if (room.gameType === 'rps') {
         room.state = { choices: {}, scores: {} };
         room.players.forEach(p => room.state.scores[p.odId] = 0);
+        io.to(roomId).emit('game_start', { room });
       } else if (room.gameType === 'durak') {
         initDurakGame(room);
+        // durak_start is emitted inside initDurakGame
       } else if (room.gameType === 'uno') {
         initUnoGame(room);
+        // uno_start is emitted inside initUnoGame
       } else if (room.gameType === 'monopoly') {
         initMonopolyGame(room);
+        // monopoly_start is emitted inside initMonopolyGame
       }
 
-      io.to(roomId).emit('game_start', { room });
       console.log(`Game started in room ${roomId}`);
     } else {
       // Notify that a player joined but waiting for more

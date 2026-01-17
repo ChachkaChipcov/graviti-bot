@@ -318,11 +318,14 @@ function selectMonopolyPlayerCount(count) {
 }
 
 function createMonopolyRoom() {
-    Multiplayer.socket.emit('create_room', {
-        gameType: 'monopoly',
-        odId: App.userId,
-        userName: App.userName,
-        settings: { maxPlayers: monopolySettings.playerCount }
+    // Set current game and switch to room screen
+    App.currentGame = 'monopoly';
+    App.showScreen('room');
+    document.getElementById('room-title').textContent = '🎲 Монополия';
+
+    // Create room with settings
+    Multiplayer.createRoom('monopoly', {
+        maxPlayers: monopolySettings.playerCount
     });
 }
 

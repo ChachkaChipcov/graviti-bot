@@ -299,17 +299,29 @@ let durakSettings = {
 
 function selectDurakMode(mode) {
     durakSettings.mode = mode;
+    // First remove selected from all buttons
     document.querySelectorAll('#durak-setup .mode-btn').forEach(btn => {
-        btn.classList.toggle('selected', btn.dataset.mode === mode);
+        btn.classList.remove('selected');
     });
+    // Then add selected to the clicked button
+    const selectedBtn = document.querySelector(`#durak-setup .mode-btn[data-mode="${mode}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
     App.haptic('light');
 }
 
 function selectPlayerCount(count) {
     durakSettings.playerCount = count;
+    // First remove selected from all buttons
     document.querySelectorAll('#durak-setup .player-btn').forEach(btn => {
-        btn.classList.toggle('selected', parseInt(btn.dataset.count) === count);
+        btn.classList.remove('selected');
     });
+    // Then add selected to the clicked button
+    const selectedBtn = document.querySelector(`#durak-setup .player-btn[data-count="${count}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
     App.haptic('light');
 }
 
@@ -317,14 +329,15 @@ function createDurakRoom() {
     Durak.mode = durakSettings.mode;
     Durak.playerCount = durakSettings.playerCount;
 
-    Multiplayer.socket.emit('create_room', {
-        gameType: 'durak',
-        odId: App.userId,
-        userName: App.userName,
-        settings: {
-            mode: durakSettings.mode,
-            maxPlayers: durakSettings.playerCount
-        }
+    // Set current game and switch to room screen
+    App.currentGame = 'durak';
+    App.showScreen('room');
+    document.getElementById('room-title').textContent = '🃏 Дурак';
+
+    // Create room with settings
+    Multiplayer.createRoom('durak', {
+        mode: durakSettings.mode,
+        maxPlayers: durakSettings.playerCount
     });
 }
 

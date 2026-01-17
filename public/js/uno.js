@@ -208,11 +208,14 @@ function selectUnoPlayerCount(count) {
 }
 
 function createUnoRoom() {
-    Multiplayer.socket.emit('create_room', {
-        gameType: 'uno',
-        odId: App.userId,
-        userName: App.userName,
-        settings: { maxPlayers: unoSettings.playerCount }
+    // Set current game and switch to room screen
+    App.currentGame = 'uno';
+    App.showScreen('room');
+    document.getElementById('room-title').textContent = '🎴 UNO';
+
+    // Create room with settings
+    Multiplayer.createRoom('uno', {
+        maxPlayers: unoSettings.playerCount
     });
 }
 

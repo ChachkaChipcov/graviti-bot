@@ -103,13 +103,29 @@ const App = {
 
     goBack() {
         if (this.currentScreen === 'room') {
+            // From room screen - go back to lobby or setup screen
+            Multiplayer.disconnect();
+            if (this.currentGame === 'durak') {
+                this.showScreen('durak-setup');
+            } else if (this.currentGame === 'uno') {
+                this.showScreen('uno-setup');
+            } else if (this.currentGame === 'monopoly') {
+                this.showScreen('monopoly-setup');
+            } else {
+                this.showScreen('lobby');
+                this.currentGame = null;
+            }
+            this.roomId = null;
+        } else if (this.currentScreen.includes('-setup')) {
+            // From setup screens - go to lobby
             this.showScreen('lobby');
             this.currentGame = null;
         } else if (this.currentScreen.includes('-game')) {
-            // Leave game room
+            // Leave game room - go to lobby
             Multiplayer.disconnect();
-            this.showScreen('room');
+            this.showScreen('lobby');
             this.roomId = null;
+            this.currentGame = null;
         }
     },
 
@@ -128,12 +144,54 @@ const App = {
     },
 
     showJoinView() {
+        // If we're on a setup screen, switch to room screen first
+        if (this.currentScreen.includes('-setup')) {
+            // Determine which game based on current setup screen
+            if (this.currentScreen === 'durak-setup') {
+                this.currentGame = 'durak';
+                document.getElementById('room-title').textContent = '🃏 Дурак';
+            } else if (this.currentScreen === 'uno-setup') {
+                this.currentGame = 'uno';
+                document.getElementById('room-title').textContent = '🎴 UNO';
+            } else if (this.currentScreen === 'monopoly-setup') {
+                this.currentGame = 'monopoly';
+                document.getElementById('room-title').textContent = '🎲 Монополия';
+            }
+            this.showScreen('room');
+        }
+
         document.querySelector('.room-actions').classList.add('hidden');
         document.getElementById('waiting-view').classList.add('hidden');
         document.getElementById('join-view').classList.remove('hidden');
     },
 
     joinRoomFromUrl(roomId) {
+        // Show room screen with loading state
+        this.showScreen('room');
+        document.getElementById('room-title').textContent = '🎮 Присоединение...';
+
+        // Hide room actions, show waiting view with message
+        document.querySelector('.room-actions').classList.add('hidden');
+        document.getElementById('join-view').classList.add('hidden');
+        const waitingView = document.getElementById('waiting-view');
+        waitingView.classList.remove('hidden');
+
+        // Update waiting message
+        const waitingText = waitingView.querySelector('p');
+        if (waitingText) {
+            waitingText.textContent = 'Подключение к комнате...';
+        }
+
+        // Hide room code display initially
+        const roomCodeDisplay = waitingView.querySelector('.room-code-display');
+        if (roomCodeDisplay) {
+            roomCodeDisplay.style.display = 'none';
+        }
+        const inviteSection = waitingView.querySelector('.invite-section');
+        if (inviteSection) {
+            inviteSection.style.display = 'none';
+        }
+
         // Auto-join room from URL parameter
         setTimeout(() => {
             Multiplayer.joinRoom(roomId);
