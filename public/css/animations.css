@@ -426,3 +426,130 @@
 .waiting p {
     animation: waitingPulse 2s ease-in-out infinite;
 }
+
+/* Card Play Animation */
+@keyframes cardPlay {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    30% {
+        transform: scale(1.2) rotate(-5deg);
+    }
+
+    100% {
+        transform: scale(0.8) rotate(10deg) translateY(-50px);
+        opacity: 0;
+    }
+}
+
+.card-play {
+    animation: cardPlay 0.4s ease-out forwards;
+}
+
+/* Card Deal Animation */
+@keyframes cardDeal {
+    0% {
+        transform: translateX(-100px) translateY(-50px) rotate(-45deg);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateX(0) translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.card-deal {
+    animation: cardDeal 0.3s ease-out forwards;
+}
+
+/* Token Move Animation */
+@keyframes tokenMove {
+    0% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform: scale(1.3) translateY(-10px);
+    }
+
+    50% {
+        transform: scale(1) translateY(0);
+    }
+
+    75% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.token-move {
+    animation: tokenMove 0.6s ease-out;
+}
+
+/* Card Throw Animation (Durak) */
+@keyframes cardThrow {
+    0% {
+        transform: translateY(100px) rotate(-30deg) scale(0.5);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(-10px) rotate(5deg) scale(1.1);
+    }
+
+    100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        opacity: 1;
+    }
+}
+
+.card-throw {
+    animation: cardThrow 0.35s ease-out forwards;
+}
+
+/* UNO Card Shine */
+@keyframes cardShine {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.u-card.playable .u-card-inner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: cardShine 2s infinite;
+    pointer-events: none;
+}
+
+/* Dice Bounce */
+@keyframes diceBounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-15px) rotate(10deg);
+    }
+
+    60% {
+        transform: translateY(-5px) rotate(-5deg);
+    }
+}
+
+.dice-bounce {
+    animation: diceBounce 0.5s ease-out;
+}

@@ -337,6 +337,332 @@ io.on('connection', (socket) => {
     });
   });
 
+  // ========== DURAK GAME EVENTS ==========
+
+  // Durak: Attack with a card
+  socket.on('durak_attack', ({ odId, card }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'durak') return;
+    if (room.state.currentAttacker !== odId) return;
+    if (room.state.phase !== 'attack') return;
+
+    // Remove card from attacker's hand
+    const hand = room.state.hands[odId];
+    const cardIndex = hand.findIndex(c => c.id === card.id);
+    if (cardIndex === -1) return;
+    hand.splice(cardIndex, 1);
+
+    // Add card to table
+    room.state.table.push({ attack: card, defense: null });
+    room.state.phase = 'defense';
+
+    // Broadcast update
+    io.to(socket.roomId).emit('durak_turn_update', {
+      table: room.state.table,
+      attacker: room.state.currentAttacker,
+      defender: room.state.currentDefender,
+      phase: room.state.phase,
+      deckCount: room.state.deck.length
+    });
+
+    io.to(socket.roomId).emit('durak_card_played', {
+      playerId: odId,
+      card,
+      table: room.state.table
+    });
+  });
+
+  // Durak: Defend with a card
+  socket.on('durak_defend', ({ odId, card, pairIndex }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'durak') return;
+    if (room.state.currentDefender !== odId) return;
+    if (room.state.phase !== 'defense') return;
+
+    const pair = room.state.table[pairIndex];
+    if (!pair || pair.defense) return;
+
+    // Check if card can beat attack card
+    const attackCard = pair.attack;
+    const canBeat = (card.suit === attackCard.suit &&
+      ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'].indexOf(card.value) >
+      ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'].indexOf(attackCard.value)) ||
+      (card.suit === room.state.trumpSuit && attackCard.suit !== room.state.trumpSuit);
+
+    if (!canBeat) return;
+
+    // Remove card from defender's hand
+    const hand = room.state.hands[odId];
+    const cardIndex = hand.findIndex(c => c.id === card.id);
+    if (cardIndex === -1) return;
+    hand.splice(cardIndex, 1);
+
+    // Add defense to pair
+    pair.defense = card;
+
+    // Check if all attacks are defended
+    const allDefended = room.state.table.every(p => p.defense !== null);
+    if (allDefended) {
+      room.state.phase = 'attack'; // Attacker can add more or pass
+    }
+
+    io.to(socket.roomId).emit('durak_turn_update', {
+      table: room.state.table,
+      attacker: room.state.currentAttacker,
+      defender: room.state.currentDefender,
+      phase: room.state.phase,
+      deckCount: room.state.deck.length
+    });
+
+    io.to(socket.roomId).emit('durak_card_played', {
+      playerId: odId,
+      card,
+      table: room.state.table
+    });
+  });
+
+  // Durak: Take cards (defender gives up)
+  socket.on('durak_take', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'durak') return;
+    if (room.state.currentDefender !== odId) return;
+
+    // Defender takes all cards from table
+    const tableCards = room.state.table.flatMap(p => [p.attack, p.defense].filter(Boolean));
+    room.state.hands[odId].push(...tableCards);
+    room.state.table = [];
+
+    // Draw cards
+    drawCardsForPlayers(room);
+
+    // Next round - same attacker, next defender
+    const players = room.players;
+    const defenderIdx = players.findIndex(p => p.odId === odId);
+    const nextDefenderIdx = (defenderIdx + 1) % players.length;
+
+    room.state.currentDefender = players[nextDefenderIdx].odId;
+    room.state.phase = 'attack';
+
+    // Check win condition
+    checkDurakWinner(room);
+
+    io.to(socket.roomId).emit('durak_round_end', {
+      message: 'Защитник забрал карты',
+      tookCards: true,
+      deckCount: room.state.deck.length
+    });
+
+    sendDurakUpdate(room);
+  });
+
+  // Durak: Pass (attacker done attacking)
+  socket.on('durak_pass', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'durak') return;
+    if (room.state.currentAttacker !== odId) return;
+    if (room.state.table.length === 0) return;
+
+    // All cards go to discard (beaten off)
+    room.state.table = [];
+
+    // Draw cards
+    drawCardsForPlayers(room);
+
+    // Next round - roles rotate
+    const players = room.players;
+    const attackerIdx = players.findIndex(p => p.odId === odId);
+    const nextAttackerIdx = (attackerIdx + 1) % players.length;
+    const nextDefenderIdx = (nextAttackerIdx + 1) % players.length;
+
+    room.state.currentAttacker = players[nextAttackerIdx].odId;
+    room.state.currentDefender = players[nextDefenderIdx].odId;
+    room.state.phase = 'attack';
+
+    // Check win condition
+    checkDurakWinner(room);
+
+    io.to(socket.roomId).emit('durak_round_end', {
+      message: 'Бито!',
+      tookCards: false,
+      deckCount: room.state.deck.length
+    });
+
+    sendDurakUpdate(room);
+  });
+
+  // ========== UNO GAME EVENTS ==========
+
+  // UNO: Play a card
+  socket.on('uno_play_card', ({ odId, card, chosenColor }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+    if (room.state.currentPlayer !== odId) return;
+
+    const currentCard = room.state.currentCard;
+
+    // Check if card is playable
+    const isWild = card.color === 'wild';
+    const sameColor = card.color === currentCard.color || card.color === room.state.chosenColor;
+    const sameValue = card.value === currentCard.value;
+
+    if (!isWild && !sameColor && !sameValue) return;
+
+    // Remove card from hand
+    const hand = room.state.hands[odId];
+    const cardIndex = hand.findIndex(c => c.id === card.id);
+    if (cardIndex === -1) return;
+    hand.splice(cardIndex, 1);
+
+    // Add to discard pile
+    room.state.discardPile.push(card);
+    room.state.currentCard = card;
+    room.state.chosenColor = isWild ? chosenColor : null;
+
+    // Handle special cards
+    const players = room.players;
+    let currentIdx = players.findIndex(p => p.odId === odId);
+    let skipNext = false;
+    let drawCards = 0;
+
+    if (card.value === 'reverse') {
+      room.state.direction *= -1;
+    } else if (card.value === 'skip') {
+      skipNext = true;
+    } else if (card.value === 'draw2') {
+      drawCards = 2;
+      skipNext = true;
+    } else if (card.value === 'wild4') {
+      drawCards = 4;
+      skipNext = true;
+    }
+
+    // Next player
+    let nextIdx = (currentIdx + room.state.direction + players.length) % players.length;
+    if (skipNext) {
+      // Give cards to skipped player
+      const skippedPlayer = players[nextIdx].odId;
+      for (let i = 0; i < drawCards; i++) {
+        if (room.state.deck.length > 0) {
+          room.state.hands[skippedPlayer].push(room.state.deck.pop());
+        }
+      }
+      nextIdx = (nextIdx + room.state.direction + players.length) % players.length;
+    }
+
+    room.state.currentPlayer = players[nextIdx].odId;
+
+    // Check win
+    if (hand.length === 0) {
+      io.to(socket.roomId).emit('uno_game_over', {
+        winner: odId,
+        winnerName: players.find(p => p.odId === odId)?.name
+      });
+      return;
+    }
+
+    // Send update to all players
+    sendUnoUpdate(room);
+  });
+
+  // UNO: Draw a card
+  socket.on('uno_draw', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+    if (room.state.currentPlayer !== odId) return;
+
+    if (room.state.deck.length === 0) {
+      // Reshuffle discard pile
+      const topCard = room.state.discardPile.pop();
+      room.state.deck = room.state.discardPile;
+      room.state.discardPile = [topCard];
+      // Shuffle
+      for (let i = room.state.deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [room.state.deck[i], room.state.deck[j]] = [room.state.deck[j], room.state.deck[i]];
+      }
+    }
+
+    if (room.state.deck.length > 0) {
+      const drawnCard = room.state.deck.pop();
+      room.state.hands[odId].push(drawnCard);
+    }
+
+    // Move to next player
+    const players = room.players;
+    const currentIdx = players.findIndex(p => p.odId === odId);
+    const nextIdx = (currentIdx + room.state.direction + players.length) % players.length;
+    room.state.currentPlayer = players[nextIdx].odId;
+
+    sendUnoUpdate(room);
+  });
+
+  // ========== MONOPOLY GAME EVENTS ==========
+
+  // Monopoly: Roll dice
+  socket.on('monopoly_roll', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+    if (room.state.currentPlayer !== odId) return;
+    if (!room.state.canRoll) return;
+
+    const die1 = Math.floor(Math.random() * 6) + 1;
+    const die2 = Math.floor(Math.random() * 6) + 1;
+    const total = die1 + die2;
+    const isDoubles = die1 === die2;
+
+    const playerState = room.state.players[odId];
+    const oldPosition = playerState.position;
+    playerState.position = (playerState.position + total) % 40;
+
+    // Passed GO
+    if (playerState.position < oldPosition) {
+      playerState.money += 200;
+    }
+
+    room.state.lastDice = [die1, die2];
+    room.state.canRoll = isDoubles; // Can roll again if doubles
+
+    if (isDoubles) {
+      room.state.doublesCount++;
+      if (room.state.doublesCount >= 3) {
+        // Go to jail
+        playerState.position = 10;
+        playerState.inJail = true;
+        room.state.canRoll = false;
+        room.state.doublesCount = 0;
+      }
+    } else {
+      room.state.doublesCount = 0;
+    }
+
+    io.to(socket.roomId).emit('monopoly_dice_result', {
+      playerId: odId,
+      dice: [die1, die2],
+      newPosition: playerState.position,
+      money: playerState.money,
+      canRollAgain: room.state.canRoll
+    });
+
+    sendMonopolyUpdate(room);
+  });
+
+  // Monopoly: End turn
+  socket.on('monopoly_end_turn', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+    if (room.state.currentPlayer !== odId) return;
+
+    const players = room.players;
+    const currentIdx = players.findIndex(p => p.odId === odId);
+    const nextIdx = (currentIdx + 1) % players.length;
+
+    room.state.currentPlayer = players[nextIdx].odId;
+    room.state.canRoll = true;
+    room.state.doublesCount = 0;
+
+    sendMonopolyUpdate(room);
+  });
+
   // Disconnect
   socket.on('disconnect', () => {
     const roomId = socket.roomId;
@@ -518,6 +844,108 @@ function initMonopolyGame(room) {
         })),
         currentPlayer: room.state.currentPlayer,
         myData: players[player.odId]
+      });
+    }
+  });
+}
+
+// ========== HELPER FUNCTIONS ==========
+
+// Durak: Draw cards for all players (to 6)
+function drawCardsForPlayers(room) {
+  const targetCards = 6;
+
+  // Attacker draws first, then others
+  const drawOrder = [room.state.currentAttacker, ...room.players
+    .filter(p => p.odId !== room.state.currentAttacker)
+    .map(p => p.odId)];
+
+  for (const playerId of drawOrder) {
+    while (room.state.hands[playerId].length < targetCards && room.state.deck.length > 0) {
+      room.state.hands[playerId].push(room.state.deck.pop());
+    }
+  }
+}
+
+// Durak: Check for winner
+function checkDurakWinner(room) {
+  if (room.state.deck.length > 0) return;
+
+  // Find players with no cards
+  const playersWithCards = room.players.filter(p => room.state.hands[p.odId].length > 0);
+
+  if (playersWithCards.length === 1) {
+    // One player left with cards - they are the loser (durak)
+    const loser = playersWithCards[0];
+    io.to(room.id).emit('durak_game_over', {
+      loser: loser.odId,
+      loserName: loser.name
+    });
+  } else if (playersWithCards.length === 0) {
+    // Draw - everyone got rid of cards at same time
+    io.to(room.id).emit('durak_game_over', {
+      loser: null,
+      loserName: null,
+      isDraw: true
+    });
+  }
+}
+
+// Durak: Send turn update to all players
+function sendDurakUpdate(room) {
+  room.players.forEach(player => {
+    const playerSocket = [...io.sockets.sockets.values()].find(s => s.id === player.id);
+    if (playerSocket) {
+      playerSocket.emit('durak_turn_update', {
+        table: room.state.table,
+        attacker: room.state.currentAttacker,
+        defender: room.state.currentDefender,
+        phase: room.state.phase,
+        deckCount: room.state.deck.length,
+        hand: room.state.hands[player.odId]
+      });
+    }
+  });
+}
+
+// UNO: Send update to all players
+function sendUnoUpdate(room) {
+  room.players.forEach(player => {
+    const playerSocket = [...io.sockets.sockets.values()].find(s => s.id === player.id);
+    if (playerSocket) {
+      playerSocket.emit('uno_turn_update', {
+        currentCard: room.state.currentCard,
+        chosenColor: room.state.chosenColor,
+        currentPlayer: room.state.currentPlayer,
+        direction: room.state.direction,
+        hand: room.state.hands[player.odId],
+        players: room.players.map(p => ({
+          name: p.name,
+          odId: p.odId,
+          cardCount: room.state.hands[p.odId].length
+        })),
+        deckCount: room.state.deck.length
+      });
+    }
+  });
+}
+
+// Monopoly: Send update to all players
+function sendMonopolyUpdate(room) {
+  room.players.forEach(player => {
+    const playerSocket = [...io.sockets.sockets.values()].find(s => s.id === player.id);
+    if (playerSocket) {
+      playerSocket.emit('monopoly_turn_update', {
+        currentPlayer: room.state.currentPlayer,
+        canRoll: room.state.canRoll,
+        lastDice: room.state.lastDice,
+        players: room.players.map(p => ({
+          name: p.name,
+          odId: p.odId,
+          ...room.state.players[p.odId]
+        })),
+        properties: room.state.properties,
+        myData: room.state.players[player.odId]
       });
     }
   });

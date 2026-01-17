@@ -415,16 +415,24 @@
 
     <!-- Monopoly Game Screen -->
     <div id="monopoly-game" class="screen">
+      <div class="m-header">
+        <div class="m-status" id="monopoly-status">Ваш ход!</div>
+      </div>
+
       <div class="monopoly-board" id="monopoly-board">
         <!-- Board will be rendered here -->
       </div>
 
       <div class="monopoly-panel">
         <div class="monopoly-player-info" id="monopoly-player-info">
-          <span class="money">💰 $1500</span>
+          <span class="m-money">💵 $1500</span>
         </div>
         <div class="monopoly-dice" id="monopoly-dice">
-          <button class="btn primary" onclick="rollDice()">🎲 Бросить кубики</button>
+          <div class="m-dice-display">
+            <span class="m-die">🎲</span>
+            <span class="m-die">🎲</span>
+          </div>
+          <button class="btn primary m-roll-btn" onclick="rollDice()">🎲 Бросить</button>
         </div>
       </div>
     </div>

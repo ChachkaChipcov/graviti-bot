@@ -914,321 +914,686 @@ body {
   margin-top: 20px;
 }
 
-/* ========== Durak Game Styles ========== */
+/* ========== Durak Game Styles (Redesigned) ========== */
 .durak-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background: var(--glass);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(26, 71, 42, 0.9) 0%, rgba(13, 40, 24, 0.9) 100%);
   border-radius: var(--radius);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .durak-info {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
-.trump-card {
-  font-size: 1.5rem;
-  padding: 8px 12px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm);
+#durak-trump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.d-trump-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.d-trump-card {
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+  border-radius: 6px;
   border: 2px solid gold;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
 }
 
-.deck-count {
+.d-trump-card.red {
+  color: #e74c3c;
+}
+
+.d-trump-card.black {
+  color: #1a1a2e;
+}
+
+#durak-deck {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.d-deck-icon {
+  font-size: 1.2rem;
+}
+
+.d-deck-count {
+  font-weight: 700;
+  color: #fff;
+}
+
+#durak-status {
   font-size: 1rem;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: #ffd700;
 }
 
-.durak-status {
-  font-size: 0.9rem;
-  color: var(--accent-secondary);
-}
-
+/* Table - Green Felt */
 .durak-table {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 12px;
   justify-content: center;
-  min-height: 200px;
+  align-items: center;
+  min-height: 160px;
   padding: 20px;
-  background: var(--glass);
+  background:
+    radial-gradient(ellipse at center, rgba(34, 139, 34, 0.3) 0%, transparent 70%),
+    linear-gradient(135deg, #1a5f2a 0%, #0d3d18 50%, #0a2f12 100%);
   border-radius: var(--radius);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+  border: 3px solid #0a2f12;
+  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.3);
 }
 
-.durak-pair {
+.d-table-empty {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+}
+
+.d-pair {
   position: relative;
-  width: 70px;
-  height: 110px;
+  width: 60px;
+  height: 90px;
 }
 
-.durak-card {
-  width: 65px;
-  height: 95px;
-  background: white;
+.d-table-card {
+  width: 55px;
+  height: 80px;
+  background: linear-gradient(145deg, #fff 0%, #f5f5f5 100%);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  border: 2px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid #ddd;
 }
 
-.durak-card.spades,
-.durak-card.clubs {
-  color: #333;
+.d-table-card.attack {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-.durak-card.hearts,
-.durak-card.diamonds {
+.d-table-card.defense {
+  position: absolute;
+  top: 15px;
+  left: 12px;
+  transform: rotate(20deg);
+}
+
+.d-table-card.red {
   color: #e74c3c;
 }
 
-.durak-card.playable {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 15px rgba(108, 92, 231, 0.5);
+.d-table-card.black {
+  color: #1a1a2e;
 }
 
-.durak-card.playable:hover {
-  transform: translateY(-10px);
+.d-tc-value {
+  font-size: 1.1rem;
 }
 
-.durak-pair .durak-card.defense {
-  position: absolute;
-  top: 20px;
-  left: 10px;
-  transform: rotate(15deg);
+.d-tc-suit {
+  font-size: 1.3rem;
 }
 
+/* Actions */
 .durak-actions {
   display: flex;
   justify-content: center;
   gap: 12px;
-  padding: 16px;
+  padding: 12px;
 }
 
+.durak-actions .btn {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+}
+
+/* Hand - Fanned Cards */
 .durak-hand {
   display: flex;
   justify-content: center;
-  gap: -20px;
-  padding: 20px;
+  align-items: flex-end;
+  padding: 15px 10px 20px;
+  min-height: 130px;
   overflow-x: auto;
-  flex-wrap: nowrap;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+  border-radius: var(--radius);
 }
 
-.durak-hand .durak-card {
-  margin-left: -15px;
+.d-card {
+  width: 60px;
+  height: 90px;
   flex-shrink: 0;
+  cursor: pointer;
+  transform: rotate(var(--rotation, 0deg)) translateY(calc(-1 * var(--lift, 0px)));
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.durak-hand .durak-card:first-child {
-  margin-left: 0;
+.d-card:hover {
+  transform: rotate(var(--rotation, 0deg)) translateY(-15px) scale(1.1);
+  z-index: 10;
 }
 
-.durak-result {
+.d-card.playable .d-card-inner {
+  border-color: #4caf50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+}
+
+.d-card-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #fff 0%, #f8f8f8 50%, #f0f0f0 100%);
+  border-radius: 8px;
+  border: 2px solid #ccc;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.d-card-inner.red {
+  color: #e74c3c;
+}
+
+.d-card-inner.black {
+  color: #1a1a2e;
+}
+
+.d-card-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.d-card-corner.top {
+  top: 4px;
+  left: 4px;
+}
+
+.d-card-corner.bottom {
+  bottom: 4px;
+  right: 4px;
+  transform: rotate(180deg);
+}
+
+.d-card-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.d-card-suit {
+  font-size: 0.7rem;
+}
+
+.d-card-big-suit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  opacity: 0.9;
+}
+
+/* Result Overlay */
+.d-result-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.9);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.d-result {
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  padding: 32px;
   text-align: center;
 }
 
-.durak-result h2 {
-  font-size: 2.5rem;
-  margin-bottom: 16px;
+.d-result h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
 }
 
-/* ========== UNO Game Styles ========== */
+.d-result p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+
+/* ========== UNO Game Styles (Redesigned) ========== */
 .uno-header {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background: var(--glass);
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(52, 152, 219, 0.2) 100%);
   border-radius: var(--radius);
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.uno-direction {
-  font-size: 2rem;
-}
-
-.uno-pile {
-  width: 80px;
-  height: 120px;
-  background: var(--bg-secondary);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.uno-card {
-  width: 70px;
-  height: 105px;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+#uno-direction {
   font-size: 1.5rem;
+}
+
+.u-dir-icon {
+  display: inline-block;
+  animation: directionPulse 2s infinite;
+}
+
+@keyframes directionPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+#uno-pile {
+  width: 80px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-pile-card {
+  width: 70px;
+  height: 100px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
   font-weight: 900;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.3);
 }
 
-.uno-card.red {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+.u-pile-value {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.uno-card.green {
-  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+#uno-deck-count {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
-.uno-card.blue {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-}
-
-.uno-card.yellow {
-  background: linear-gradient(135deg, #f1c40f 0%, #d4ac0d 100%);
-  color: #333;
-}
-
-.uno-card.wild {
-  background: linear-gradient(135deg, #333 0%, #111 100%);
-}
-
-.uno-card.playable:hover {
-  transform: translateY(-15px) scale(1.05);
-}
-
-.uno-players {
+/* Players */
+#uno-players {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px;
+  flex-wrap: wrap;
 }
 
-.uno-player {
+.u-player {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px;
+  padding: 8px 14px;
   background: var(--glass);
   border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
 }
 
-.uno-actions {
+.u-player.active {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+}
+
+.u-player.me {
+  border-color: var(--accent-primary);
+}
+
+.u-player-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.u-player-cards {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Actions */
+#uno-actions {
   display: flex;
   justify-content: center;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px;
 }
 
-.uno-call {
+.u-draw-btn,
+.u-uno-btn {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+}
+
+.u-uno-btn {
   background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%) !important;
-  animation: pulse 1s infinite;
+  animation: unoPulse 1s infinite;
 }
 
-.uno-hand {
+@keyframes unoPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px 5px rgba(231, 76, 60, 0.4);
+  }
+}
+
+/* Hand */
+#uno-hand {
   display: flex;
   justify-content: center;
-  gap: -15px;
-  padding: 20px;
+  align-items: flex-end;
+  padding: 15px 10px 20px;
+  min-height: 140px;
   overflow-x: auto;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.15) 100%);
+  border-radius: var(--radius);
 }
 
-.uno-hand .uno-card {
-  margin-left: -10px;
+.u-card {
+  width: 55px;
+  height: 85px;
   flex-shrink: 0;
+  cursor: pointer;
+  transform: rotate(var(--rotation, 0deg));
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-/* ========== Monopoly Game Styles ========== */
+.u-card:hover {
+  transform: rotate(var(--rotation, 0deg)) translateY(-20px) scale(1.15);
+  z-index: 10;
+}
+
+.u-card.playable .u-card-inner {
+  box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.5);
+}
+
+.u-card-inner {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.u-card-corner {
+  position: absolute;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.u-card-corner.top {
+  top: 4px;
+  left: 5px;
+}
+
+.u-card-corner.bottom {
+  bottom: 4px;
+  right: 5px;
+  transform: rotate(180deg);
+}
+
+.u-card-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.8rem;
+  font-weight: 900;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.u-card-rainbow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+/* Color Picker */
+.u-color-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.u-color-picker {
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+}
+
+.u-color-picker h3 {
+  margin-bottom: 20px;
+}
+
+.u-color-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.u-color-btn {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-color-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Result Overlay */
+.u-result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.u-result {
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+}
+
+.u-result h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.u-result p {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+
+/* ========== Monopoly Game Styles (Redesigned) ========== */
+.m-header {
+  text-align: center;
+  padding: 12px;
+  background: var(--glass);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+
+.m-status {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-secondary);
+}
+
 .monopoly-board {
   width: 100%;
-  max-width: 400px;
-  aspect-ratio: 1;
-  margin: 0 auto;
-  background: #c8e6c9;
+  max-width: 100%;
+  background: linear-gradient(135deg, #1a472a 0%, #0d2818 100%);
   border-radius: var(--radius);
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(11, 1fr);
-  grid-template-rows: repeat(11, 1fr);
-  gap: 1px;
-  padding: 4px;
+  padding: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
-.monopoly-cell {
-  background: #e8f5e9;
-  border: 1px solid #a5d6a7;
+.monopoly-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.m-cell {
+  width: calc(10% - 4px);
+  min-width: 55px;
+  max-width: 70px;
+  height: 70px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%);
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: 0.5rem;
-  padding: 2px;
+  justify-content: space-between;
+  padding: 4px;
+  font-size: 0.6rem;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
 }
 
-.monopoly-cell.corner {
-  background: #c8e6c9;
+.m-cell:hover {
+  transform: scale(1.05);
 }
 
-.monopoly-cell .color-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 8px;
+.m-cell.corner {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  font-weight: 700;
 }
 
-.monopoly-cell .color-bar.brown {
-  background: #795548;
+.m-cell.owned {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--accent-primary);
 }
 
-.monopoly-cell .color-bar.light-blue {
-  background: #81d4fa;
+.m-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
 }
 
-.monopoly-cell .color-bar.pink {
-  background: #f48fb1;
+.m-icon {
+  font-size: 1rem;
 }
 
-.monopoly-cell .color-bar.orange {
-  background: #ffb74d;
+.m-name {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  line-height: 1.1;
 }
 
-.monopoly-cell .color-bar.red {
-  background: #ef5350;
+.m-price {
+  font-size: 0.5rem;
+  color: #4caf50;
+  font-weight: 700;
+  background: rgba(76, 175, 80, 0.15);
+  padding: 1px 4px;
+  border-radius: 4px;
 }
 
-.monopoly-cell .color-bar.yellow {
-  background: #fff176;
+.m-tokens {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  min-height: 18px;
 }
 
-.monopoly-cell .color-bar.green {
-  background: #81c784;
+.player-token {
+  font-size: 0.9rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  animation: tokenBounce 0.5s ease;
 }
 
-.monopoly-cell .color-bar.dark-blue {
-  background: #42a5f5;
+@keyframes tokenBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .monopoly-panel {
@@ -1238,66 +1603,130 @@ body {
   padding: 16px;
   background: var(--glass);
   border-radius: var(--radius);
-  margin-top: 16px;
+  margin-top: 12px;
+  gap: 12px;
 }
 
-.monopoly-player-info .money {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--success);
+.monopoly-player-info {
+  flex: 1;
+}
+
+.m-my-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.m-money {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #4caf50;
+}
+
+.m-props {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .monopoly-dice {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
 }
 
-.dice {
-  width: 50px;
-  height: 50px;
-  background: white;
+.m-dice-display {
+  display: flex;
+  gap: 8px;
+}
+
+.m-die {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   font-weight: 900;
-  color: #333;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  color: #c0392b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 2px solid #ddd;
 }
 
-.monopoly-token {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  position: absolute;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+.m-die.rolling {
+  animation: diceRoll 0.5s ease infinite;
 }
 
-.monopoly-token.player1 {
-  background: #e74c3c;
+@keyframes diceRoll {
+
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  25% {
+    transform: rotate(15deg) scale(1.1);
+  }
+
+  50% {
+    transform: rotate(-10deg) scale(0.95);
+  }
+
+  75% {
+    transform: rotate(5deg) scale(1.05);
+  }
 }
 
-.monopoly-token.player2 {
-  background: #3498db;
+.m-roll-btn {
+  padding: 10px 20px !important;
+  font-size: 0.9rem !important;
 }
 
-.monopoly-token.player3 {
-  background: #2ecc71;
+/* Monopoly Dialog */
+.monopoly-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
 }
 
-.monopoly-token.player4 {
-  background: #f1c40f;
+.m-dialog {
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 300px;
+  width: 90%;
+  text-align: center;
 }
 
-.monopoly-token.player5 {
-  background: #9b59b6;
+.m-dialog h3 {
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 4px solid;
 }
 
-.monopoly-token.player6 {
-  background: #e67e22;
+.m-dialog-info {
+  margin-bottom: 20px;
 }
+
+.m-dialog-info p {
+  margin: 8px 0;
+  font-size: 1rem;
+}
+
+.m-dialog-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 
 /* ========== Mobile Responsive Styles ========== */
 @media (max-width: 480px) {
