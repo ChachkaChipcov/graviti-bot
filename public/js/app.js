@@ -57,6 +57,10 @@ const App = {
         };
 
         // New games with setup screens
+        if (gameType === 'rps') {
+            this.showScreen('rps-setup');
+            return;
+        }
         if (gameType === 'durak') {
             this.showScreen('durak-setup');
             return;

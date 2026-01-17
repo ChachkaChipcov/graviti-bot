@@ -148,6 +148,12 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Check if user is already in the room (prevent playing with yourself)
+    if (room.players.some(p => p.odId === odId)) {
+      socket.emit('error', { message: 'Вы уже в этой комнате' });
+      return;
+    }
+
     room.players.push({ id: socket.id, odId: odId, name: userName });
     socket.join(roomId);
     socket.roomId = roomId;

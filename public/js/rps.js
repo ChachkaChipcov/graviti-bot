@@ -127,3 +127,26 @@ function makeRPSChoice(choice) {
     // Send to server
     Multiplayer.rpsChoice(choice);
 }
+
+// RPS Settings
+let rpsSettings = {
+    winsToWin: 3
+};
+
+function updateRpsWinsDisplay(value) {
+    document.getElementById('rps-wins-value').textContent = value;
+    rpsSettings.winsToWin = parseInt(value);
+    App.haptic('light');
+}
+
+function createRpsRoom() {
+    App.currentGame = 'rps';
+    App.showScreen('room');
+    document.getElementById('room-title').textContent = '✊✋✌️ КНБ';
+
+    Multiplayer.createRoom('rps', {
+        maxPlayers: 2,
+        winsToWin: rpsSettings.winsToWin
+    });
+}
+

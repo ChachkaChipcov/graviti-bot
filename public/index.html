@@ -262,6 +262,37 @@
       <div class="bs-result hidden" id="bs-result"></div>
     </div>
 
+    <!-- RPS Room Setup Screen -->
+    <div id="rps-setup" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2>✊✋✌️ КНБ - Настройка</h2>
+      </div>
+
+      <div class="setup-content">
+        <div class="setup-section">
+          <h3>До скольки побед играем?</h3>
+          <div class="slider-container">
+            <input type="range" id="rps-wins-slider" class="wins-slider" min="1" max="100" value="3"
+              oninput="updateRpsWinsDisplay(this.value)">
+            <div class="slider-value" id="rps-wins-value">3</div>
+          </div>
+          <div class="slider-labels">
+            <span>1</span>
+            <span>25</span>
+            <span>50</span>
+            <span>75</span>
+            <span>100</span>
+          </div>
+        </div>
+
+        <div class="setup-actions">
+          <button class="btn primary" onclick="createRpsRoom()">🎮 Создать комнату</button>
+          <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Durak Room Setup Screen -->
     <div id="durak-setup" class="screen">
       <div class="room-header">
