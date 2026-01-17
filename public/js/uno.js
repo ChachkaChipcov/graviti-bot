@@ -30,6 +30,7 @@ const UNO = {
     players: [],
     isMyTurn: false,
     deckCount: 0,
+    unoCalled: false,
 
     init(room) {
         this.room = room;
@@ -144,6 +145,37 @@ const UNO = {
         this.updatePlayers();
         this.updateDirection();
         this.updateActions();
+        this.updateStatus();
+    },
+
+    updateStatus() {
+        const statusEl = document.getElementById('uno-status');
+        if (!statusEl) return;
+
+        // Find current player name
+        const currentPlayerObj = this.players.find(p => p.odId === this.currentPlayer);
+        const currentName = currentPlayerObj ? (currentPlayerObj.odId === App.userId ? 'Вы' : currentPlayerObj.name) : '';
+
+        let statusText = '';
+        let statusClass = '';
+
+        if (this.isMyTurn) {
+            if (this.hand.length === 2 && !this.unoCalled) {
+                statusText = '⚠️ 2 карты! Нажмите UNO!';
+                statusClass = 'warning';
+            } else if (this.hand.some(c => this.canPlay(c))) {
+                statusText = '🎯 Ваш ход! Выберите карту';
+                statusClass = 'your-turn';
+            } else {
+                statusText = '📥 Нет подходящих карт - возьмите';
+                statusClass = 'draw';
+            }
+        } else {
+            statusText = `⏳ Ход: ${currentName}`;
+            statusClass = 'waiting';
+        }
+
+        statusEl.innerHTML = `<span class="status-${statusClass}">${statusText}</span>`;
     },
 
     updateCurrentCard() {
@@ -187,7 +219,8 @@ const UNO = {
         const actionsEl = document.getElementById('uno-actions');
         if (!actionsEl) return;
 
-        const showUno = this.hand.length === 2 && this.isMyTurn;
+        // Show UNO button only if 2 cards, my turn, and not already called
+        const showUno = this.hand.length === 2 && this.isMyTurn && !this.unoCalled;
 
         actionsEl.innerHTML = `
             <button class="btn secondary u-draw-btn" onclick="unoDraw()" ${!this.isMyTurn ? 'disabled' : ''}>
@@ -284,8 +317,10 @@ function unoDraw() {
 }
 
 function unoCall() {
-    if (UNO.hand.length <= 2) {
+    if (UNO.hand.length <= 2 && !UNO.unoCalled) {
+        UNO.unoCalled = true;
         Multiplayer.socket.emit('uno_call', { odId: App.userId });
+        UNO.updateUI(); // Hide the UNO button
         App.haptic('heavy');
     }
 }
