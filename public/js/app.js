@@ -310,13 +310,19 @@ function showJoinView() {
     App.showJoinView();
 }
 
+// Room browser state
+let availableRooms = [];
+let currentFilter = 'all';
+
 function joinRoom() {
     const input = document.getElementById('room-code-input');
+    const passwordInput = document.getElementById('room-password-input');
     const code = input.value.trim().toUpperCase();
+    const password = passwordInput?.value?.trim() || null;
 
     if (code.length < 6) {
         input.style.borderColor = '#ff6b6b';
-        input.placeholder = 'Введите код (мин. 6 символов)';
+        input.placeholder = 'Мин. 6 символов';
         setTimeout(() => {
             input.style.borderColor = '';
             input.placeholder = 'XXXXXXXX';
@@ -324,7 +330,78 @@ function joinRoom() {
         return;
     }
 
-    Multiplayer.joinRoom(code);
+    Multiplayer.joinRoom(code, password);
+}
+
+function showJoinByCode() {
+    document.querySelectorAll('.join-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.join-tab:first-child').classList.add('active');
+    document.getElementById('join-by-code').classList.remove('hidden');
+    document.getElementById('room-browser').classList.add('hidden');
+}
+
+function showRoomBrowser() {
+    document.querySelectorAll('.join-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.join-tab:last-child').classList.add('active');
+    document.getElementById('join-by-code').classList.add('hidden');
+    document.getElementById('room-browser').classList.remove('hidden');
+
+    // Request rooms list from server
+    Multiplayer.getRooms(App.currentGame);
+}
+
+function filterRooms(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.filter-btn[data-filter="${filter}"]`).classList.add('active');
+    renderRoomsList();
+}
+
+function renderRoomsList() {
+    const listEl = document.getElementById('rooms-list');
+    if (!listEl) return;
+
+    const gameNames = {
+        'rps': '✊ КНБ',
+        'tictactoe': '❌⭕ Крестики-Нолики',
+        'battleship': '🚢 Морской Бой',
+        'durak': '🃏 Дурак',
+        'uno': '🎴 UNO',
+        'monopoly': '🎲 Монополия'
+    };
+
+    let filtered = availableRooms;
+    if (currentFilter === 'open') {
+        filtered = availableRooms.filter(r => !r.hasPassword);
+    } else if (currentFilter === 'locked') {
+        filtered = availableRooms.filter(r => r.hasPassword);
+    }
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<p class="rooms-empty">🔍 Нет доступных комнат</p>';
+        return;
+    }
+
+    listEl.innerHTML = filtered.map(room => `
+        <div class="room-card" onclick="joinRoomFromList('${room.id}', ${room.hasPassword})">
+            <div class="room-card-info">
+                <div class="room-card-game">${gameNames[room.gameType] || room.gameType}</div>
+                <div class="room-card-creator">👤 ${room.creatorName}</div>
+            </div>
+            <div class="room-card-players">${room.players}/${room.maxPlayers}</div>
+            <div class="room-card-lock">${room.hasPassword ? '🔒' : '🔓'}</div>
+        </div>
+    `).join('');
+}
+
+function joinRoomFromList(roomId, hasPassword) {
+    if (hasPassword) {
+        const password = prompt('🔐 Введите пароль:');
+        if (password === null) return;
+        Multiplayer.joinRoom(roomId, password);
+    } else {
+        Multiplayer.joinRoom(roomId);
+    }
 }
 
 function shareInvite() {

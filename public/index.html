@@ -117,9 +117,28 @@
         </div>
 
         <div id="join-view" class="join hidden">
-          <p>Введите код комнаты:</p>
-          <input type="text" id="room-code-input" placeholder="XXXXXXXX" maxlength="8">
-          <button class="join-btn" onclick="joinRoom()">Присоединиться</button>
+          <div class="join-tabs">
+            <button class="join-tab active" onclick="showJoinByCode()">📝 По коду</button>
+            <button class="join-tab" onclick="showRoomBrowser()">🌐 Комнаты</button>
+          </div>
+
+          <div id="join-by-code" class="join-section">
+            <p>Введите код комнаты:</p>
+            <input type="text" id="room-code-input" placeholder="XXXXXXXX" maxlength="8">
+            <input type="text" id="room-password-input" class="hidden" placeholder="Пароль (если есть)" maxlength="20">
+            <button class="btn primary" onclick="joinRoom()">🔗 Присоединиться</button>
+          </div>
+
+          <div id="room-browser" class="join-section hidden">
+            <div class="rooms-filter">
+              <button class="filter-btn active" data-filter="all" onclick="filterRooms('all')">Все</button>
+              <button class="filter-btn" data-filter="open" onclick="filterRooms('open')">🔓 Открытые</button>
+              <button class="filter-btn" data-filter="locked" onclick="filterRooms('locked')">🔒 С паролем</button>
+            </div>
+            <div id="rooms-list" class="rooms-list">
+              <p class="rooms-loading">⏳ Загрузка комнат...</p>
+            </div>
+          </div>
         </div>
       </div>
 

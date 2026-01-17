@@ -459,6 +459,112 @@ body {
   cursor: pointer;
 }
 
+/* Room Browser Styles */
+.join-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.join-tab {
+  flex: 1;
+  padding: 12px;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.join-tab.active {
+  background: var(--accent-gradient);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.join-section {
+  margin-top: 12px;
+}
+
+.rooms-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.filter-btn {
+  padding: 8px 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+.rooms-list {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rooms-loading,
+.rooms-empty {
+  color: var(--text-secondary);
+  padding: 20px;
+}
+
+.room-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-card:hover {
+  border-color: var(--accent-primary);
+  background: rgba(108, 92, 231, 0.15);
+}
+
+.room-card-info {
+  flex: 1;
+  text-align: left;
+}
+
+.room-card-game {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.room-card-creator {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.room-card-players {
+  font-size: 0.85rem;
+  color: var(--accent-secondary);
+}
+
+.room-card-lock {
+  font-size: 1.2rem;
+}
+
 .hidden {
   display: none !important;
 }

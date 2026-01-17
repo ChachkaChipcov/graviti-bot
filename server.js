@@ -119,12 +119,15 @@ io.on('connection', (socket) => {
       gameType,
       players: [{ id: socket.id, odId: odId, name: userName }],
       creator: odId,
+      creatorName: userName,
       state: null,
       currentTurn: null,
       created: Date.now(),
       settings: {
         maxPlayers,
-        mode: settings?.mode || 'podkidnoy' // For Durak
+        mode: settings?.mode || 'podkidnoy',
+        isPublic: settings?.isPublic !== false, // Default to public
+        password: settings?.password || null // Alphanumeric only
       }
     };
 
@@ -133,11 +136,34 @@ io.on('connection', (socket) => {
     socket.roomId = roomId;
 
     socket.emit('room_created', { roomId, room });
-    console.log(`Room ${roomId} created for ${gameType} (max ${maxPlayers} players)`);
+    console.log(`Room ${roomId} created for ${gameType} (max ${maxPlayers} players, public: ${room.settings.isPublic})`);
+  });
+
+  // Get list of available rooms
+  socket.on('get_rooms', ({ gameType }) => {
+    const availableRooms = [];
+
+    rooms.forEach((room, id) => {
+      // Only show public rooms that are not full and match game type
+      if (room.settings.isPublic &&
+        room.players.length < room.settings.maxPlayers &&
+        (!gameType || room.gameType === gameType)) {
+        availableRooms.push({
+          id: room.id,
+          gameType: room.gameType,
+          players: room.players.length,
+          maxPlayers: room.settings.maxPlayers,
+          creatorName: room.creatorName,
+          hasPassword: !!room.settings.password
+        });
+      }
+    });
+
+    socket.emit('rooms_list', { rooms: availableRooms });
   });
 
   // Join existing room
-  socket.on('join_room', ({ roomId, odId, userName }) => {
+  socket.on('join_room', ({ roomId, odId, userName, password }) => {
     const room = rooms.get(roomId.toUpperCase());
 
     if (!room) {
@@ -154,6 +180,12 @@ io.on('connection', (socket) => {
     // Check if user is already in the room (prevent playing with yourself)
     if (room.players.some(p => p.odId === odId)) {
       socket.emit('error', { message: 'Вы уже в этой комнате' });
+      return;
+    }
+
+    // Check password if room has one
+    if (room.settings.password && room.settings.password !== password) {
+      socket.emit('error', { message: 'Неверный пароль' });
       return;
     }
 

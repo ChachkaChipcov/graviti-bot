@@ -41,6 +41,12 @@ const Multiplayer = {
             App.showWaiting(roomId, room);
         });
 
+        // Rooms list for browser
+        this.socket.on('rooms_list', ({ rooms }) => {
+            availableRooms = rooms;
+            renderRoomsList();
+        });
+
         this.socket.on('error', ({ message }) => {
             console.error('Server error:', message);
 
@@ -184,12 +190,17 @@ const Multiplayer = {
         });
     },
 
-    joinRoom(roomId) {
+    joinRoom(roomId, password) {
         this.socket.emit('join_room', {
             roomId,
             odId: App.userId,
-            userName: App.userName
+            userName: App.userName,
+            password: password || null
         });
+    },
+
+    getRooms(gameType) {
+        this.socket.emit('get_rooms', { gameType: gameType || null });
     },
 
     disconnect() {
