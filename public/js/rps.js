@@ -103,6 +103,28 @@ const RPS = {
             }, 2500);
 
         }, 1500); // After shake animation
+    },
+
+    handleGameOver(data) {
+        const isWinner = data.winner === App.userId;
+
+        // Create game over overlay
+        const gameEl = document.getElementById('rps-game');
+        if (gameEl) {
+            const overlay = document.createElement('div');
+            overlay.className = 'rps-game-over-overlay';
+            overlay.innerHTML = `
+                <div class="rps-game-over">
+                    <h2>${isWinner ? '🎉 Вы победили!' : '😔 Вы проиграли'}</h2>
+                    <p>Счёт: ${data.scores[App.userId] || 0} - ${data.scores[Object.keys(data.scores).find(k => k !== App.userId)] || 0}</p>
+                    <p>${isWinner ? 'Поздравляем!' : data.winnerName + ' победил!'}</p>
+                    <button class="btn primary" onclick="App.goBack()">🔙 В меню</button>
+                </div>
+            `;
+            gameEl.appendChild(overlay);
+        }
+
+        App.showVictory(isWinner);
     }
 };
 

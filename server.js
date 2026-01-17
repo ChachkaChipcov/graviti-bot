@@ -59,7 +59,10 @@ bot.command('start', async (ctx) => {
       'Выберите игру для игры с друзьями:\n\n' +
       '✊ *Камень\\-Ножницы\\-Бумага* \\- классика\\!\n' +
       '❌⭕ *Крестики\\-Нолики* \\- стратегия\n' +
-      '🚢 *Морской Бой* \\- морская битва\n\n' +
+      '🚢 *Морской Бой* \\- морская битва\n' +
+      '🃏 *Дурак* \\- карточная игра \\[БЕТА\\]\n' +
+      '🎴 *UNO* \\- цветные карты \\[БЕТА\\]\n' +
+      '🎲 *Монополия* \\- бизнес\\-игра \\[БЕТА\\]\n\n' +
       'Нажмите кнопку ниже, чтобы начать\\!',
       {
         parse_mode: 'MarkdownV2',
@@ -158,6 +161,9 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     socket.roomId = roomId;
 
+    // Notify the joining player that they successfully joined
+    socket.emit('room_joined', { roomId, room });
+
     // Check if room is full and initialize game
     const isFull = room.players.length >= maxPlayers;
 
@@ -221,11 +227,26 @@ io.on('connection', (socket) => {
         room.state.scores[winner]++;
       }
 
+      // Get win limit from settings (default 3)
+      const winsToWin = room.settings?.winsToWin || 3;
+
       io.to(socket.roomId).emit('rps_result', {
         choices: room.state.choices,
         winner,
-        scores: room.state.scores
+        scores: room.state.scores,
+        winsToWin
       });
+
+      // Check if someone won the game
+      if (winner && room.state.scores[winner] >= winsToWin) {
+        const winnerPlayer = room.players.find(p => p.odId === winner);
+        io.to(socket.roomId).emit('rps_game_over', {
+          winner,
+          winnerName: winnerPlayer?.name || 'Игрок',
+          scores: room.state.scores
+        });
+        return;
+      }
 
       // Reset for next round
       room.state.choices = {};

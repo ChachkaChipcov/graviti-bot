@@ -134,8 +134,9 @@ const App = {
     },
 
 
-    showWaiting(roomId) {
+    showWaiting(roomId, room) {
         this.roomId = roomId;
+        this.room = room;
         document.querySelector('.room-actions').classList.add('hidden');
         document.getElementById('waiting-view').classList.remove('hidden');
         document.getElementById('join-view').classList.add('hidden');
@@ -144,6 +145,12 @@ const App = {
         const roomCodeText = document.getElementById('room-code-text');
         if (roomCodeText) {
             roomCodeText.textContent = roomId.toUpperCase();
+        }
+
+        // Display correct player count
+        const waitingEl = document.querySelector('#waiting-view p');
+        if (waitingEl && room?.settings?.maxPlayers) {
+            waitingEl.textContent = `Игроки: 1/${room.settings.maxPlayers}`;
         }
     },
 
@@ -205,19 +212,27 @@ const App = {
     shareInvite() {
         if (!this.roomId) return;
 
-        const botUsername = 'modulletgbot'; // Actual bot username
-        const inviteText = encodeURIComponent(`🎮 Давай сыграем! Присоединяйся к игре:`);
+        // Game names for invite message
+        const gameNames = {
+            'rps': 'Камень-Ножницы-Бумага',
+            'tictactoe': 'Крестики-Нолики',
+            'battleship': 'Морской Бой',
+            'durak': 'Дурак',
+            'uno': 'UNO',
+            'monopoly': 'Монополия'
+        };
+
+        const gameName = gameNames[this.currentGame] || 'игру';
+        const botUsername = 'modulletgbot';
+        const inviteText = encodeURIComponent(`🎮 Давай сыграем в ${gameName}! Присоединяйся:`);
         const inviteUrl = encodeURIComponent(`https://t.me/${botUsername}?start=join_${this.roomId}`);
         const shareUrl = `https://t.me/share/url?url=${inviteUrl}&text=${inviteText}`;
 
         if (this.tg && this.tg.openTelegramLink) {
-            // This method works in almost all Telegram versions
             this.tg.openTelegramLink(shareUrl);
         } else if (this.tg && this.tg.openLink) {
-            // Alternative method
             this.tg.openLink(shareUrl);
         } else {
-            // Fallback for regular browser
             navigator.clipboard.writeText(`https://t.me/${botUsername}?start=join_${this.roomId}`).then(() => {
                 alert('Ссылка скопирована в буфер обмена!');
             });

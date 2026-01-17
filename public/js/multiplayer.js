@@ -18,7 +18,27 @@ const Multiplayer = {
 
         this.socket.on('room_created', ({ roomId, room }) => {
             console.log('Room created:', roomId);
-            App.showWaiting(roomId);
+            App.showWaiting(roomId, room);
+        });
+
+        // Handler when joining an existing room
+        this.socket.on('room_joined', ({ roomId, room }) => {
+            console.log('Joined room:', roomId);
+            // Set current game type from room
+            App.currentGame = room.gameType;
+
+            // Update room title based on game type
+            const titles = {
+                'rps': '✊ КНБ',
+                'tictactoe': '❌⭕ Крестики-Нолики',
+                'battleship': '🚢 Морской Бой',
+                'durak': '🃏 Дурак',
+                'uno': '🎴 UNO',
+                'monopoly': '🎲 Монополия'
+            };
+            document.getElementById('room-title').textContent = titles[room.gameType] || 'Игра';
+
+            App.showWaiting(roomId, room);
         });
 
         this.socket.on('error', ({ message }) => {
@@ -66,6 +86,10 @@ const Multiplayer = {
 
         this.socket.on('rps_result', (data) => {
             RPS.showResult(data);
+        });
+
+        this.socket.on('rps_game_over', (data) => {
+            RPS.handleGameOver(data);
         });
 
         // TicTacToe Events
