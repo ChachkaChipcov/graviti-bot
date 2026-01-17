@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: telegram-games-miniapp
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: WEBAPP_URL
+        sync: false

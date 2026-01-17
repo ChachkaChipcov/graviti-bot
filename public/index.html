@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Game Zone</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Lobby Screen -->
+    <div id="lobby" class="screen active">
+      <div class="header">
+        <h1>🎮 Game Zone</h1>
+        <p class="subtitle">Играй с друзьями!</p>
+      </div>
+
+      <div class="games-grid">
+        <div class="game-card" onclick="selectGame('rps')">
+          <div class="game-icon">
+            <span class="emoji-bounce">✊</span>
+            <span class="emoji-bounce delay-1">✋</span>
+            <span class="emoji-bounce delay-2">✌️</span>
+          </div>
+          <h3>Камень-Ножницы-Бумага</h3>
+          <p>Классическая игра на удачу</p>
+        </div>
+
+        <div class="game-card" onclick="selectGame('tictactoe')">
+          <div class="game-icon ttt-grid">
+            <span>❌</span>
+            <span>⭕</span>
+            <span>❌</span>
+          </div>
+          <h3>Крестики-Нолики</h3>
+          <p>Стратегическая дуэль 3x3</p>
+        </div>
+
+        <div class="game-card" onclick="selectGame('battleship')">
+          <div class="game-icon">
+            <span class="ship-float">🚢</span>
+            <span class="explosion">💥</span>
+          </div>
+          <h3>Морской Бой</h3>
+          <p>Потопи флот противника!</p>
+        </div>
+
+        <div class="game-card" onclick="selectGame('durak')">
+          <div class="game-icon">
+            <span class="card-float">🃏</span>
+            <span class="card-float delay-1">♠️</span>
+            <span class="card-float delay-2">♥️</span>
+          </div>
+          <h3>Дурак</h3>
+          <p>Карточная игра 2-7 игроков</p>
+          <span class="beta-badge">БЕТА</span>
+        </div>
+
+        <div class="game-card" onclick="selectGame('uno')">
+          <div class="game-icon uno-cards">
+            <span style="color: #ff5555;">🔴</span>
+            <span style="color: #55ff55;">🟢</span>
+            <span style="color: #5555ff;">🔵</span>
+            <span style="color: #ffff55;">🟡</span>
+          </div>
+          <h3>UNO</h3>
+          <p>Цветные карты 2-7 игроков</p>
+          <span class="beta-badge">БЕТА</span>
+        </div>
+
+        <div class="game-card" onclick="selectGame('monopoly')">
+          <div class="game-icon">
+            <span>🎲</span>
+            <span>🏠</span>
+            <span>💰</span>
+          </div>
+          <h3>Монополия</h3>
+          <p>Классическая настольная игра</p>
+          <span class="beta-badge">БЕТА</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Screen -->
+    <div id="room" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2 id="room-title">Комната</h2>
+      </div>
+
+      <div class="room-content">
+        <div id="waiting-view" class="waiting">
+          <div class="loader"></div>
+          <p>Ожидание соперника...</p>
+
+          <div class="room-code-display">
+            <p class="room-code-label">Код комнаты:</p>
+            <div class="room-code-box">
+              <span id="room-code-text" class="room-code-text"></span>
+              <button class="copy-code-btn" onclick="copyRoomCode()" title="Скопировать код">
+                📋
+              </button>
+            </div>
+            <p class="room-code-hint">Продиктуй код другу или нажми кнопку ниже</p>
+          </div>
+
+          <div class="invite-section">
+            <button class="invite-btn" onclick="shareInvite()">
+              📤 Пригласить друга
+            </button>
+          </div>
+        </div>
+
+        <div id="join-view" class="join hidden">
+          <p>Введите код комнаты:</p>
+          <input type="text" id="room-code-input" placeholder="XXXXXXXX" maxlength="8">
+          <button class="join-btn" onclick="joinRoom()">Присоединиться</button>
+        </div>
+      </div>
+
+      <div class="room-actions">
+        <button class="btn primary" onclick="createRoom()">🎮 Создать комнату</button>
+        <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+      </div>
+    </div>
+
+    <!-- RPS Game Screen -->
+    <div id="rps-game" class="screen">
+      <div class="game-header">
+        <div class="player-info">
+          <span class="player-name" id="rps-player1">Вы</span>
+          <span class="score" id="rps-score1">0</span>
+        </div>
+        <div class="vs">VS</div>
+        <div class="player-info">
+          <span class="score" id="rps-score2">0</span>
+          <span class="player-name" id="rps-player2">Соперник</span>
+        </div>
+      </div>
+
+      <div class="rps-arena">
+        <div class="rps-hand left" id="rps-left-hand">❓</div>
+        <div class="rps-vs-text">VS</div>
+        <div class="rps-hand right" id="rps-right-hand">❓</div>
+      </div>
+
+      <div class="rps-result" id="rps-result"></div>
+
+      <div class="rps-choices">
+        <button class="rps-choice" data-choice="rock" onclick="makeRPSChoice('rock')">
+          <span>✊</span>
+          <small>Камень</small>
+        </button>
+        <button class="rps-choice" data-choice="paper" onclick="makeRPSChoice('paper')">
+          <span>✋</span>
+          <small>Бумага</small>
+        </button>
+        <button class="rps-choice" data-choice="scissors" onclick="makeRPSChoice('scissors')">
+          <span>✌️</span>
+          <small>Ножницы</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- TicTacToe Game Screen -->
+    <div id="ttt-game" class="screen">
+      <div class="game-header">
+        <div class="player-info">
+          <span class="player-name" id="ttt-player1">Вы (X)</span>
+        </div>
+        <div class="turn-indicator" id="ttt-turn">Ваш ход</div>
+        <div class="player-info">
+          <span class="player-name" id="ttt-player2">Соперник (O)</span>
+        </div>
+      </div>
+
+      <div class="ttt-board" id="ttt-board">
+        <div class="ttt-cell" data-index="0" onclick="makeTTTMove(0)"></div>
+        <div class="ttt-cell" data-index="1" onclick="makeTTTMove(1)"></div>
+        <div class="ttt-cell" data-index="2" onclick="makeTTTMove(2)"></div>
+        <div class="ttt-cell" data-index="3" onclick="makeTTTMove(3)"></div>
+        <div class="ttt-cell" data-index="4" onclick="makeTTTMove(4)"></div>
+        <div class="ttt-cell" data-index="5" onclick="makeTTTMove(5)"></div>
+        <div class="ttt-cell" data-index="6" onclick="makeTTTMove(6)"></div>
+        <div class="ttt-cell" data-index="7" onclick="makeTTTMove(7)"></div>
+        <div class="ttt-cell" data-index="8" onclick="makeTTTMove(8)"></div>
+      </div>
+
+      <div class="ttt-result" id="ttt-result"></div>
+      <button class="btn primary hidden" id="ttt-rematch" onclick="requestRematch()">🔄 Ещё раз</button>
+    </div>
+
+    <!-- Battleship Game Screen -->
+    <div id="bs-game" class="screen">
+      <div class="bs-phase" id="bs-phase">
+        <!-- Placement Phase -->
+        <div id="bs-placement" class="bs-placement">
+          <h3>Расставьте корабли</h3>
+          <p class="bs-hint">Выберите корабль, нажмите кнопку поворота и кликните на сетку</p>
+
+          <div class="bs-rotation-controls">
+            <button class="rotation-btn" id="rotation-btn" onclick="toggleShipRotation()">
+              <span id="rotation-icon">➡️</span>
+              <span id="rotation-text">Горизонтально</span>
+            </button>
+          </div>
+
+          <div class="bs-ships-to-place" id="ships-to-place">
+            <div class="ship-item" data-size="4" onclick="selectShip(4)">
+              <span>🚢🚢🚢🚢</span>
+              <small>4 клетки</small>
+            </div>
+            <div class="ship-item" data-size="3" onclick="selectShip(3)">
+              <span>🚢🚢🚢</span>
+              <small>3 клетки</small>
+            </div>
+            <div class="ship-item" data-size="3" onclick="selectShip(3)">
+              <span>🚢🚢🚢</span>
+              <small>3 клетки</small>
+            </div>
+            <div class="ship-item" data-size="2" onclick="selectShip(2)">
+              <span>🚢🚢</span>
+              <small>2 клетки</small>
+            </div>
+            <div class="ship-item" data-size="1" onclick="selectShip(1)">
+              <span>🚢</span>
+              <small>1 клетка</small>
+            </div>
+          </div>
+
+          <div class="bs-grid placement" id="bs-placement-grid"></div>
+
+          <button class="btn primary" id="bs-ready-btn" onclick="confirmPlacement()" disabled>
+            ✅ Готов к бою!
+          </button>
+        </div>
+
+        <!-- Battle Phase -->
+        <div id="bs-battle" class="bs-battle hidden">
+          <div class="bs-turn-indicator" id="bs-turn">Ваш ход!</div>
+
+          <div class="bs-grids">
+            <div class="bs-grid-container">
+              <h4>Противник</h4>
+              <div class="bs-grid enemy" id="bs-enemy-grid"></div>
+            </div>
+            <div class="bs-grid-container">
+              <h4>Ваш флот</h4>
+              <div class="bs-grid own" id="bs-own-grid"></div>
+            </div>
+          </div>
+
+          <div class="bs-ships-status" id="bs-ships-status"></div>
+        </div>
+      </div>
+
+      <div class="bs-result hidden" id="bs-result"></div>
+    </div>
+
+    <!-- Durak Room Setup Screen -->
+    <div id="durak-setup" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2>🃏 Дурак - Настройка</h2>
+      </div>
+
+      <div class="setup-content">
+        <div class="setup-section">
+          <h3>Режим игры:</h3>
+          <div class="mode-selector">
+            <button class="mode-btn selected" data-mode="podkidnoy" onclick="selectDurakMode('podkidnoy')">
+              <span>🎯</span>
+              <strong>Подкидной</strong>
+              <small>Классический режим</small>
+            </button>
+            <button class="mode-btn" data-mode="perevodnoy" onclick="selectDurakMode('perevodnoy')">
+              <span>🔄</span>
+              <strong>Переводной</strong>
+              <small>Можно переводить карты</small>
+            </button>
+            <button class="mode-btn" data-mode="combined" onclick="selectDurakMode('combined')">
+              <span>⚡</span>
+              <strong>Комбинированный</strong>
+              <small>Подкидной + Переводной</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="setup-section">
+          <h3>Количество игроков:</h3>
+          <div class="players-selector">
+            <button class="player-btn selected" data-count="2" onclick="selectPlayerCount(2)">2</button>
+            <button class="player-btn" data-count="3" onclick="selectPlayerCount(3)">3</button>
+            <button class="player-btn" data-count="4" onclick="selectPlayerCount(4)">4</button>
+            <button class="player-btn" data-count="5" onclick="selectPlayerCount(5)">5</button>
+            <button class="player-btn" data-count="6" onclick="selectPlayerCount(6)">6</button>
+            <button class="player-btn" data-count="7" onclick="selectPlayerCount(7)">7</button>
+          </div>
+        </div>
+
+        <div class="setup-actions">
+          <button class="btn primary" onclick="createDurakRoom()">🎮 Создать комнату</button>
+          <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Durak Game Screen -->
+    <div id="durak-game" class="screen">
+      <div class="durak-header">
+        <div class="durak-info">
+          <span class="trump-card" id="durak-trump">♠️</span>
+          <span class="deck-count" id="durak-deck">36</span>
+        </div>
+        <div class="durak-status" id="durak-status">Ожидание игроков...</div>
+      </div>
+
+      <div class="durak-table" id="durak-table">
+        <!-- Cards on table will be rendered here -->
+      </div>
+
+      <div class="durak-actions" id="durak-actions">
+        <button class="btn secondary" id="durak-take" onclick="durakTake()">📥 Забрать</button>
+        <button class="btn primary" id="durak-pass" onclick="durakPass()">✅ Бито</button>
+        <button class="btn secondary" id="durak-transfer" onclick="durakTransfer()" style="display: none;">🔄
+          Перевести</button>
+      </div>
+
+      <div class="durak-hand" id="durak-hand">
+        <!-- Player's cards will be rendered here -->
+      </div>
+    </div>
+
+    <!-- UNO Setup Screen -->
+    <div id="uno-setup" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2>🎴 UNO - Настройка</h2>
+      </div>
+
+      <div class="setup-content">
+        <div class="setup-section">
+          <h3>Количество игроков:</h3>
+          <div class="players-selector">
+            <button class="player-btn selected" data-count="2" onclick="selectUnoPlayerCount(2)">2</button>
+            <button class="player-btn" data-count="3" onclick="selectUnoPlayerCount(3)">3</button>
+            <button class="player-btn" data-count="4" onclick="selectUnoPlayerCount(4)">4</button>
+            <button class="player-btn" data-count="5" onclick="selectUnoPlayerCount(5)">5</button>
+            <button class="player-btn" data-count="6" onclick="selectUnoPlayerCount(6)">6</button>
+            <button class="player-btn" data-count="7" onclick="selectUnoPlayerCount(7)">7</button>
+          </div>
+        </div>
+
+        <div class="setup-actions">
+          <button class="btn primary" onclick="createUnoRoom()">🎮 Создать комнату</button>
+          <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNO Game Screen -->
+    <div id="uno-game" class="screen">
+      <div class="uno-header">
+        <div class="uno-direction" id="uno-direction">➡️</div>
+        <div class="uno-pile" id="uno-pile">
+          <!-- Current card -->
+        </div>
+        <div class="uno-deck-count" id="uno-deck-count">📚 Draw</div>
+      </div>
+
+      <div class="uno-players" id="uno-players">
+        <!-- Other players' card counts -->
+      </div>
+
+      <div class="uno-actions" id="uno-actions">
+        <button class="btn secondary" onclick="unoDraw()">📥 Взять карту</button>
+        <button class="btn primary uno-call hidden" id="uno-call" onclick="unoCall()">🔥 UNO!</button>
+      </div>
+
+      <div class="uno-hand" id="uno-hand">
+        <!-- Player's cards -->
+      </div>
+    </div>
+
+    <!-- Monopoly Setup Screen -->
+    <div id="monopoly-setup" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2>🎲 Монополия - Настройка</h2>
+      </div>
+
+      <div class="setup-content">
+        <div class="setup-section">
+          <h3>Количество игроков:</h3>
+          <div class="players-selector">
+            <button class="player-btn selected" data-count="2" onclick="selectMonopolyPlayerCount(2)">2</button>
+            <button class="player-btn" data-count="3" onclick="selectMonopolyPlayerCount(3)">3</button>
+            <button class="player-btn" data-count="4" onclick="selectMonopolyPlayerCount(4)">4</button>
+            <button class="player-btn" data-count="5" onclick="selectMonopolyPlayerCount(5)">5</button>
+            <button class="player-btn" data-count="6" onclick="selectMonopolyPlayerCount(6)">6</button>
+          </div>
+        </div>
+
+        <div class="setup-actions">
+          <button class="btn primary" onclick="createMonopolyRoom()">🎮 Создать комнату</button>
+          <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monopoly Game Screen -->
+    <div id="monopoly-game" class="screen">
+      <div class="monopoly-board" id="monopoly-board">
+        <!-- Board will be rendered here -->
+      </div>
+
+      <div class="monopoly-panel">
+        <div class="monopoly-player-info" id="monopoly-player-info">
+          <span class="money">💰 $1500</span>
+        </div>
+        <div class="monopoly-dice" id="monopoly-dice">
+          <button class="btn primary" onclick="rollDice()">🎲 Бросить кубики</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/multiplayer.js"></script>
+  <script src="/js/rps.js"></script>
+  <script src="/js/tictactoe.js"></script>
+  <script src="/js/battleship.js"></script>
+  <script src="/js/durak.js"></script>
+  <script src="/js/uno.js"></script>
+  <script src="/js/monopoly.js"></script>
+</body>
+
+</html>

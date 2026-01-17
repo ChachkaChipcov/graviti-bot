@@ -1,0 +1,428 @@
+/* Bounce Animation */
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.emoji-bounce {
+    display: inline-block;
+    animation: bounce 1s ease-in-out infinite;
+}
+
+.emoji-bounce.delay-1 {
+    animation-delay: 0.2s;
+}
+
+.emoji-bounce.delay-2 {
+    animation-delay: 0.4s;
+}
+
+/* Ship Float Animation */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(-5deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(5deg);
+    }
+}
+
+.ship-float {
+    display: inline-block;
+    animation: float 2s ease-in-out infinite;
+}
+
+/* Explosion Animation */
+@keyframes explode {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.explosion {
+    animation: explode 0.5s ease-out forwards;
+}
+
+/* Shake Animation for RPS */
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateY(0) scaleX(-1);
+    }
+
+    25% {
+        transform: translateY(-20px) scaleX(-1);
+    }
+
+    50% {
+        transform: translateY(0) scaleX(-1);
+    }
+
+    75% {
+        transform: translateY(-20px) scaleX(-1);
+    }
+}
+
+.rps-hand.left.shake {
+    animation: shake 0.5s ease-in-out 3;
+}
+
+@keyframes shake-right {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    25% {
+        transform: translateY(-20px);
+    }
+
+    50% {
+        transform: translateY(0);
+    }
+
+    75% {
+        transform: translateY(-20px);
+    }
+}
+
+.rps-hand.right.shake {
+    animation: shake-right 0.5s ease-in-out 3;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.pulse {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Slide In Animation */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.slide-in {
+    animation: slideInUp 0.5s ease-out forwards;
+}
+
+/* Scale In Animation */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease-out forwards;
+}
+
+/* Pop Animation for TTT symbols */
+@keyframes pop {
+    0% {
+        transform: scale(0);
+    }
+
+    70% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pop {
+    animation: pop 0.3s ease-out forwards;
+}
+
+/* Win Line Glow */
+@keyframes glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px var(--success);
+    }
+
+    50% {
+        box-shadow: 0 0 30px var(--success), 0 0 60px var(--success);
+    }
+}
+
+.ttt-cell.win {
+    animation: glow 1s ease-in-out infinite;
+}
+
+/* Victory Animation */
+@keyframes victory {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.2) rotate(10deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.victory {
+    animation: victory 0.8s ease-out forwards;
+}
+
+/* Defeat Animation */
+@keyframes defeat {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(0.8);
+        opacity: 0.6;
+        filter: grayscale(100%);
+    }
+}
+
+.defeat {
+    animation: defeat 0.5s ease-out forwards;
+}
+
+/* Wave Animation for Miss */
+@keyframes wave {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    25% {
+        transform: translateY(-3px);
+    }
+
+    75% {
+        transform: translateY(3px);
+    }
+}
+
+.bs-cell.miss::after {
+    animation: wave 1s ease-in-out infinite;
+}
+
+/* Fire Animation for Hit */
+@keyframes fire {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.bs-cell.hit::after {
+    animation: fire 0.5s ease-in-out 3;
+}
+
+/* Sink Animation */
+@keyframes sink {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateY(10px);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: translateY(5px);
+        opacity: 0.3;
+    }
+}
+
+.bs-cell.sunk {
+    animation: sink 1s ease-out forwards;
+}
+
+/* Screen Transition */
+.screen {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.screen.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Ripple Effect */
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 50%;
+    left: 50%;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10);
+    opacity: 0;
+    transition: transform 0.5s, opacity 1s;
+}
+
+.ripple:active::after {
+    transform: scale(0);
+    opacity: 1;
+    transition: 0s;
+}
+
+/* Loading Dots */
+@keyframes loadingDots {
+
+    0%,
+    20% {
+        content: '.';
+    }
+
+    40% {
+        content: '..';
+    }
+
+    60%,
+    100% {
+        content: '...';
+    }
+}
+
+.loading::after {
+    content: '.';
+    animation: loadingDots 1.5s infinite;
+}
+
+/* Confetti Animation */
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+.confetti {
+    position: fixed;
+    font-size: 1.5rem;
+    animation: confetti-fall 3s ease-in forwards;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* Waiting Pulse */
+@keyframes waitingPulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.waiting p {
+    animation: waitingPulse 2s ease-in-out infinite;
+}
