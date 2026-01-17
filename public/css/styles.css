@@ -1140,21 +1140,23 @@ body {
 /* Hand - Fanned Cards */
 .durak-hand {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: flex-end;
-  padding: 15px 10px 20px;
-  min-height: 130px;
-  overflow-x: auto;
+  padding: 10px 5px 15px;
+  min-height: 100px;
+  max-height: 220px;
+  overflow-y: auto;
+  gap: 4px;
   background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
   border-radius: var(--radius);
 }
 
 .d-card {
-  width: 60px;
-  height: 90px;
+  width: 50px;
+  height: 75px;
   flex-shrink: 0;
   cursor: pointer;
-  transform: rotate(var(--rotation, 0deg)) translateY(calc(-1 * var(--lift, 0px)));
   transition: all 0.2s ease;
   position: relative;
 }
