@@ -523,6 +523,52 @@ io.on('connection', (socket) => {
     });
   });
 
+  // Durak: Transfer attack (perevodnoy mode)
+  socket.on('durak_transfer', ({ odId, card }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'durak') return;
+    if (room.state.currentDefender !== odId) return;
+
+    // Only allow transfer in perevodnoy or combined mode
+    const mode = room.settings?.mode || 'podkidnoy';
+    if (mode !== 'perevodnoy' && mode !== 'combined') return;
+
+    // Check if card value matches any attack card on table
+    const attackValues = room.state.table.map(p => p.attack.value);
+    if (!attackValues.includes(card.value)) return;
+
+    // Remove card from defender's hand
+    const hand = room.state.hands[odId];
+    const cardIndex = hand.findIndex(c => c.id === card.id);
+    if (cardIndex === -1) return;
+    hand.splice(cardIndex, 1);
+
+    // Add to table as new attack
+    room.state.table.push({ attack: card, defense: null });
+
+    // Transfer: current defender becomes attacker, next player becomes defender
+    const players = room.players;
+    const currentDefenderIdx = players.findIndex(p => p.odId === room.state.currentDefender);
+    const nextDefenderIdx = (currentDefenderIdx + 1) % players.length;
+
+    // Skip if next player would be original attacker with no cards
+    const newDefender = players[nextDefenderIdx].odId;
+
+    room.state.currentAttacker = room.state.currentDefender;
+    room.state.currentDefender = newDefender;
+    room.state.phase = 'defense';
+
+    io.to(socket.roomId).emit('durak_transfer', {
+      transferredBy: odId,
+      card,
+      newAttacker: room.state.currentAttacker,
+      newDefender: room.state.currentDefender,
+      table: room.state.table
+    });
+
+    sendDurakUpdate(room);
+  });
+
   // Durak: Take cards (defender gives up)
   socket.on('durak_take', ({ odId }) => {
     const room = rooms.get(socket.roomId);
