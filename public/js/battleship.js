@@ -278,11 +278,17 @@ const Battleship = {
             }
         });
 
-        // Mark ship item as placed
-        const shipItems = document.querySelectorAll(`.ship-item[data-size="${this.selectedShipSize}"]:not(.placed)`);
-        if (shipItems.length > 0) {
-            shipItems[0].classList.add('placed');
-            shipItems[0].classList.remove('selected');
+        // Mark ship item as placed - use selected element if available
+        if (this.selectedShipElement) {
+            this.selectedShipElement.classList.add('placed');
+            this.selectedShipElement.classList.remove('selected');
+            this.selectedShipElement = null;
+        } else {
+            const shipItems = document.querySelectorAll(`.ship-item[data-size="${this.selectedShipSize}"]:not(.placed)`);
+            if (shipItems.length > 0) {
+                shipItems[0].classList.add('placed');
+                shipItems[0].classList.remove('selected');
+            }
         }
 
         App.haptic('medium');
@@ -441,6 +447,24 @@ function selectShip(size) {
     if (items.length > 0) {
         items[0].classList.add('selected');
     }
+}
+
+// New function - select specific ship element by ID
+function selectShipById(element) {
+    if (Battleship.phase !== 'placement') return;
+    if (element.classList.contains('placed')) {
+        App.haptic('heavy');
+        return;
+    }
+
+    const size = parseInt(element.dataset.size);
+    Battleship.selectedShipSize = size;
+    Battleship.selectedShipElement = element;
+    App.haptic('light');
+
+    // Visual feedback - only this element
+    document.querySelectorAll('.ship-item').forEach(item => item.classList.remove('selected'));
+    element.classList.add('selected');
 }
 
 function confirmPlacement() {

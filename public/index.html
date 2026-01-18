@@ -134,6 +134,7 @@
               <button class="filter-btn active" data-filter="all" onclick="filterRooms('all')">Все</button>
               <button class="filter-btn" data-filter="open" onclick="filterRooms('open')">🔓 Открытые</button>
               <button class="filter-btn" data-filter="locked" onclick="filterRooms('locked')">🔒 С паролем</button>
+              <button class="refresh-btn" onclick="refreshRoomList()">🔄</button>
             </div>
             <div id="rooms-list" class="rooms-list">
               <p class="rooms-loading">⏳ Загрузка комнат...</p>
@@ -247,46 +248,46 @@
 
           <div class="bs-ships-to-place" id="ships-to-place">
             <div class="ship-row">
-              <div class="ship-item" data-size="4" onclick="selectShip(4)">
+              <div class="ship-item" data-size="4" data-id="4a" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢🚢🚢🚢</span>
                 <small>4 кл × 1</small>
               </div>
             </div>
             <div class="ship-row">
-              <div class="ship-item" data-size="3" onclick="selectShip(3)">
+              <div class="ship-item" data-size="3" data-id="3a" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢🚢🚢</span>
                 <small>3 кл</small>
               </div>
-              <div class="ship-item" data-size="3" onclick="selectShip(3)">
+              <div class="ship-item" data-size="3" data-id="3b" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢🚢🚢</span>
                 <small>3 кл</small>
               </div>
             </div>
             <div class="ship-row">
-              <div class="ship-item" data-size="2" onclick="selectShip(2)">
+              <div class="ship-item" data-size="2" data-id="2a" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢🚢</span>
                 <small>2кл</small>
               </div>
-              <div class="ship-item" data-size="2" onclick="selectShip(2)">
+              <div class="ship-item" data-size="2" data-id="2b" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢🚢</span>
                 <small>2кл</small>
               </div>
-              <div class="ship-item" data-size="2" onclick="selectShip(2)">
+              <div class="ship-item" data-size="2" data-id="2c" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢🚢</span>
                 <small>2кл</small>
               </div>
             </div>
             <div class="ship-row">
-              <div class="ship-item" data-size="1" onclick="selectShip(1)">
+              <div class="ship-item" data-size="1" data-id="1a" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢</span>
               </div>
-              <div class="ship-item" data-size="1" onclick="selectShip(1)">
+              <div class="ship-item" data-size="1" data-id="1b" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢</span>
               </div>
-              <div class="ship-item" data-size="1" onclick="selectShip(1)">
+              <div class="ship-item" data-size="1" data-id="1c" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢</span>
               </div>
-              <div class="ship-item" data-size="1" onclick="selectShip(1)">
+              <div class="ship-item" data-size="1" data-id="1d" onclick="selectShipById(this)">
                 <span class="ship-cells">🚢</span>
               </div>
             </div>

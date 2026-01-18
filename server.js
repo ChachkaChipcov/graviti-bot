@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
   console.log('Player connected:', socket.id);
 
   // Create new game room
-  socket.on('create_room', ({ gameType, odId, userName, settings }) => {
+  socket.on('create_room', ({ gameType, odId, userName, settings, password, isPublic }) => {
     const roomId = uuidv4().slice(0, 8).toUpperCase();
     const maxPlayers = settings?.maxPlayers || (gameType === 'durak' || gameType === 'uno' ? 7 : gameType === 'monopoly' ? 6 : 2);
 
@@ -126,8 +126,8 @@ io.on('connection', (socket) => {
       settings: {
         maxPlayers,
         mode: settings?.mode || 'podkidnoy',
-        isPublic: settings?.isPublic !== false, // Default to public
-        password: settings?.password || null // Alphanumeric only
+        isPublic: isPublic !== false && settings?.isPublic !== false, // Check both
+        password: password || settings?.password || null
       }
     };
 

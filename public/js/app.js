@@ -398,6 +398,11 @@ function showRoomBrowser() {
     Multiplayer.getRooms(App.currentGame);
 }
 
+function refreshRoomList() {
+    App.haptic('light');
+    Multiplayer.getRooms(App.currentGame);
+}
+
 function filterRooms(filter) {
     currentFilter = filter;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
