@@ -1591,6 +1591,50 @@ function sendUnoUpdate(room) {
   });
 }
 
+// ========== MONOPOLY INITIALIZATION ==========
+function initMonopolyGame(room) {
+  const startMoney = 1500;
+  const players = {};
+
+  room.players.forEach((player, index) => {
+    players[player.odId] = {
+      position: 0,
+      money: startMoney,
+      properties: [],
+      inJail: false,
+      jailTurns: 0,
+      bankrupt: false
+    };
+  });
+
+  room.state = {
+    players,
+    currentPlayer: room.players[0].odId,
+    properties: {},
+    canRoll: true,
+    lastDice: [0, 0],
+    doublesCount: 0
+  };
+
+  // Send initial state to all players
+  room.players.forEach((player, index) => {
+    const playerSocket = [...io.sockets.sockets.values()].find(s => s.id === player.id);
+    if (playerSocket) {
+      playerSocket.emit('monopoly_start', {
+        players: room.players.map((p, idx) => ({
+          name: p.name,
+          odId: p.odId,
+          position: 0,
+          money: startMoney
+        })),
+        currentPlayer: room.state.currentPlayer,
+        myData: players[player.odId],
+        properties: {}
+      });
+    }
+  });
+}
+
 // Monopoly: Send update to all players
 function sendMonopolyUpdate(room) {
   room.players.forEach(player => {

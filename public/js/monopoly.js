@@ -126,22 +126,23 @@ const MonopolyPlus = {
     calculateGridPositions() {
         const pos = {};
 
-        // Bottom row (0-10): row 10, col 10 to 0
+        // Bottom row (0-10): row 10, col 10 down to 0 (right to left)
         for (let i = 0; i <= 10; i++) {
             pos[`10,${10 - i}`] = i;
         }
 
-        // Left column (11-19): col 0, row 9 to 1
+        // Left column (11-19): col 0, row 9 down to 1 (bottom to top, skip corners)
         for (let i = 0; i < 9; i++) {
             pos[`${9 - i},0`] = 11 + i;
         }
 
-        // Top row (20-30): row 0, col 0 to 10
+        // Top row (20-30): row 0, col 0 to 10 (left to right)
+        // Position 20 is at row 0, col 0 (top-left corner)
         for (let i = 0; i <= 10; i++) {
             pos[`0,${i}`] = 20 + i;
         }
 
-        // Right column (31-39): col 10, row 1 to 9
+        // Right column (31-39): col 10, row 1 to 9 (top to bottom, skip corners)
         for (let i = 0; i < 9; i++) {
             pos[`${1 + i},10`] = 31 + i;
         }
