@@ -35,29 +35,27 @@ const Durak = {
         const handEl = document.getElementById('durak-hand');
         if (!handEl) return;
 
-        const cardWidth = Math.min(70, (window.innerWidth - 40) / Math.max(this.hand.length, 6));
-        const overlap = Math.max(-30, -cardWidth * 0.4);
-
         handEl.innerHTML = this.hand.map((card, index) => {
             const isRed = card.suit === '♥' || card.suit === '♦';
             const playable = this.isCardPlayable(card);
-            const rotation = (index - this.hand.length / 2) * 3;
-            const lift = playable ? 10 : 0;
 
             return `
                 <div class="d-card ${playable ? 'playable' : ''}" 
                      data-index="${index}"
-                     style="--rotation: ${rotation}deg; --lift: ${lift}px; margin-left: ${index > 0 ? overlap : 0}px"
-                     onclick="Durak.playCard(${index})">
+                     draggable="true"
+                     onclick="Durak.playCard(${index})"
+                     ontouchstart="startDrag(event, ${index}, 'durak')"
+                     ontouchmove="onDrag(event)"
+                     ontouchend="endDrag(event, 'durak')">
                     <div class="d-card-inner ${isRed ? 'red' : 'black'}">
-                        <span class="d-card-corner top">
-                            <span class="d-card-value">${card.value}</span>
-                            <span class="d-card-suit">${card.suit}</span>
+                        <span class="d-card-tl">
+                            <span class="d-val">${card.value}</span>
+                            <span class="d-suit">${card.suit}</span>
                         </span>
-                        <span class="d-card-big-suit">${card.suit}</span>
-                        <span class="d-card-corner bottom">
-                            <span class="d-card-value">${card.value}</span>
-                            <span class="d-card-suit">${card.suit}</span>
+                        <span class="d-card-center">${card.suit}</span>
+                        <span class="d-card-br">
+                            <span class="d-val">${card.value}</span>
+                            <span class="d-suit">${card.suit}</span>
                         </span>
                     </div>
                 </div>

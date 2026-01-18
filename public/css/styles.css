@@ -1597,47 +1597,81 @@ body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  border-radius: 10px;
+  border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   position: relative;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.4);
   overflow: hidden;
 }
 
-.u-card-corner {
+/* Oval center like real UNO */
+.u-card-oval {
   position: absolute;
-  font-size: 0.7rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-20deg);
+  width: 85%;
+  height: 60%;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-card-value {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--bg);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Corner values */
+.u-card-tl {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: 0.65rem;
   font-weight: 800;
 }
 
-.u-card-corner.top {
-  top: 4px;
-  left: 5px;
-}
-
-.u-card-corner.bottom {
-  bottom: 4px;
-  right: 5px;
+.u-card-br {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
   transform: rotate(180deg);
 }
 
-.u-card-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 1.8rem;
-  font-weight: 900;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+/* Wild card special design */
+.u-card-inner.wild-card {
+  background: linear-gradient(135deg, #e74c3c 25%, #f1c40f 25%, #f1c40f 50%, #27ae60 50%, #27ae60 75%, #3498db 75%);
 }
 
-.u-card-rainbow {
+.u-card-inner.wild-card .u-card-oval {
+  background: #1a1a2e;
+}
+
+.u-card-inner.wild-card .u-card-value {
+  color: white;
+}
+
+.u-card-wild-colors {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2rem;
-  opacity: 0.8;
+  inset: 0;
+  opacity: 0;
+}
+
+/* Dragging state */
+.u-card.dragging {
+  animation: cardLift 0.2s ease forwards;
+}
+
+@keyframes cardLift {
+  to {
+    transform: scale(1.15) rotate(8deg);
+  }
 }
 
 /* Color Picker */

@@ -53,23 +53,28 @@ const UNO = {
         const handEl = document.getElementById('uno-hand');
         if (!handEl) return;
 
-        const overlap = Math.max(-25, -60 / Math.max(this.hand.length, 5));
-
         handEl.innerHTML = this.hand.map((card, index) => {
             const playable = this.canPlay(card);
             const style = this.colorStyles[card.color] || this.colorStyles.wild;
-            const rotation = (index - this.hand.length / 2) * 3;
+            const isWild = card.color === 'wild';
+            const displayVal = this.getDisplayValue(card);
 
             return `
                 <div class="u-card ${playable ? 'playable' : ''}" 
                      data-index="${index}"
-                     style="--rotation: ${rotation}deg; --bg: ${style.bg}; --text: ${style.text}; margin-left: ${index > 0 ? overlap : 0}px"
-                     onclick="UNO.playCard(${index})">
-                    <div class="u-card-inner">
-                        <span class="u-card-corner top">${this.getDisplayValue(card)}</span>
-                        <span class="u-card-center">${this.getDisplayValue(card)}</span>
-                        <span class="u-card-corner bottom">${this.getDisplayValue(card)}</span>
-                        ${card.color === 'wild' ? '<span class="u-card-rainbow">🌈</span>' : ''}
+                     draggable="true"
+                     style="--bg: ${style.bg}; --text: ${style.text}"
+                     onclick="UNO.playCard(${index})"
+                     ontouchstart="startDrag(event, ${index}, 'uno')"
+                     ontouchmove="onDrag(event)"
+                     ontouchend="endDrag(event, 'uno')">
+                    <div class="u-card-inner ${isWild ? 'wild-card' : ''}">
+                        <span class="u-card-tl">${displayVal}</span>
+                        <div class="u-card-oval">
+                            <span class="u-card-value">${displayVal}</span>
+                        </div>
+                        <span class="u-card-br">${displayVal}</span>
+                        ${isWild ? '<div class="u-card-wild-colors"></div>' : ''}
                     </div>
                 </div>
             `;

@@ -487,6 +487,79 @@ function exitToMenu() {
     App.goBack();
 }
 
+// Drag and drop for cards
+let draggedCard = null;
+let draggedIndex = null;
+let draggedGame = null;
+let dragClone = null;
+
+function startDrag(event, index, game) {
+    if (event.cancelable) event.preventDefault();
+
+    draggedIndex = index;
+    draggedGame = game;
+    draggedCard = event.target.closest('.u-card, .d-card');
+
+    if (!draggedCard) return;
+
+    // Create visual clone
+    dragClone = draggedCard.cloneNode(true);
+    dragClone.classList.add('dragging');
+    dragClone.style.position = 'fixed';
+    dragClone.style.zIndex = '9999';
+    dragClone.style.pointerEvents = 'none';
+    dragClone.style.opacity = '0.9';
+    dragClone.style.transform = 'scale(1.1) rotate(5deg)';
+    document.body.appendChild(dragClone);
+
+    const touch = event.touches[0];
+    dragClone.style.left = (touch.clientX - 30) + 'px';
+    dragClone.style.top = (touch.clientY - 40) + 'px';
+
+    draggedCard.style.opacity = '0.4';
+    App.haptic('light');
+}
+
+function onDrag(event) {
+    if (!dragClone || !event.touches[0]) return;
+    if (event.cancelable) event.preventDefault();
+
+    const touch = event.touches[0];
+    dragClone.style.left = (touch.clientX - 30) + 'px';
+    dragClone.style.top = (touch.clientY - 40) + 'px';
+}
+
+function endDrag(event, game) {
+    if (!dragClone || !draggedCard) return;
+
+    const touch = event.changedTouches[0];
+    const dropZone = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    // Check if dropped on valid target
+    const validTarget = dropZone?.closest('#uno-pile, .durak-table, .u-pile-card, .d-pair');
+
+    if (validTarget && draggedIndex !== null) {
+        App.haptic('medium');
+        if (game === 'uno') {
+            UNO.playCard(draggedIndex);
+        } else if (game === 'durak') {
+            Durak.playCard(draggedIndex);
+        }
+    }
+
+    // Cleanup
+    if (dragClone) {
+        dragClone.remove();
+        dragClone = null;
+    }
+    if (draggedCard) {
+        draggedCard.style.opacity = '1';
+        draggedCard = null;
+    }
+    draggedIndex = null;
+    draggedGame = null;
+}
+
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
