@@ -189,10 +189,13 @@ const UNO = {
 
         const displayColor = this.chosenColor || this.currentCard.color;
         const style = this.colorStyles[displayColor] || this.colorStyles.wild;
+        const val = this.getDisplayValue(this.currentCard);
 
         pileEl.innerHTML = `
             <div class="u-pile-card" style="background: ${style.bg}; color: ${style.text}">
-                <span class="u-pile-value">${this.getDisplayValue(this.currentCard)}</span>
+                <div class="u-pile-oval">
+                    <span class="u-pile-value" style="color: ${style.bg}">${val}</span>
+                </div>
             </div>
         `;
     },

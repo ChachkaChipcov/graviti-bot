@@ -1426,18 +1426,162 @@ body {
 
 
 /* ========== UNO Game Styles (Redesigned) ========== */
-.uno-header {
+
+/* Game Table */
+.uno-table {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(52, 152, 219, 0.2) 100%);
-  border-radius: var(--radius);
-  margin-bottom: 12px;
+  gap: 30px;
+  padding: 30px 20px;
+  background: linear-gradient(180deg, rgba(47, 54, 74, 0.9) 0%, rgba(26, 26, 46, 0.95) 100%);
+  border-radius: 20px;
+  margin: 10px;
+  box-shadow: inset 0 2px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Draw Deck */
+.uno-draw-deck {
+  position: relative;
+  width: 70px;
+  height: 100px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.uno-draw-deck:active {
+  transform: scale(0.95);
+}
+
+.deck-cards {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 10px;
+  border: 3px solid #333;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3), 8px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.deck-cards::after {
+  content: "UNO";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-15deg);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #e74c3c;
+  text-shadow: 2px 2px 0 #f39c12;
+}
+
+.deck-count {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: #e74c3c;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 2px solid white;
+}
+
+/* Discard Pile */
+.uno-discard {
+  width: 80px;
+  height: 115px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.u-pile-card {
+  width: 75px;
+  height: 110px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid #000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  animation: cardDrop 0.2s ease;
+}
+
+@keyframes cardDrop {
+  from {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 0.5;
+  }
+
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
+.u-pile-oval {
+  width: 85%;
+  height: 55%;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-25deg);
+}
+
+.u-pile-value {
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+/* Players Bar */
+.uno-players-bar {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+/* Status Hint */
+.uno-status {
+  text-align: center;
+  padding: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.15);
+  border-radius: 20px;
+  margin: 8px 20px;
+}
+
+/* Action Buttons */
+.btn-draw {
+  padding: 12px 24px;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: 25px;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-uno {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #e74c3c, #f39c12);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  animation: unoPulse 1s infinite;
 }
 
 #uno-direction {
-  font-size: 1.5rem;
+  display: none;
 }
 
 .u-dir-icon {
@@ -1600,7 +1744,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   position: relative;
-  border: 3px solid rgba(255, 255, 255, 0.4);
+  border: 3px solid #000;
   overflow: hidden;
 }
 

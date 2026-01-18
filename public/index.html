@@ -415,23 +415,35 @@
 
     <!-- UNO Game Screen -->
     <div id="uno-game" class="screen">
-      <div class="uno-header">
-        <div class="uno-direction" id="uno-direction">➡️</div>
-        <div class="uno-pile" id="uno-pile">
+      <!-- Game table area -->
+      <div class="uno-table">
+        <!-- Draw deck on left -->
+        <div class="uno-draw-deck" id="uno-draw-deck" onclick="unoDraw()">
+          <div class="deck-cards"></div>
+          <span class="deck-count" id="uno-deck-count">52</span>
+        </div>
+
+        <!-- Discard pile in center -->
+        <div class="uno-discard" id="uno-pile">
           <!-- Current card -->
         </div>
-        <div class="uno-deck-count" id="uno-deck-count">📚 Draw</div>
       </div>
 
-      <div class="uno-players" id="uno-players">
-        <!-- Other players' card counts -->
+      <!-- Players info -->
+      <div class="uno-players-bar" id="uno-players">
+        <!-- Will show: Вы (8 карт) | Zhmalll (3 карты) -->
       </div>
 
+      <!-- Status hint -->
+      <div class="uno-status" id="uno-status">Ваш ход!</div>
+
+      <!-- Action buttons -->
       <div class="uno-actions" id="uno-actions">
-        <button class="btn secondary" onclick="unoDraw()">📥 Взять карту</button>
-        <button class="btn primary uno-call hidden" id="uno-call" onclick="unoCall()">🔥 UNO!</button>
+        <button class="btn-draw" onclick="unoDraw()">Взять карту</button>
+        <button class="btn-uno hidden" id="uno-call" onclick="unoCall()">UNO!</button>
       </div>
 
+      <!-- Player hand -->
       <div class="uno-hand" id="uno-hand">
         <!-- Player's cards -->
       </div>
