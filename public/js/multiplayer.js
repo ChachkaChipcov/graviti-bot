@@ -165,29 +165,62 @@ const Multiplayer = {
         // Monopoly Events
         this.socket.on('monopoly_start', (data) => {
             App.showScreen('monopoly-game');
-            Monopoly.handleGameStart(data);
+            MonopolyPlus.handleGameStart(data);
         });
 
         this.socket.on('monopoly_turn_update', (data) => {
-            Monopoly.handleTurnUpdate(data);
+            MonopolyPlus.handleTurnUpdate(data);
         });
 
         this.socket.on('monopoly_dice_result', (data) => {
-            Monopoly.handleDiceResult(data);
+            MonopolyPlus.handleDiceResult(data);
+        });
+
+        this.socket.on('monopoly_property_purchased', (data) => {
+            MonopolyPlus.handlePropertyPurchased(data);
+        });
+
+        this.socket.on('monopoly_rent_paid', (data) => {
+            MonopolyPlus.handleRentPaid(data);
+        });
+
+        this.socket.on('monopoly_card', (data) => {
+            MonopolyPlus.handleCard(data);
+        });
+
+        this.socket.on('monopoly_build_result', (data) => {
+            MonopolyPlus.handleBuildResult(data);
+        });
+
+        this.socket.on('monopoly_jail', (data) => {
+            MonopolyPlus.showNotification(data.message);
+        });
+
+        this.socket.on('monopoly_jail_paid', (data) => {
+            if (data.playerId === App.userId && MonopolyPlus.myData) {
+                MonopolyPlus.myData.money = data.newMoney;
+                MonopolyPlus.myData.inJail = false;
+            }
+            MonopolyPlus.updateUI();
+        });
+
+        this.socket.on('monopoly_bankruptcy', (data) => {
+            MonopolyPlus.handleBankruptcy(data);
         });
 
         this.socket.on('monopoly_game_over', (data) => {
-            Monopoly.handleGameOver(data);
+            MonopolyPlus.handleGameOver(data);
         });
     },
 
-    createRoom(gameType, password = null, isPublic = true) {
+    createRoom(gameType, password = null, isPublic = true, settings = {}) {
         this.socket.emit('create_room', {
             gameType,
             odId: App.userId,
             userName: App.userName,
             password: password,
-            isPublic: isPublic
+            isPublic: isPublic,
+            settings: settings
         });
     },
 

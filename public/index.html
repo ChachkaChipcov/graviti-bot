@@ -584,24 +584,34 @@
 
     <!-- Monopoly Game Screen -->
     <div id="monopoly-game" class="screen">
-      <div class="m-header">
-        <div class="m-status" id="monopoly-status">Ваш ход!</div>
+      <!-- Top bar: status and player money -->
+      <div class="mp-top-bar">
+        <div class="mp-turn-status" id="mp-status">Ваш ход!</div>
+        <div class="mp-player-money" id="mp-money">$1500</div>
       </div>
 
-      <div class="monopoly-board" id="monopoly-board">
-        <!-- Board will be rendered here -->
+      <!-- Players bar showing all players -->
+      <div class="mp-players-bar" id="mp-players"></div>
+
+      <!-- Board area (horizontal scrollable) -->
+      <div class="mp-board-container">
+        <div class="mp-board" id="mp-board"></div>
       </div>
 
-      <div class="monopoly-panel">
-        <div class="monopoly-player-info" id="monopoly-player-info">
-          <span class="m-money">💵 $1500</span>
-        </div>
-        <div class="monopoly-dice" id="monopoly-dice">
-          <div class="m-dice-display">
-            <span class="m-die">🎲</span>
-            <span class="m-die">🎲</span>
+      <!-- Dice and action panel -->
+      <div class="mp-controls">
+        <div class="mp-dice-area" id="mp-dice">
+          <div class="mp-dice-box">
+            <span class="mp-die" id="mp-die1">⚀</span>
+            <span class="mp-die" id="mp-die2">⚀</span>
           </div>
-          <button class="btn primary m-roll-btn" onclick="rollDice()">🎲 Бросить</button>
+          <button class="btn primary mp-roll-btn" id="mp-roll-btn" onclick="monopolyRoll()">
+            🎲 Бросить кости
+          </button>
+        </div>
+        <div class="mp-action-buttons" id="mp-actions">
+          <button class="btn secondary" onclick="MonopolyPlus.endTurn()">✅ Конец хода</button>
+          <button class="btn secondary" onclick="MonopolyPlus.showMyProperties()">🏠 Мои участки</button>
         </div>
       </div>
     </div>

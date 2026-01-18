@@ -112,7 +112,16 @@ io.on('connection', (socket) => {
   // Create new game room
   socket.on('create_room', ({ gameType, odId, userName, settings, password, isPublic }) => {
     const roomId = uuidv4().slice(0, 8).toUpperCase();
-    const maxPlayers = settings?.maxPlayers || (gameType === 'durak' || gameType === 'uno' ? 7 : gameType === 'monopoly' ? 6 : 2);
+
+    // Get maxPlayers from settings, or use default based on game type
+    let maxPlayers = 2; // default
+    if (settings && settings.maxPlayers && settings.maxPlayers >= 2) {
+      maxPlayers = settings.maxPlayers;
+    } else if (gameType === 'durak' || gameType === 'uno') {
+      maxPlayers = 2; // default for card games
+    } else if (gameType === 'monopoly') {
+      maxPlayers = 2; // default for monopoly
+    }
 
     const room = {
       id: roomId,
@@ -746,6 +755,64 @@ io.on('connection', (socket) => {
 
   // ========== MONOPOLY GAME EVENTS ==========
 
+  // Monopoly board data (for server-side calculations)
+  const monopolyBoard = [
+    { id: 0, type: 'corner', action: 'go' },
+    { id: 1, type: 'property', group: 'brown', price: 60, rent: [2, 10, 30, 90, 160, 250] },
+    { id: 2, type: 'chest' },
+    { id: 3, type: 'property', group: 'brown', price: 60, rent: [4, 20, 60, 180, 320, 450] },
+    { id: 4, type: 'tax', amount: 200 },
+    { id: 5, type: 'railroad', price: 200 },
+    { id: 6, type: 'property', group: 'lightBlue', price: 100, rent: [6, 30, 90, 270, 400, 550] },
+    { id: 7, type: 'chance' },
+    { id: 8, type: 'property', group: 'lightBlue', price: 100, rent: [6, 30, 90, 270, 400, 550] },
+    { id: 9, type: 'property', group: 'lightBlue', price: 120, rent: [8, 40, 100, 300, 450, 600] },
+    { id: 10, type: 'corner', action: 'jail' },
+    { id: 11, type: 'property', group: 'pink', price: 140, rent: [10, 50, 150, 450, 625, 750] },
+    { id: 12, type: 'utility', price: 150 },
+    { id: 13, type: 'property', group: 'pink', price: 140, rent: [10, 50, 150, 450, 625, 750] },
+    { id: 14, type: 'property', group: 'pink', price: 160, rent: [12, 60, 180, 500, 700, 900] },
+    { id: 15, type: 'railroad', price: 200 },
+    { id: 16, type: 'property', group: 'orange', price: 180, rent: [14, 70, 200, 550, 750, 950] },
+    { id: 17, type: 'chest' },
+    { id: 18, type: 'property', group: 'orange', price: 180, rent: [14, 70, 200, 550, 750, 950] },
+    { id: 19, type: 'property', group: 'orange', price: 200, rent: [16, 80, 220, 600, 800, 1000] },
+    { id: 20, type: 'corner', action: 'parking' },
+    { id: 21, type: 'property', group: 'red', price: 220, rent: [18, 90, 250, 700, 875, 1050] },
+    { id: 22, type: 'chance' },
+    { id: 23, type: 'property', group: 'red', price: 220, rent: [18, 90, 250, 700, 875, 1050] },
+    { id: 24, type: 'property', group: 'red', price: 240, rent: [20, 100, 300, 750, 925, 1100] },
+    { id: 25, type: 'railroad', price: 200 },
+    { id: 26, type: 'property', group: 'yellow', price: 260, rent: [22, 110, 330, 800, 975, 1150] },
+    { id: 27, type: 'property', group: 'yellow', price: 260, rent: [22, 110, 330, 800, 975, 1150] },
+    { id: 28, type: 'utility', price: 150 },
+    { id: 29, type: 'property', group: 'yellow', price: 280, rent: [24, 120, 360, 850, 1025, 1200] },
+    { id: 30, type: 'corner', action: 'gotoJail' },
+    { id: 31, type: 'property', group: 'green', price: 300, rent: [26, 130, 390, 900, 1100, 1275] },
+    { id: 32, type: 'property', group: 'green', price: 300, rent: [26, 130, 390, 900, 1100, 1275] },
+    { id: 33, type: 'chest' },
+    { id: 34, type: 'property', group: 'green', price: 320, rent: [28, 150, 450, 1000, 1200, 1400] },
+    { id: 35, type: 'railroad', price: 200 },
+    { id: 36, type: 'chance' },
+    { id: 37, type: 'property', group: 'darkBlue', price: 350, rent: [35, 175, 500, 1100, 1300, 1500] },
+    { id: 38, type: 'tax', amount: 100 },
+    { id: 39, type: 'property', group: 'darkBlue', price: 400, rent: [50, 200, 600, 1400, 1700, 2000] }
+  ];
+
+  const propertyGroups = {
+    brown: [1, 3],
+    lightBlue: [6, 8, 9],
+    pink: [11, 13, 14],
+    orange: [16, 18, 19],
+    red: [21, 23, 24],
+    yellow: [26, 27, 29],
+    green: [31, 32, 34],
+    darkBlue: [37, 39]
+  };
+
+  const railroads = [5, 15, 25, 35];
+  const utilities = [12, 28];
+
   // Monopoly: Roll dice
   socket.on('monopoly_roll', ({ odId }) => {
     const room = rooms.get(socket.roomId);
@@ -753,42 +820,437 @@ io.on('connection', (socket) => {
     if (room.state.currentPlayer !== odId) return;
     if (!room.state.canRoll) return;
 
+    const playerState = room.state.players[odId];
+
+    // Handle jail roll
+    if (playerState.inJail) {
+      const die1 = Math.floor(Math.random() * 6) + 1;
+      const die2 = Math.floor(Math.random() * 6) + 1;
+      room.state.lastDice = [die1, die2];
+
+      if (die1 === die2) {
+        // Got doubles - escape jail!
+        playerState.inJail = false;
+        playerState.jailTurns = 0;
+        const total = die1 + die2;
+        playerState.position = (10 + total) % 40;
+        room.state.canRoll = false;
+
+        io.to(socket.roomId).emit('monopoly_dice_result', {
+          playerId: odId,
+          dice: [die1, die2],
+          newPosition: playerState.position,
+          money: playerState.money,
+          isDoubles: true,
+          escapedJail: true,
+          canRollAgain: false
+        });
+
+        // Process landing
+        processMonopolyLanding(room, odId);
+      } else {
+        playerState.jailTurns++;
+        if (playerState.jailTurns >= 3) {
+          // Must pay and get out
+          playerState.money -= 50;
+          playerState.inJail = false;
+          playerState.jailTurns = 0;
+          const total = die1 + die2;
+          playerState.position = (10 + total) % 40;
+
+          io.to(socket.roomId).emit('monopoly_dice_result', {
+            playerId: odId,
+            dice: [die1, die2],
+            newPosition: playerState.position,
+            money: playerState.money,
+            forcedJailPayment: true,
+            canRollAgain: false
+          });
+
+          processMonopolyLanding(room, odId);
+        } else {
+          io.to(socket.roomId).emit('monopoly_dice_result', {
+            playerId: odId,
+            dice: [die1, die2],
+            newPosition: 10,
+            money: playerState.money,
+            stayInJail: true,
+            canRollAgain: false
+          });
+        }
+        room.state.canRoll = false;
+      }
+      sendMonopolyUpdate(room);
+      return;
+    }
+
     const die1 = Math.floor(Math.random() * 6) + 1;
     const die2 = Math.floor(Math.random() * 6) + 1;
     const total = die1 + die2;
     const isDoubles = die1 === die2;
 
-    const playerState = room.state.players[odId];
     const oldPosition = playerState.position;
-    playerState.position = (playerState.position + total) % 40;
-
-    // Passed GO
-    if (playerState.position < oldPosition) {
-      playerState.money += 200;
-    }
-
-    room.state.lastDice = [die1, die2];
-    room.state.canRoll = isDoubles; // Can roll again if doubles
+    let wentToJail = false;
 
     if (isDoubles) {
       room.state.doublesCount++;
       if (room.state.doublesCount >= 3) {
-        // Go to jail
+        // Go to jail for 3 doubles
         playerState.position = 10;
         playerState.inJail = true;
         room.state.canRoll = false;
         room.state.doublesCount = 0;
+        wentToJail = true;
+      } else {
+        playerState.position = (oldPosition + total) % 40;
+        room.state.canRoll = true; // Can roll again
       }
     } else {
+      playerState.position = (oldPosition + total) % 40;
+      room.state.canRoll = false;
       room.state.doublesCount = 0;
     }
+
+    // Passed GO (not if went to jail)
+    if (!wentToJail && playerState.position < oldPosition && playerState.position !== 0) {
+      playerState.money += 200;
+    }
+    // Landed exactly on GO
+    if (!wentToJail && playerState.position === 0 && oldPosition !== 0) {
+      playerState.money += 200;
+    }
+
+    room.state.lastDice = [die1, die2];
 
     io.to(socket.roomId).emit('monopoly_dice_result', {
       playerId: odId,
       dice: [die1, die2],
       newPosition: playerState.position,
       money: playerState.money,
-      canRollAgain: room.state.canRoll
+      isDoubles,
+      doublesCount: room.state.doublesCount,
+      wentToJail,
+      canRollAgain: room.state.canRoll && !wentToJail
+    });
+
+    if (!wentToJail) {
+      processMonopolyLanding(room, odId);
+    }
+
+    sendMonopolyUpdate(room);
+  });
+
+  // Process landing on a cell
+  function processMonopolyLanding(room, playerId) {
+    const playerState = room.state.players[playerId];
+    const position = playerState.position;
+    const cell = monopolyBoard[position];
+
+    if (!cell) return;
+
+    // Handle Go To Jail
+    if (cell.type === 'corner' && cell.action === 'gotoJail') {
+      playerState.position = 10;
+      playerState.inJail = true;
+      room.state.canRoll = false;
+
+      io.to(room.id).emit('monopoly_jail', {
+        playerId,
+        message: 'Отправляйтесь в тюрьму!'
+      });
+      return;
+    }
+
+    // Handle tax
+    if (cell.type === 'tax') {
+      playerState.money -= cell.amount;
+      io.to(room.id).emit('monopoly_tax_paid', {
+        playerId,
+        amount: cell.amount,
+        newMoney: playerState.money
+      });
+      checkMonopolyBankruptcy(room, playerId);
+      return;
+    }
+
+    // Handle Chance
+    if (cell.type === 'chance') {
+      processChanceCard(room, playerId);
+      return;
+    }
+
+    // Handle Community Chest
+    if (cell.type === 'chest') {
+      processChestCard(room, playerId);
+      return;
+    }
+
+    // Handle property/railroad/utility landing
+    if (cell.type === 'property' || cell.type === 'railroad' || cell.type === 'utility') {
+      const propData = room.state.properties[position];
+
+      if (propData && propData.owner !== playerId) {
+        // Pay rent
+        const rent = calculateRent(room, position);
+        playerState.money -= rent;
+        room.state.players[propData.owner].money += rent;
+
+        io.to(room.id).emit('monopoly_rent_paid', {
+          payerId: playerId,
+          ownerId: propData.owner,
+          propertyIndex: position,
+          amount: rent,
+          payerMoney: playerState.money,
+          ownerMoney: room.state.players[propData.owner].money
+        });
+
+        checkMonopolyBankruptcy(room, playerId);
+      }
+    }
+  }
+
+  // Calculate rent for a property
+  function calculateRent(room, position) {
+    const cell = monopolyBoard[position];
+    const propData = room.state.properties[position];
+
+    if (!cell || !propData) return 0;
+
+    if (cell.type === 'railroad') {
+      // Count owner's railroads
+      const ownedRailroads = railroads.filter(r =>
+        room.state.properties[r]?.owner === propData.owner
+      ).length;
+      return [25, 50, 100, 200][ownedRailroads - 1] || 25;
+    }
+
+    if (cell.type === 'utility') {
+      // Count owner's utilities
+      const ownedUtilities = utilities.filter(u =>
+        room.state.properties[u]?.owner === propData.owner
+      ).length;
+      const diceSum = room.state.lastDice[0] + room.state.lastDice[1];
+      return ownedUtilities === 2 ? diceSum * 10 : diceSum * 4;
+    }
+
+    if (cell.type === 'property') {
+      const houses = propData.houses || 0;
+      let baseRent = cell.rent[houses];
+
+      // Double rent if owner has monopoly and no houses
+      if (houses === 0) {
+        const group = propertyGroups[cell.group];
+        const hasMonopoly = group.every(idx =>
+          room.state.properties[idx]?.owner === propData.owner
+        );
+        if (hasMonopoly) baseRent *= 2;
+      }
+
+      return baseRent;
+    }
+
+    return 0;
+  }
+
+  // Process Chance card
+  function processChanceCard(room, playerId) {
+    const playerState = room.state.players[playerId];
+    const cards = [
+      {
+        text: 'Проезд до СТАРТА. Получите $200', action: () => {
+          const oldPos = playerState.position;
+          playerState.position = 0;
+          playerState.money += 200;
+        }
+      },
+      {
+        text: 'Отправляйтесь в тюрьму', action: () => {
+          playerState.position = 10;
+          playerState.inJail = true;
+          room.state.canRoll = false;
+        }
+      },
+      {
+        text: 'Банк выплачивает дивиденды $50', action: () => {
+          playerState.money += 50;
+        }
+      },
+      {
+        text: 'Штраф за превышение скорости $15', action: () => {
+          playerState.money -= 15;
+        }
+      },
+      {
+        text: 'Кредит на строительство: получите $150', action: () => {
+          playerState.money += 150;
+        }
+      },
+      {
+        text: 'Вы выиграли в лотерею! Получите $100', action: () => {
+          playerState.money += 100;
+        }
+      },
+      {
+        text: 'Отступите на 3 клетки назад', action: () => {
+          playerState.position = (playerState.position - 3 + 40) % 40;
+        }
+      }
+    ];
+
+    const card = cards[Math.floor(Math.random() * cards.length)];
+    card.action();
+
+    io.to(room.id).emit('monopoly_card', {
+      playerId,
+      type: 'chance',
+      text: card.text
+    });
+
+    sendMonopolyUpdate(room);
+  }
+
+  // Process Community Chest card
+  function processChestCard(room, playerId) {
+    const playerState = room.state.players[playerId];
+    const cards = [
+      {
+        text: 'Банковская ошибка в вашу пользу. Получите $200', action: () => {
+          playerState.money += 200;
+        }
+      },
+      {
+        text: 'Оплата услуг доктора $50', action: () => {
+          playerState.money -= 50;
+        }
+      },
+      {
+        text: 'Продажа акций: получите $50', action: () => {
+          playerState.money += 50;
+        }
+      },
+      {
+        text: 'Получите наследство $100', action: () => {
+          playerState.money += 100;
+        }
+      },
+      {
+        text: 'Плата за обучение $50', action: () => {
+          playerState.money -= 50;
+        }
+      },
+      {
+        text: 'Подоходный налог: получите $20 возврат', action: () => {
+          playerState.money += 20;
+        }
+      },
+      {
+        text: 'Проезд до СТАРТА. Получите $200', action: () => {
+          playerState.position = 0;
+          playerState.money += 200;
+        }
+      }
+    ];
+
+    const card = cards[Math.floor(Math.random() * cards.length)];
+    card.action();
+
+    io.to(room.id).emit('monopoly_card', {
+      playerId,
+      type: 'chest',
+      text: card.text
+    });
+
+    sendMonopolyUpdate(room);
+  }
+
+  // Monopoly: Buy property
+  socket.on('monopoly_buy', ({ odId, propertyIndex }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+    if (room.state.currentPlayer !== odId) return;
+
+    const cell = monopolyBoard[propertyIndex];
+    const playerState = room.state.players[odId];
+
+    if (!cell || !cell.price) return;
+    if (room.state.properties[propertyIndex]) return; // Already owned
+    if (playerState.money < cell.price) return; // Can't afford
+
+    playerState.money -= cell.price;
+    room.state.properties[propertyIndex] = {
+      owner: odId,
+      houses: 0,
+      mortgaged: false
+    };
+
+    io.to(socket.roomId).emit('monopoly_property_purchased', {
+      playerId: odId,
+      propertyIndex,
+      newMoney: playerState.money
+    });
+
+    sendMonopolyUpdate(room);
+  });
+
+  // Monopoly: Build house
+  socket.on('monopoly_build', ({ odId, propertyIndex }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+    if (room.state.currentPlayer !== odId) return;
+
+    const cell = monopolyBoard[propertyIndex];
+    const propData = room.state.properties[propertyIndex];
+    const playerState = room.state.players[odId];
+
+    if (!cell || !cell.group || !propData) return;
+    if (propData.owner !== odId) return;
+    if (propData.houses >= 5) return; // Max houses/hotel
+
+    // Check monopoly ownership
+    const group = propertyGroups[cell.group];
+    if (!group.every(idx => room.state.properties[idx]?.owner === odId)) return;
+
+    // Check even building rule
+    const minHouses = Math.min(...group.map(idx => room.state.properties[idx]?.houses || 0));
+    if (propData.houses > minHouses) return;
+
+    // Get house cost (approximate based on group)
+    const houseCost = cell.price <= 120 ? 50 : cell.price <= 200 ? 100 : cell.price <= 280 ? 150 : 200;
+
+    if (playerState.money < houseCost) return;
+
+    playerState.money -= houseCost;
+    propData.houses++;
+
+    io.to(socket.roomId).emit('monopoly_build_result', {
+      playerId: odId,
+      propertyIndex,
+      houses: propData.houses,
+      newMoney: playerState.money,
+      success: true
+    });
+
+    sendMonopolyUpdate(room);
+  });
+
+  // Monopoly: Pay jail fine
+  socket.on('monopoly_pay_jail', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+    if (room.state.currentPlayer !== odId) return;
+
+    const playerState = room.state.players[odId];
+    if (!playerState.inJail) return;
+    if (playerState.money < 50) return;
+
+    playerState.money -= 50;
+    playerState.inJail = false;
+    playerState.jailTurns = 0;
+    room.state.canRoll = true;
+
+    io.to(socket.roomId).emit('monopoly_jail_paid', {
+      playerId: odId,
+      newMoney: playerState.money
     });
 
     sendMonopolyUpdate(room);
@@ -800,16 +1262,67 @@ io.on('connection', (socket) => {
     if (!room || room.gameType !== 'monopoly') return;
     if (room.state.currentPlayer !== odId) return;
 
-    const players = room.players;
-    const currentIdx = players.findIndex(p => p.odId === odId);
-    const nextIdx = (currentIdx + 1) % players.length;
+    // Find next non-bankrupt player
+    const activePlayers = room.players.filter(p => !room.state.players[p.odId]?.bankrupt);
+    if (activePlayers.length <= 1) {
+      // Game over
+      const winner = activePlayers[0];
+      io.to(socket.roomId).emit('monopoly_game_over', {
+        winner: winner?.odId,
+        winnerName: winner?.name,
+        finalMoney: room.state.players[winner?.odId]?.money || 0,
+        propertiesCount: Object.values(room.state.properties).filter(p => p.owner === winner?.odId).length
+      });
+      return;
+    }
 
-    room.state.currentPlayer = players[nextIdx].odId;
+    const currentIdx = room.players.findIndex(p => p.odId === odId);
+    let nextIdx = (currentIdx + 1) % room.players.length;
+
+    // Skip bankrupt players
+    while (room.state.players[room.players[nextIdx].odId]?.bankrupt) {
+      nextIdx = (nextIdx + 1) % room.players.length;
+    }
+
+    room.state.currentPlayer = room.players[nextIdx].odId;
     room.state.canRoll = true;
     room.state.doublesCount = 0;
 
     sendMonopolyUpdate(room);
   });
+
+  // Check bankruptcy
+  function checkMonopolyBankruptcy(room, playerId) {
+    const playerState = room.state.players[playerId];
+    if (playerState.money < 0) {
+      playerState.bankrupt = true;
+      playerState.money = 0;
+
+      // Return properties to bank
+      Object.keys(room.state.properties).forEach(idx => {
+        if (room.state.properties[idx].owner === playerId) {
+          delete room.state.properties[idx];
+        }
+      });
+
+      io.to(room.id).emit('monopoly_bankruptcy', {
+        playerId,
+        playerName: room.players.find(p => p.odId === playerId)?.name
+      });
+
+      // Check if game over
+      const activePlayers = room.players.filter(p => !room.state.players[p.odId]?.bankrupt);
+      if (activePlayers.length === 1) {
+        const winner = activePlayers[0];
+        io.to(room.id).emit('monopoly_game_over', {
+          winner: winner.odId,
+          winnerName: winner.name,
+          finalMoney: room.state.players[winner.odId].money,
+          propertiesCount: Object.values(room.state.properties).filter(p => p.owner === winner.odId).length
+        });
+      }
+    }
+  }
 
   // Disconnect
   socket.on('disconnect', () => {
