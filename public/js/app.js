@@ -48,19 +48,17 @@ const App = {
 
     selectGame(gameType) {
         this.currentGame = gameType;
-        this.showScreen('room');
 
         const titles = {
             'rps': '✊ Камень-Ножницы-Бумага',
             'tictactoe': '❌⭕ Крестики-Нолики',
-            'battleship': '🚢 Морской Бой'
+            'battleship': '🚢 Морской Бой',
+            'durak': '🃏 Дурак',
+            'uno': '🎴 UNO',
+            'monopoly': '🎲 Монополия'
         };
 
-        // New games with setup screens
-        if (gameType === 'rps') {
-            this.showScreen('rps-setup');
-            return;
-        }
+        // Games with setup screens
         if (gameType === 'durak') {
             this.showScreen('durak-setup');
             return;
@@ -73,13 +71,23 @@ const App = {
             this.showScreen('monopoly-setup');
             return;
         }
+        if (gameType === 'rps') {
+            this.showScreen('rps-setup');
+            return;
+        }
 
+        // For simple games - show room screen with room browser
+        this.showScreen('room');
         document.getElementById('room-title').textContent = titles[gameType];
 
-        // Reset room view
+        // Show room browser by default, hide waiting
         document.getElementById('waiting-view').classList.add('hidden');
-        document.getElementById('join-view').classList.add('hidden');
+        document.getElementById('join-view').classList.remove('hidden');
         document.querySelector('.room-actions').classList.remove('hidden');
+
+        // Switch to room browser tab and load rooms
+        showRoomBrowser();
+        Multiplayer.getRooms(gameType);
     },
 
     showScreen(screenId) {
