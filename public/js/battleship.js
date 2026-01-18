@@ -87,11 +87,68 @@ const Battleship = {
                     cell.addEventListener('click', () => this.placeShip(x, y));
                     cell.addEventListener('mouseenter', () => this.previewShip(x, y));
                     cell.addEventListener('mouseleave', () => this.clearPreview());
+
+                    // Touch events for drawing ships
+                    cell.addEventListener('touchstart', (e) => this.startDraw(e, x, y), { passive: false });
+                    cell.addEventListener('touchmove', (e) => this.onDraw(e), { passive: false });
+                    cell.addEventListener('touchend', (e) => this.endDraw(e), { passive: false });
                 }
 
                 grid.appendChild(cell);
             }
         }
+    },
+
+    // Touch drawing state
+    drawStartX: null,
+    drawStartY: null,
+    isDrawing: false,
+
+    startDraw(e, x, y) {
+        if (!this.selectedShipSize || this.phase !== 'placement') return;
+        e.preventDefault();
+        this.drawStartX = x;
+        this.drawStartY = y;
+        this.isDrawing = true;
+        App.haptic('light');
+    },
+
+    onDraw(e) {
+        if (!this.isDrawing || !this.selectedShipSize) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!element || !element.classList.contains('bs-cell')) return;
+
+        const x = parseInt(element.dataset.x);
+        const y = parseInt(element.dataset.y);
+
+        // Determine direction based on drag
+        const dx = x - this.drawStartX;
+        const dy = y - this.drawStartY;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            this.isHorizontal = true;
+        } else if (Math.abs(dy) > Math.abs(dx)) {
+            this.isHorizontal = false;
+        }
+
+        this.updateRotationButton();
+        this.previewShip(this.drawStartX, this.drawStartY);
+    },
+
+    endDraw(e) {
+        if (!this.isDrawing) return;
+        e.preventDefault();
+
+        if (this.drawStartX !== null && this.drawStartY !== null) {
+            this.placeShip(this.drawStartX, this.drawStartY);
+        }
+
+        this.isDrawing = false;
+        this.drawStartX = null;
+        this.drawStartY = null;
     },
 
     createBattleGrids() {
