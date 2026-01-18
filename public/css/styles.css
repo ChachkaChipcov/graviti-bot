@@ -717,8 +717,9 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
-  max-width: 320px;
-  margin: 20px auto;
+  width: 90vw;
+  max-width: 360px;
+  margin: 30px auto;
   padding: 20px;
   background: var(--glass);
   border-radius: var(--radius);

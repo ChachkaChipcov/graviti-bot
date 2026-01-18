@@ -101,6 +101,5 @@ function makeTTTMove(index) {
 }
 
 function requestRematch() {
-    // For now, go back to room
-    App.goBack();
+    playAgain();
 }
