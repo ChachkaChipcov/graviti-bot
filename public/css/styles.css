@@ -1341,10 +1341,10 @@ body {
 .d-card-inner {
   width: 100%;
   height: 100%;
-  background: linear-gradient(145deg, #fff 0%, #f8f8f8 50%, #f0f0f0 100%);
-  border-radius: 8px;
-  border: 2px solid #ccc;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, #ffffff 0%, #f5f5f5 100%);
+  border-radius: 6px;
+  border: 3px solid #2e7d32;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
 }
