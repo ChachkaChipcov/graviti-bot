@@ -460,38 +460,69 @@ body {
 }
 
 /* Room Browser Styles */
-.join-tabs {
+.join-methods {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
 }
 
-.join-tab {
+.join-method {
   flex: 1;
-  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
   background: var(--glass);
   border: 2px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
+  min-width: 90px;
 }
 
-.join-tab.active {
+.join-method .method-icon {
+  font-size: 1.4rem;
+}
+
+.join-method .method-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.join-method.active {
   background: var(--accent-gradient);
   border-color: var(--accent-primary);
   color: white;
+}
+
+.join-method:hover:not(.active) {
+  border-color: var(--accent-primary);
+  background: rgba(108, 92, 231, 0.15);
+}
+
+.join-hint {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-size: 0.9rem;
 }
 
 .join-section {
   margin-top: 12px;
 }
 
+.rooms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .rooms-filter {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  justify-content: center;
+  gap: 6px;
 }
 
 .filter-btn {
@@ -518,21 +549,34 @@ body {
 }
 
 .refresh-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #1a3a5c 0%, #0f2744 100%);
   border: 2px solid #2a5a8a;
   border-radius: 50%;
   color: #8bb8e8;
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color 0.2s, color 0.2s;
 }
 
 .refresh-btn:hover {
   border-color: #4299e1;
   color: white;
-  transform: rotate(180deg);
+}
+
+.refresh-btn:active {
+  animation: spin 0.5s ease;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Room Create Form */

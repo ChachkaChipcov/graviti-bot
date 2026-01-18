@@ -382,20 +382,50 @@ function joinRoom() {
 }
 
 function showJoinByCode() {
-    document.querySelectorAll('.join-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('.join-tab:first-child').classList.add('active');
-    document.getElementById('join-by-code').classList.remove('hidden');
-    document.getElementById('room-browser').classList.add('hidden');
+    showJoinMethod('code');
 }
 
 function showRoomBrowser() {
-    document.querySelectorAll('.join-tab').forEach(t => t.classList.remove('active'));
-    document.querySelector('.join-tab:last-child').classList.add('active');
-    document.getElementById('join-by-code').classList.add('hidden');
-    document.getElementById('room-browser').classList.remove('hidden');
+    showJoinMethod('rooms');
+}
 
-    // Request rooms list from server
-    Multiplayer.getRooms(App.currentGame);
+function showJoinMethod(method) {
+    // Update method buttons
+    document.querySelectorAll('.join-method').forEach(m => m.classList.remove('active'));
+    document.querySelector(`.join-method[data-method="${method}"]`)?.classList.add('active');
+
+    // Hide all sections
+    document.getElementById('join-by-code').classList.add('hidden');
+    document.getElementById('join-by-link')?.classList.add('hidden');
+    document.getElementById('room-browser').classList.add('hidden');
+
+    // Show selected section
+    if (method === 'code') {
+        document.getElementById('join-by-code').classList.remove('hidden');
+    } else if (method === 'link') {
+        document.getElementById('join-by-link')?.classList.remove('hidden');
+    } else if (method === 'rooms') {
+        document.getElementById('room-browser').classList.remove('hidden');
+        Multiplayer.getRooms(App.currentGame);
+    }
+}
+
+function joinByLink() {
+    const input = document.getElementById('room-link-input');
+    const link = input.value.trim();
+
+    // Extract room code from link (format: ...?startapp=ROOMCODE)
+    const match = link.match(/[?&]startapp=([A-Z0-9]+)/i);
+    if (match) {
+        const code = match[1].toUpperCase();
+        Multiplayer.joinRoom(code);
+    } else if (link.length >= 6) {
+        // Maybe they just pasted the code
+        Multiplayer.joinRoom(link.toUpperCase());
+    } else {
+        input.style.borderColor = '#ff6b6b';
+        setTimeout(() => input.style.borderColor = '', 2000);
+    }
 }
 
 function refreshRoomList() {

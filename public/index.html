@@ -117,23 +117,41 @@
         </div>
 
         <div id="join-view" class="join hidden">
-          <div class="join-tabs">
-            <button class="join-tab active" onclick="showJoinByCode()">📝 По коду</button>
-            <button class="join-tab" onclick="showRoomBrowser()">🌐 Комнаты</button>
+          <div class="join-methods">
+            <button class="join-method active" data-method="code" onclick="showJoinMethod('code')">
+              <span class="method-icon">📝</span>
+              <span class="method-text">По коду</span>
+            </button>
+            <button class="join-method" data-method="link" onclick="showJoinMethod('link')">
+              <span class="method-icon">🔗</span>
+              <span class="method-text">По ссылке</span>
+            </button>
+            <button class="join-method" data-method="rooms" onclick="showJoinMethod('rooms')">
+              <span class="method-icon">🌐</span>
+              <span class="method-text">Комнаты</span>
+            </button>
           </div>
 
           <div id="join-by-code" class="join-section">
-            <p>Введите код комнаты:</p>
+            <p class="join-hint">Введите код комнаты:</p>
             <input type="text" id="room-code-input" placeholder="XXXXXXXX" maxlength="8">
             <input type="text" id="room-password-input" class="hidden" placeholder="Пароль (если есть)" maxlength="20">
-            <button class="btn primary" onclick="joinRoom()">🔗 Присоединиться</button>
+            <button class="btn primary" onclick="joinRoom()">✅ Войти</button>
+          </div>
+
+          <div id="join-by-link" class="join-section hidden">
+            <p class="join-hint">Вставьте ссылку-приглашение:</p>
+            <input type="text" id="room-link-input" placeholder="https://t.me/...">
+            <button class="btn primary" onclick="joinByLink()">✅ Войти</button>
           </div>
 
           <div id="room-browser" class="join-section hidden">
-            <div class="rooms-filter">
-              <button class="filter-btn active" data-filter="all" onclick="filterRooms('all')">Все</button>
-              <button class="filter-btn" data-filter="open" onclick="filterRooms('open')">🔓 Открытые</button>
-              <button class="filter-btn" data-filter="locked" onclick="filterRooms('locked')">🔒 С паролем</button>
+            <div class="rooms-header">
+              <div class="rooms-filter">
+                <button class="filter-btn active" data-filter="all" onclick="filterRooms('all')">Все</button>
+                <button class="filter-btn" data-filter="open" onclick="filterRooms('open')">🔓</button>
+                <button class="filter-btn" data-filter="locked" onclick="filterRooms('locked')">🔒</button>
+              </div>
               <button class="refresh-btn" onclick="refreshRoomList()">🔄</button>
             </div>
             <div id="rooms-list" class="rooms-list">

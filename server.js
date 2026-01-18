@@ -144,9 +144,8 @@ io.on('connection', (socket) => {
     const availableRooms = [];
 
     rooms.forEach((room, id) => {
-      // Only show public rooms that are not full and match game type
-      if (room.settings.isPublic &&
-        room.players.length < room.settings.maxPlayers &&
+      // Show all rooms that are not full and match game type
+      if (room.players.length < room.settings.maxPlayers &&
         (!gameType || room.gameType === gameType)) {
         availableRooms.push({
           id: room.id,
@@ -154,7 +153,8 @@ io.on('connection', (socket) => {
           players: room.players.length,
           maxPlayers: room.settings.maxPlayers,
           creatorName: room.creatorName,
-          hasPassword: !!room.settings.password
+          hasPassword: !!room.settings.password,
+          isPublic: room.settings.isPublic
         });
       }
     });
