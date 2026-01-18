@@ -127,10 +127,14 @@ const Durak = {
 
     playCard(index) {
         const card = this.hand[index];
-        if (!card || !this.isCardPlayable(card)) {
+        // Block if unplayable or already playing
+        if (!card || !this.isCardPlayable(card) || this.isPlaying) {
             App.haptic('heavy');
             return;
         }
+
+        // Lock to prevent rapid clicks
+        this.isPlaying = true;
 
         App.haptic('medium');
 

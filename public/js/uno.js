@@ -87,10 +87,15 @@ const UNO = {
 
     playCard(index) {
         const card = this.hand[index];
-        if (!card || !this.isMyTurn || !this.canPlay(card)) {
+        // Block if not our turn, card unplayable, or already playing
+        if (!card || !this.isMyTurn || !this.canPlay(card) || this.isPlaying) {
             App.haptic('heavy');
             return;
         }
+
+        // Lock to prevent rapid clicks
+        this.isPlaying = true;
+        this.isMyTurn = false; // Immediately set to prevent more plays
 
         App.haptic('medium');
 
@@ -271,6 +276,7 @@ const UNO = {
         this.direction = data.direction || this.direction;
         this.isMyTurn = this.currentPlayer === App.userId;
         this.deckCount = data.deckCount || 0;
+        this.isPlaying = false; // Reset lock
 
         if (data.hand) {
             this.hand = data.hand;
