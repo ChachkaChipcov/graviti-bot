@@ -487,41 +487,26 @@ function exitToMenu() {
     App.goBack();
 }
 
-// Drag and drop for cards - optimized for smooth touch
+// Drag and drop for cards - supports both tap and drag
 let isDragging = false;
-let dragStartX = 0;
-let dragStartY = 0;
 let dragCardEl = null;
 let dragCardIndex = null;
 let dragGame = null;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragMoved = false;
 
 function startDrag(e, index, game) {
     e.preventDefault();
-    e.stopPropagation();
 
     const touch = e.touches[0];
     dragCardEl = e.currentTarget;
     dragCardIndex = index;
     dragGame = game;
     isDragging = true;
-
-    const rect = dragCardEl.getBoundingClientRect();
-    dragStartX = rect.left;
-    dragStartY = rect.top;
-    dragOffsetX = touch.clientX - rect.left;
-    dragOffsetY = touch.clientY - rect.top;
-
-    // Instant visual feedback
-    dragCardEl.style.willChange = 'transform';
-    dragCardEl.style.zIndex = '1000';
-    dragCardEl.style.transition = 'none';
-    dragCardEl.style.position = 'fixed';
-    dragCardEl.style.left = rect.left + 'px';
-    dragCardEl.style.top = rect.top + 'px';
-    dragCardEl.style.transform = 'scale(1.15) rotate(5deg)';
-    dragCardEl.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+    dragMoved = false;
+    dragStartX = touch.clientX;
+    dragStartY = touch.clientY;
 
     App.haptic('light');
 }
@@ -531,42 +516,71 @@ function onDrag(e) {
     e.preventDefault();
 
     const touch = e.touches[0];
-    const x = touch.clientX - dragOffsetX;
-    const y = touch.clientY - dragOffsetY;
+    const dx = touch.clientX - dragStartX;
+    const dy = touch.clientY - dragStartY;
 
-    dragCardEl.style.left = x + 'px';
-    dragCardEl.style.top = y + 'px';
+    // Only start visual drag if moved more than 10px
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        dragMoved = true;
+
+        if (!dragCardEl.style.position) {
+            const rect = dragCardEl.getBoundingClientRect();
+            dragCardEl.style.position = 'fixed';
+            dragCardEl.style.zIndex = '1000';
+            dragCardEl.style.transition = 'none';
+            dragCardEl.style.left = rect.left + 'px';
+            dragCardEl.style.top = rect.top + 'px';
+            dragCardEl.style.transform = 'scale(1.1)';
+        }
+
+        dragCardEl.style.left = (parseFloat(dragCardEl.style.left) + dx) + 'px';
+        dragCardEl.style.top = (parseFloat(dragCardEl.style.top) + dy) + 'px';
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+    }
 }
 
 function endDrag(e, game) {
-    if (!isDragging || !dragCardEl) return;
+    if (!isDragging) return;
 
     const touch = e.changedTouches[0];
+    const cardIndex = dragCardIndex;
 
     // Reset card style
-    dragCardEl.style.willChange = '';
-    dragCardEl.style.zIndex = '';
-    dragCardEl.style.position = '';
-    dragCardEl.style.left = '';
-    dragCardEl.style.top = '';
-    dragCardEl.style.transform = '';
-    dragCardEl.style.boxShadow = '';
-    dragCardEl.style.transition = '';
+    if (dragCardEl) {
+        dragCardEl.style.position = '';
+        dragCardEl.style.zIndex = '';
+        dragCardEl.style.left = '';
+        dragCardEl.style.top = '';
+        dragCardEl.style.transform = '';
+        dragCardEl.style.transition = '';
+    }
 
-    // Check drop zone
+    // If didn't move much, treat as tap (click)
+    if (!dragMoved) {
+        isDragging = false;
+        dragCardEl = null;
+        if (game === 'uno') {
+            UNO.playCard(cardIndex);
+        } else if (game === 'durak') {
+            Durak.playCard(cardIndex);
+        }
+        return;
+    }
+
+    // Check drop zone for drag
     const dropEl = document.elementFromPoint(touch.clientX, touch.clientY);
-    const validDrop = dropEl?.closest('#uno-pile, #durak-table, .u-pile-card, .d-pair, .uno-discard');
+    const validDrop = dropEl?.closest('#uno-pile, #durak-table, .u-pile-card, .d-pair, .uno-discard, .durak-table');
 
-    if (validDrop && dragCardIndex !== null) {
+    if (validDrop && cardIndex !== null) {
         App.haptic('medium');
         if (game === 'uno') {
-            UNO.playCard(dragCardIndex);
+            UNO.playCard(cardIndex);
         } else if (game === 'durak') {
-            Durak.playCard(dragCardIndex);
+            Durak.playCard(cardIndex);
         }
     }
 
-    // Reset state
     isDragging = false;
     dragCardEl = null;
     dragCardIndex = null;
