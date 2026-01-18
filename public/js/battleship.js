@@ -256,6 +256,7 @@ const Battleship = {
 
         if (!cells || !this.canPlaceShip(cells)) {
             App.haptic('heavy');
+            this.showPlacementError('⚠️ Задевает другой корабль!');
             return;
         }
 
@@ -293,6 +294,23 @@ const Battleship = {
         if (this.placedShips.length === this.totalShips) {
             document.getElementById('bs-ready-btn').disabled = false;
         }
+    },
+
+    showPlacementError(message) {
+        // Show error toast
+        let toast = document.getElementById('bs-error-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'bs-error-toast';
+            toast.className = 'bs-error-toast';
+            document.getElementById('bs-placement').appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
     },
 
     showWaitingForOpponent() {

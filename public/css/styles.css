@@ -1022,9 +1022,8 @@ body {
 }
 
 .bs-cell.miss::after {
-  content: '•';
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 1.2rem;
+  content: '🌊';
+  font-size: 0.7rem;
 }
 
 .bs-cell.sunk {
@@ -1035,6 +1034,30 @@ body {
 .bs-cell.sunk::after {
   content: '💀';
   font-size: 0.8rem;
+}
+
+/* Battleship Error Toast */
+.bs-error-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+  color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.bs-error-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .bs-grids {
