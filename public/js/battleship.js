@@ -10,9 +10,9 @@ const Battleship = {
     myShots: [],
     opponentShots: [],
 
-    // Ship definitions
-    shipSizes: [4, 3, 3, 2, 1],
-    totalShips: 5,
+    // Ship definitions: 4cel-1, 3cel-2, 2cel-3, 1cel-4
+    shipSizes: [4, 3, 3, 2, 2, 2, 1, 1, 1, 1],
+    totalShips: 10,
 
     init(room) {
         this.room = room;
