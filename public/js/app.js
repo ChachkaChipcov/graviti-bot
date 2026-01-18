@@ -487,77 +487,90 @@ function exitToMenu() {
     App.goBack();
 }
 
-// Drag and drop for cards
-let draggedCard = null;
-let draggedIndex = null;
-let draggedGame = null;
-let dragClone = null;
+// Drag and drop for cards - optimized for smooth touch
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragCardEl = null;
+let dragCardIndex = null;
+let dragGame = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
 
-function startDrag(event, index, game) {
-    if (event.cancelable) event.preventDefault();
+function startDrag(e, index, game) {
+    e.preventDefault();
+    e.stopPropagation();
 
-    draggedIndex = index;
-    draggedGame = game;
-    draggedCard = event.target.closest('.u-card, .d-card');
+    const touch = e.touches[0];
+    dragCardEl = e.currentTarget;
+    dragCardIndex = index;
+    dragGame = game;
+    isDragging = true;
 
-    if (!draggedCard) return;
+    const rect = dragCardEl.getBoundingClientRect();
+    dragStartX = rect.left;
+    dragStartY = rect.top;
+    dragOffsetX = touch.clientX - rect.left;
+    dragOffsetY = touch.clientY - rect.top;
 
-    // Create visual clone
-    dragClone = draggedCard.cloneNode(true);
-    dragClone.classList.add('dragging');
-    dragClone.style.position = 'fixed';
-    dragClone.style.zIndex = '9999';
-    dragClone.style.pointerEvents = 'none';
-    dragClone.style.opacity = '0.9';
-    dragClone.style.transform = 'scale(1.1) rotate(5deg)';
-    document.body.appendChild(dragClone);
+    // Instant visual feedback
+    dragCardEl.style.willChange = 'transform';
+    dragCardEl.style.zIndex = '1000';
+    dragCardEl.style.transition = 'none';
+    dragCardEl.style.position = 'fixed';
+    dragCardEl.style.left = rect.left + 'px';
+    dragCardEl.style.top = rect.top + 'px';
+    dragCardEl.style.transform = 'scale(1.15) rotate(5deg)';
+    dragCardEl.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
 
-    const touch = event.touches[0];
-    dragClone.style.left = (touch.clientX - 30) + 'px';
-    dragClone.style.top = (touch.clientY - 40) + 'px';
-
-    draggedCard.style.opacity = '0.4';
     App.haptic('light');
 }
 
-function onDrag(event) {
-    if (!dragClone || !event.touches[0]) return;
-    if (event.cancelable) event.preventDefault();
+function onDrag(e) {
+    if (!isDragging || !dragCardEl) return;
+    e.preventDefault();
 
-    const touch = event.touches[0];
-    dragClone.style.left = (touch.clientX - 30) + 'px';
-    dragClone.style.top = (touch.clientY - 40) + 'px';
+    const touch = e.touches[0];
+    const x = touch.clientX - dragOffsetX;
+    const y = touch.clientY - dragOffsetY;
+
+    dragCardEl.style.left = x + 'px';
+    dragCardEl.style.top = y + 'px';
 }
 
-function endDrag(event, game) {
-    if (!dragClone || !draggedCard) return;
+function endDrag(e, game) {
+    if (!isDragging || !dragCardEl) return;
 
-    const touch = event.changedTouches[0];
-    const dropZone = document.elementFromPoint(touch.clientX, touch.clientY);
+    const touch = e.changedTouches[0];
 
-    // Check if dropped on valid target
-    const validTarget = dropZone?.closest('#uno-pile, .durak-table, .u-pile-card, .d-pair');
+    // Reset card style
+    dragCardEl.style.willChange = '';
+    dragCardEl.style.zIndex = '';
+    dragCardEl.style.position = '';
+    dragCardEl.style.left = '';
+    dragCardEl.style.top = '';
+    dragCardEl.style.transform = '';
+    dragCardEl.style.boxShadow = '';
+    dragCardEl.style.transition = '';
 
-    if (validTarget && draggedIndex !== null) {
+    // Check drop zone
+    const dropEl = document.elementFromPoint(touch.clientX, touch.clientY);
+    const validDrop = dropEl?.closest('#uno-pile, #durak-table, .u-pile-card, .d-pair, .uno-discard');
+
+    if (validDrop && dragCardIndex !== null) {
         App.haptic('medium');
         if (game === 'uno') {
-            UNO.playCard(draggedIndex);
+            UNO.playCard(dragCardIndex);
         } else if (game === 'durak') {
-            Durak.playCard(draggedIndex);
+            Durak.playCard(dragCardIndex);
         }
     }
 
-    // Cleanup
-    if (dragClone) {
-        dragClone.remove();
-        dragClone = null;
-    }
-    if (draggedCard) {
-        draggedCard.style.opacity = '1';
-        draggedCard = null;
-    }
-    draggedIndex = null;
-    draggedGame = null;
+    // Reset state
+    isDragging = false;
+    dragCardEl = null;
+    dragCardIndex = null;
+    dragGame = null;
 }
 
 // Initialize on DOM load
