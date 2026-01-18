@@ -364,6 +364,18 @@
           </div>
         </div>
 
+        <div class="setup-section">
+          <div class="room-type-toggle">
+            <label class="toggle-label">
+              <span>🔒 Закрытая комната</span>
+              <input type="checkbox" id="rps-private-toggle" onchange="toggleSetupPassword('rps')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <input type="text" id="rps-password" class="setup-password hidden" placeholder="Пароль для входа"
+            maxlength="20">
+        </div>
+
         <div class="setup-actions">
           <button class="btn primary" onclick="createRpsRoom()">🎮 Создать комнату</button>
           <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
@@ -410,6 +422,18 @@
             <button class="player-btn" data-count="6" onclick="selectPlayerCount(6)">6</button>
             <button class="player-btn" data-count="7" onclick="selectPlayerCount(7)">7</button>
           </div>
+        </div>
+
+        <div class="setup-section">
+          <div class="room-type-toggle">
+            <label class="toggle-label">
+              <span>🔒 Закрытая комната</span>
+              <input type="checkbox" id="durak-private-toggle" onchange="toggleSetupPassword('durak')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <input type="text" id="durak-password" class="setup-password hidden" placeholder="Пароль для входа"
+            maxlength="20">
         </div>
 
         <div class="setup-actions">
@@ -463,6 +487,18 @@
             <button class="player-btn" data-count="6" onclick="selectUnoPlayerCount(6)">6</button>
             <button class="player-btn" data-count="7" onclick="selectUnoPlayerCount(7)">7</button>
           </div>
+        </div>
+
+        <div class="setup-section">
+          <div class="room-type-toggle">
+            <label class="toggle-label">
+              <span>🔒 Закрытая комната</span>
+              <input type="checkbox" id="uno-private-toggle" onchange="toggleSetupPassword('uno')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <input type="text" id="uno-password" class="setup-password hidden" placeholder="Пароль для входа"
+            maxlength="20">
         </div>
 
         <div class="setup-actions">
@@ -525,6 +561,18 @@
             <button class="player-btn" data-count="5" onclick="selectMonopolyPlayerCount(5)">5</button>
             <button class="player-btn" data-count="6" onclick="selectMonopolyPlayerCount(6)">6</button>
           </div>
+        </div>
+
+        <div class="setup-section">
+          <div class="room-type-toggle">
+            <label class="toggle-label">
+              <span>🔒 Закрытая комната</span>
+              <input type="checkbox" id="monopoly-private-toggle" onchange="toggleSetupPassword('monopoly')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <input type="text" id="monopoly-password" class="setup-password hidden" placeholder="Пароль для входа"
+            maxlength="20">
         </div>
 
         <div class="setup-actions">

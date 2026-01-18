@@ -322,10 +322,10 @@ function createDurakRoom() {
     App.showScreen('room');
     document.getElementById('room-title').textContent = '🃏 Дурак';
 
-    Multiplayer.createRoom('durak', {
-        mode: durakSettings.mode,
-        maxPlayers: durakSettings.playerCount
-    });
+    const isPrivate = document.getElementById('durak-private-toggle')?.checked || false;
+    const password = document.getElementById('durak-password')?.value.trim() || null;
+
+    Multiplayer.createRoom('durak', isPrivate ? password : null, !isPrivate);
 }
 
 function durakTake() {

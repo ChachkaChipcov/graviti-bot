@@ -284,9 +284,11 @@ function createMonopolyRoom() {
     App.currentGame = 'monopoly';
     App.showScreen('room');
     document.getElementById('room-title').textContent = '🎲 Монополия';
-    Multiplayer.createRoom('monopoly', {
-        maxPlayers: monopolySettings.playerCount
-    });
+
+    const isPrivate = document.getElementById('monopoly-private-toggle')?.checked || false;
+    const password = document.getElementById('monopoly-password')?.value.trim() || null;
+
+    Multiplayer.createRoom('monopoly', isPrivate ? password : null, !isPrivate);
 }
 
 function rollDice() {

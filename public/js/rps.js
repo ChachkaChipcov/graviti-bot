@@ -169,9 +169,21 @@ function createRpsRoom() {
     App.showScreen('room');
     document.getElementById('room-title').textContent = '✊✋✌️ КНБ';
 
-    Multiplayer.createRoom('rps', {
-        maxPlayers: 2,
-        winsToWin: rpsSettings.winsToWin
-    });
+    const isPrivate = document.getElementById('rps-private-toggle')?.checked || false;
+    const password = document.getElementById('rps-password')?.value.trim() || null;
+
+    Multiplayer.createRoom('rps', isPrivate ? password : null, !isPrivate);
 }
 
+function toggleSetupPassword(game) {
+    const toggle = document.getElementById(`${game}-private-toggle`);
+    const passwordInput = document.getElementById(`${game}-password`);
+    if (toggle && passwordInput) {
+        if (toggle.checked) {
+            passwordInput.classList.remove('hidden');
+        } else {
+            passwordInput.classList.add('hidden');
+            passwordInput.value = '';
+        }
+    }
+}

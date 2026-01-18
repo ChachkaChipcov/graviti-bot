@@ -331,9 +331,10 @@ function createUnoRoom() {
     App.showScreen('room');
     document.getElementById('room-title').textContent = '🎴 UNO';
 
-    Multiplayer.createRoom('uno', {
-        maxPlayers: unoSettings.playerCount
-    });
+    const isPrivate = document.getElementById('uno-private-toggle')?.checked || false;
+    const password = document.getElementById('uno-password')?.value.trim() || null;
+
+    Multiplayer.createRoom('uno', isPrivate ? password : null, !isPrivate);
 }
 
 function unoDraw() {
