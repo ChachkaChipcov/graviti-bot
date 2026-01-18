@@ -151,6 +151,14 @@ const UNO = {
         this.updateDirection();
         this.updateActions();
         this.updateStatus();
+        this.updateDeckCount();
+    },
+
+    updateDeckCount() {
+        const deckEl = document.getElementById('uno-deck-count');
+        if (deckEl && this.deckCount !== undefined) {
+            deckEl.textContent = this.deckCount;
+        }
     },
 
     updateStatus() {
@@ -250,6 +258,7 @@ const UNO = {
         this.direction = data.direction || 1;
         this.isMyTurn = this.currentPlayer === App.userId;
         this.chosenColor = null;
+        this.deckCount = data.deckCount || 52;
 
         this.renderHand();
         this.updateUI();

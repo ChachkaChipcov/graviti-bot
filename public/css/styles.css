@@ -1764,10 +1764,14 @@ body {
 }
 
 .u-card-value {
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 900;
   color: var(--bg);
-  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.3),
+    1px -1px 0 rgba(0, 0, 0, 0.3),
+    -1px 1px 0 rgba(0, 0, 0, 0.3),
+    1px 1px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Corner values */
