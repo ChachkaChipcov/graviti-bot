@@ -310,8 +310,48 @@ function goBack() {
     App.goBack();
 }
 
+function showCreateRoomForm() {
+    document.getElementById('room-create-form').classList.remove('hidden');
+    document.getElementById('room-buttons').classList.add('hidden');
+}
+
+function cancelCreateRoom() {
+    document.getElementById('room-create-form').classList.add('hidden');
+    document.getElementById('room-buttons').classList.remove('hidden');
+    document.getElementById('room-private-toggle').checked = false;
+    document.getElementById('room-password-row').classList.add('hidden');
+    document.getElementById('create-room-password').value = '';
+}
+
+function toggleRoomPassword() {
+    const isPrivate = document.getElementById('room-private-toggle').checked;
+    const passwordRow = document.getElementById('room-password-row');
+    if (isPrivate) {
+        passwordRow.classList.remove('hidden');
+    } else {
+        passwordRow.classList.add('hidden');
+        document.getElementById('create-room-password').value = '';
+    }
+}
+
+function confirmCreateRoom() {
+    const isPrivate = document.getElementById('room-private-toggle').checked;
+    const password = document.getElementById('create-room-password').value.trim();
+
+    if (isPrivate && !password) {
+        document.getElementById('create-room-password').style.borderColor = '#ff6b6b';
+        setTimeout(() => {
+            document.getElementById('create-room-password').style.borderColor = '';
+        }, 2000);
+        return;
+    }
+
+    Multiplayer.createRoom(App.currentGame, password || null, !isPrivate);
+    cancelCreateRoom();
+}
+
 function createRoom() {
-    Multiplayer.createRoom(App.currentGame);
+    showCreateRoomForm();
 }
 
 function showJoinView() {

@@ -181,12 +181,13 @@ const Multiplayer = {
         });
     },
 
-    createRoom(gameType, settings = {}) {
+    createRoom(gameType, password = null, isPublic = true) {
         this.socket.emit('create_room', {
             gameType,
             odId: App.userId,
             userName: App.userName,
-            settings
+            password: password,
+            isPublic: isPublic
         });
     },
 
