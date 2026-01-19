@@ -3268,8 +3268,13 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  max-height: 100vh;
   background: linear-gradient(180deg, #1a2634 0%, #0d1520 100%);
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
 }
 
@@ -3447,7 +3452,9 @@ body {
 
 .dk-table-area {
   flex: 1;
-  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #dk-table {
@@ -3456,11 +3463,14 @@ body {
   gap: 15px;
   justify-content: center;
   align-items: center;
-  min-height: 120px;
-  padding: 20px;
+  min-height: 140px;
+  min-width: 200px;
+  max-width: 350px;
+  padding: 25px 40px;
   background: rgba(0, 80, 60, 0.25);
-  border-radius: 80px;
+  border-radius: 50%;
   border: 3px solid rgba(0, 100, 80, 0.3);
+  aspect-ratio: 1.5;
 }
 
 .dk-table-empty {
@@ -3481,8 +3491,8 @@ body {
 
 .dk-pair {
   position: relative;
-  width: 55px;
-  height: 77px;
+  width: 70px;
+  height: 98px;
 }
 
 .dk-pair .dk-card.attack {
@@ -3511,15 +3521,16 @@ body {
 }
 
 .dk-card {
-  width: 55px;
-  height: 77px;
+  width: 70px;
+  height: 98px;
   background: linear-gradient(180deg, #fff 0%, #f0f0f0 100%);
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   position: relative;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .dk-card:hover:not(.back) {
@@ -3561,13 +3572,13 @@ body {
 }
 
 .dk-card-value {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   font-weight: 800;
   font-family: 'Georgia', serif;
 }
 
 .dk-card-suit {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
 }
 
 .dk-card-center {
@@ -3578,7 +3589,7 @@ body {
 }
 
 .dk-card-suit-big {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
 }
 
 .dk-card.red .dk-card-value,
