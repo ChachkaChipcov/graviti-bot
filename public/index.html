@@ -445,27 +445,38 @@
 
     <!-- Durak Game Screen -->
     <div id="durak-game" class="screen">
-      <div class="durak-header">
-        <div class="durak-info">
-          <span class="trump-card" id="durak-trump">♠️</span>
-          <span class="deck-count" id="durak-deck">36</span>
+      <!-- Status Bar -->
+      <div class="dk-status" id="dk-status">⏳ Ожидание игроков...</div>
+
+      <!-- Opponents Area -->
+      <div class="dk-opponents-area" id="dk-players">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Main Game Area -->
+      <div class="dk-game-area">
+        <!-- Deck & Trump -->
+        <div class="dk-deck-area" id="dk-deck-area">
+          <!-- Rendered by JS -->
         </div>
-        <div class="durak-status" id="durak-status">Ожидание игроков...</div>
+
+        <!-- Table -->
+        <div class="dk-table-area">
+          <div id="dk-table">
+            <div class="dk-table-empty">Бросьте карту</div>
+          </div>
+        </div>
       </div>
 
-      <div class="durak-table" id="durak-table">
-        <!-- Cards on table will be rendered here -->
-      </div>
-
-      <div class="durak-actions" id="durak-actions">
-        <button class="btn secondary" id="durak-take" onclick="durakTake()">📥 Забрать</button>
-        <button class="btn primary" id="durak-pass" onclick="durakPass()">✅ Бито</button>
-        <button class="btn secondary" id="durak-transfer" onclick="durakTransfer()" style="display: none;">🔄
-          Перевести</button>
-      </div>
-
-      <div class="durak-hand" id="durak-hand">
-        <!-- Player's cards will be rendered here -->
+      <!-- Hand & Actions -->
+      <div class="dk-hand-area">
+        <div class="dk-actions">
+          <button class="dk-action-btn" id="dk-take-btn" onclick="durakTake()">📥 Беру</button>
+          <button class="dk-action-btn" id="dk-pass-btn" onclick="durakPass()">✅ Бито</button>
+        </div>
+        <div id="dk-hand">
+          <!-- Rendered by JS -->
+        </div>
       </div>
     </div>
 

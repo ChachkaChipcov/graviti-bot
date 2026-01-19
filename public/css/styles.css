@@ -3259,3 +3259,539 @@ body {
 .mp-trade-money {
   margin-top: 10px;
 }
+
+/* ============================================
+   ДУРАК ОНЛАЙН - Premium Design
+   ============================================ */
+
+#durak-game {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(180deg, #1a2634 0%, #0d1520 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+#durak-game::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 80, 60, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+#durak-game>* {
+  position: relative;
+  z-index: 1;
+}
+
+.dk-status {
+  text-align: center;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dk-status.attack {
+  color: #ff6b6b;
+  text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+}
+
+.dk-status.defense {
+  color: #4ecdc4;
+  text-shadow: 0 0 20px rgba(78, 205, 196, 0.5);
+}
+
+.dk-status.waiting {
+  color: #a0a0a0;
+}
+
+.dk-opponents-area {
+  padding: 10px 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.dk-opponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dk-opponent-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.dk-opponent.attacking .dk-opponent-avatar {
+  border-color: #ff6b6b;
+  box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+}
+
+.dk-opponent.defending .dk-opponent-avatar {
+  border-color: #4ecdc4;
+  box-shadow: 0 0 20px rgba(78, 205, 196, 0.4);
+}
+
+.dk-avatar-icon {
+  font-size: 1.8rem;
+}
+
+.dk-avatar-name {
+  font-size: 0.75rem;
+  color: #ccc;
+}
+
+.dk-opponent-cards {
+  display: flex;
+  margin-left: 10px;
+}
+
+.dk-opponent-count {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: #ffd700;
+}
+
+.dk-game-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  gap: 20px;
+  min-height: 0;
+}
+
+.dk-deck-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.dk-deck-stack {
+  position: relative;
+  width: 60px;
+  height: 84px;
+}
+
+.dk-deck-stack .dk-card {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.dk-deck-stack .offset-1 {
+  transform: translate(3px, -3px);
+}
+
+.dk-deck-stack .offset-2 {
+  transform: translate(6px, -6px);
+}
+
+.dk-deck-count {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: #ffd700;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dk-trump-card {
+  transform: rotate(90deg) translateY(-20px);
+  z-index: -1;
+}
+
+.dk-trump-indicator {
+  position: absolute;
+  top: 50%;
+  left: 150%;
+  transform: translateY(-50%);
+  font-size: 4rem;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.dk-trump-indicator.red {
+  color: #dc3545;
+}
+
+.dk-trump-indicator.black {
+  color: #fff;
+}
+
+.dk-deck-empty {
+  color: #555;
+  font-size: 0.8rem;
+}
+
+.dk-table-area {
+  flex: 1;
+  max-width: 400px;
+}
+
+#dk-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  min-height: 120px;
+  padding: 20px;
+  background: rgba(0, 80, 60, 0.25);
+  border-radius: 80px;
+  border: 3px solid rgba(0, 100, 80, 0.3);
+}
+
+.dk-table-empty {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9rem;
+}
+
+#dk-table.clearing .dk-pair {
+  animation: tableCardsClear 0.5s ease-out forwards;
+}
+
+@keyframes tableCardsClear {
+  to {
+    transform: translateY(100px) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+.dk-pair {
+  position: relative;
+  width: 55px;
+  height: 77px;
+}
+
+.dk-pair .dk-card.attack {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.dk-pair .dk-card.defense {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  animation: cardDefend 0.2s ease-out;
+}
+
+@keyframes cardDefend {
+  from {
+    transform: translateY(-30px) rotate(-10deg);
+    opacity: 0.5;
+  }
+
+  to {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+.dk-card {
+  width: 55px;
+  height: 77px;
+  background: linear-gradient(180deg, #fff 0%, #f0f0f0 100%);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.dk-card:hover:not(.back) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+}
+
+.dk-card.playable {
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dk-card.playable:hover {
+  transform: translateY(-8px) scale(1.05);
+}
+
+.dk-card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.dk-card-corner {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.dk-card-corner.top-left {
+  top: 4px;
+  left: 5px;
+}
+
+.dk-card-corner.bottom-right {
+  bottom: 4px;
+  right: 5px;
+  transform: rotate(180deg);
+}
+
+.dk-card-value {
+  font-size: 0.9rem;
+  font-weight: 800;
+  font-family: 'Georgia', serif;
+}
+
+.dk-card-suit {
+  font-size: 0.7rem;
+}
+
+.dk-card-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.dk-card-suit-big {
+  font-size: 1.8rem;
+}
+
+.dk-card.red .dk-card-value,
+.dk-card.red .dk-card-suit,
+.dk-card.red .dk-card-suit-big {
+  color: #dc3545;
+}
+
+.dk-card.black .dk-card-value,
+.dk-card.black .dk-card-suit,
+.dk-card.black .dk-card-suit-big {
+  color: #1a1a2e;
+}
+
+.dk-card.back {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0d2137 100%);
+  border: 2px solid #2a4a6f;
+}
+
+.dk-card.back::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255, 255, 255, 0.05) 4px, rgba(255, 255, 255, 0.05) 8px);
+  border-radius: 4px;
+}
+
+.dk-hand-area {
+  padding: 10px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#dk-hand {
+  display: flex;
+  justify-content: center;
+  min-height: 90px;
+  position: relative;
+}
+
+.dk-hand-card {
+  position: relative;
+  transform: rotate(var(--card-rotation, 0deg)) translateY(var(--card-translate-y, 0px));
+  transition: transform 0.2s ease;
+  margin: 0 -15px;
+}
+
+.dk-hand-card:hover {
+  transform: rotate(0deg) translateY(-20px) scale(1.1);
+  z-index: 100 !important;
+}
+
+.dk-hand-card.playing {
+  animation: cardPlay 0.3s ease-out forwards;
+}
+
+@keyframes cardPlay {
+  to {
+    transform: translateY(-100px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.dk-hand-card.dragging {
+  z-index: 1000 !important;
+  opacity: 0.9;
+}
+
+.dk-hand-empty {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.dk-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.dk-action-btn {
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+#dk-take-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: white;
+  display: none;
+}
+
+#dk-take-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+#dk-pass-btn {
+  background: linear-gradient(135deg, #00c853, #00a043);
+  color: white;
+  display: none;
+}
+
+#dk-pass-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
+}
+
+.dk-toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  z-index: 1100;
+  opacity: 0;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dk-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.dk-gameover-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.dk-gameover-modal {
+  background: linear-gradient(180deg, #1a2c40 0%, #121e2d 100%);
+  border-radius: 20px;
+  padding: 30px;
+  text-align: center;
+  max-width: 320px;
+  animation: slideUp 0.3s ease;
+}
+
+.dk-gameover-modal.winner {
+  border-top: 5px solid #ffd700;
+}
+
+.dk-gameover-modal.loser {
+  border-top: 5px solid #ff6b6b;
+}
+
+.dk-gameover-icon {
+  font-size: 4rem;
+  margin-bottom: 15px;
+}
+
+.dk-gameover-modal h2 {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.dk-gameover-modal p {
+  color: #a0a0a0;
+  margin-bottom: 20px;
+}
+
+.dk-gameover-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.dk-gameover-buttons .btn {
+  flex: 1;
+}
+
+@media (max-width: 420px) {
+  .dk-card {
+    width: 48px;
+    height: 67px;
+  }
+
+  .dk-card-value {
+    font-size: 0.75rem;
+  }
+
+  .dk-card-suit {
+    font-size: 0.6rem;
+  }
+
+  .dk-card-suit-big {
+    font-size: 1.4rem;
+  }
+
+  .dk-hand-card {
+    margin: 0 -18px;
+  }
+
+  .dk-pair {
+    width: 48px;
+    height: 67px;
+  }
+}
