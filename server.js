@@ -1324,6 +1324,172 @@ io.on('connection', (socket) => {
     }
   }
 
+  // ========== MONOPOLY AUCTION SYSTEM ==========
+
+  // Decline purchase - start auction
+  socket.on('monopoly_decline_buy', ({ odId, propertyIndex }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+
+    const cell = monopolyBoard[propertyIndex];
+    if (!cell || !cell.price) return;
+    if (room.state.properties[propertyIndex]) return;
+
+    // Start auction
+    room.state.auction = {
+      propertyIndex,
+      currentBid: 10,
+      highestBidder: null,
+      passedPlayers: new Set()
+    };
+
+    io.to(socket.roomId).emit('monopoly_auction_start', {
+      propertyIndex,
+      currentBid: 10,
+      highestBidder: null
+    });
+  });
+
+  // Place auction bid
+  socket.on('monopoly_auction_bid', ({ odId, amount }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly' || !room.state.auction) return;
+
+    const playerState = room.state.players[odId];
+    if (!playerState || playerState.bankrupt) return;
+
+    const newBid = room.state.auction.currentBid + amount;
+    if (playerState.money < newBid) return;
+
+    room.state.auction.currentBid = newBid;
+    room.state.auction.highestBidder = odId;
+
+    io.to(socket.roomId).emit('monopoly_auction_update', {
+      currentBid: newBid,
+      highestBidder: odId
+    });
+  });
+
+  // Pass on auction
+  socket.on('monopoly_auction_pass', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly' || !room.state.auction) return;
+
+    room.state.auction.passedPlayers.add(odId);
+
+    // Check if auction is over
+    const activePlayers = room.players.filter(p => !room.state.players[p.odId]?.bankrupt);
+    const allPassed = activePlayers.every(p =>
+      room.state.auction.passedPlayers.has(p.odId) || p.odId === room.state.auction.highestBidder
+    );
+
+    if (allPassed && room.state.auction.highestBidder) {
+      // Winner
+      const winner = room.state.auction.highestBidder;
+      const bid = room.state.auction.currentBid;
+      const propIndex = room.state.auction.propertyIndex;
+
+      room.state.players[winner].money -= bid;
+      room.state.properties[propIndex] = { owner: winner, houses: 0, mortgaged: false };
+
+      io.to(socket.roomId).emit('monopoly_auction_end', {
+        winner,
+        winningBid: bid,
+        propertyIndex: propIndex,
+        newMoney: room.state.players[winner].money
+      });
+
+      room.state.auction = null;
+      sendMonopolyUpdate(room);
+    } else if (allPassed && !room.state.auction.highestBidder) {
+      // No winner
+      io.to(socket.roomId).emit('monopoly_auction_end', {
+        winner: null,
+        propertyIndex: room.state.auction.propertyIndex
+      });
+      room.state.auction = null;
+    }
+  });
+
+  // ========== MONOPOLY TRADE SYSTEM ==========
+
+  // Send trade offer
+  socket.on('monopoly_trade_offer', ({ odId, targetId, offerProps, requestProps, offerMoney, requestMoney }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly') return;
+
+    const targetSocket = [...io.sockets.sockets.values()].find(s =>
+      s.roomId === socket.roomId && room.players.find(p => p.odId === targetId && p.id === s.id)
+    );
+
+    if (targetSocket) {
+      const tradeId = Date.now().toString();
+      room.state.pendingTrade = {
+        tradeId,
+        senderId: odId,
+        targetId,
+        offerProps,
+        requestProps,
+        offerMoney,
+        requestMoney
+      };
+
+      targetSocket.emit('monopoly_trade_offer', {
+        tradeId,
+        senderId: odId,
+        offerProps,
+        requestProps,
+        offerMoney,
+        requestMoney
+      });
+    }
+  });
+
+  // Respond to trade offer
+  socket.on('monopoly_trade_response', ({ odId, accept, tradeId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'monopoly' || !room.state.pendingTrade) return;
+    if (room.state.pendingTrade.tradeId !== tradeId) return;
+
+    const trade = room.state.pendingTrade;
+
+    if (accept) {
+      const sender = room.state.players[trade.senderId];
+      const target = room.state.players[trade.targetId];
+
+      // Validate trade
+      if (sender.money < trade.offerMoney) { accept = false; }
+      if (target.money < trade.requestMoney) { accept = false; }
+
+      if (accept) {
+        // Execute trade
+        sender.money -= trade.offerMoney;
+        sender.money += trade.requestMoney;
+        target.money += trade.offerMoney;
+        target.money -= trade.requestMoney;
+
+        // Transfer properties
+        trade.offerProps.forEach(idx => {
+          if (room.state.properties[idx]?.owner === trade.senderId) {
+            room.state.properties[idx].owner = trade.targetId;
+          }
+        });
+        trade.requestProps.forEach(idx => {
+          if (room.state.properties[idx]?.owner === trade.targetId) {
+            room.state.properties[idx].owner = trade.senderId;
+          }
+        });
+
+        io.to(socket.roomId).emit('monopoly_trade_complete', { success: true, tradeId });
+        sendMonopolyUpdate(room);
+      }
+    } else {
+      io.to(socket.roomId).emit('monopoly_trade_complete', { success: false, tradeId });
+    }
+
+    room.state.pendingTrade = null;
+  });
+
   // Disconnect
   socket.on('disconnect', () => {
     const roomId = socket.roomId;

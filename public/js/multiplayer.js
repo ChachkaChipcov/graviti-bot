@@ -211,6 +211,28 @@ const Multiplayer = {
         this.socket.on('monopoly_game_over', (data) => {
             MonopolyPlus.handleGameOver(data);
         });
+
+        // Monopoly Auction Events
+        this.socket.on('monopoly_auction_start', (data) => {
+            MonopolyPlus.handleAuctionStart(data);
+        });
+
+        this.socket.on('monopoly_auction_update', (data) => {
+            MonopolyPlus.handleAuctionUpdate(data);
+        });
+
+        this.socket.on('monopoly_auction_end', (data) => {
+            MonopolyPlus.handleAuctionEnd(data);
+        });
+
+        // Monopoly Trade Events
+        this.socket.on('monopoly_trade_offer', (data) => {
+            MonopolyPlus.handleTradeOffer(data);
+        });
+
+        this.socket.on('monopoly_trade_complete', (data) => {
+            MonopolyPlus.handleTradeComplete(data);
+        });
     },
 
     createRoom(gameType, password = null, isPublic = true, settings = {}) {
