@@ -674,22 +674,3 @@ function endDrag(e, game) {
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
 });
-
-// Global functions for onclick handlers in HTML
-function selectGame(gameType) {
-    App.selectGame(gameType);
-}
-
-function goBack() {
-    App.goBack();
-}
-
-function showCreateRoomForm() {
-    document.getElementById('room-create-form').classList.remove('hidden');
-    document.getElementById('room-buttons').classList.add('hidden');
-}
-
-function cancelCreateRoom() {
-    document.getElementById('room-create-form').classList.add('hidden');
-    document.getElementById('room-buttons').classList.remove('hidden');
-}
