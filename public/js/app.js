@@ -677,31 +677,38 @@ function endDrag(e, game) {
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
+    alert('App инициализирован');
+});
 
-    // Add touch handlers for game cards (backup for Telegram WebApp)
-    document.querySelectorAll('.game-card').forEach(card => {
+// Event delegation - capture all clicks on body
+document.body.addEventListener('touchstart', function (e) {
+    const card = e.target.closest('.game-card');
+    if (card) {
+        e.preventDefault();
+        e.stopPropagation();
         const onclick = card.getAttribute('onclick');
         if (onclick) {
-            // Extract game type from onclick="selectGame('rps')"
             const match = onclick.match(/selectGame\('([^']+)'\)/);
             if (match) {
-                const gameType = match[1];
-
-                // Add touchstart handler
-                card.addEventListener('touchstart', function (e) {
-                    e.preventDefault();
-                    alert('Touch на: ' + gameType);
-                    selectGame(gameType);
-                }, { passive: false });
-
-                // Also add click handler
-                card.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    selectGame(gameType);
-                });
+                alert('Touchstart на: ' + match[1]);
+                selectGame(match[1]);
             }
         }
-    });
+    }
+}, { capture: true, passive: false });
 
-    alert('Обработчики добавлены: ' + document.querySelectorAll('.game-card').length + ' карточек');
-});
+document.body.addEventListener('click', function (e) {
+    const card = e.target.closest('.game-card');
+    if (card) {
+        e.preventDefault();
+        e.stopPropagation();
+        const onclick = card.getAttribute('onclick');
+        if (onclick) {
+            const match = onclick.match(/selectGame\('([^']+)'\)/);
+            if (match) {
+                alert('Click на: ' + match[1]);
+                selectGame(match[1]);
+            }
+        }
+    }
+}, { capture: true });
