@@ -43,13 +43,22 @@ body {
 
 /* Screens */
 .screen {
-  display: none;
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
   min-height: calc(100vh - 32px);
   flex-direction: column;
+  width: 100%;
+  left: 0;
+  top: 0;
 }
 
 .screen.active {
-  display: flex;
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  position: relative !important;
 }
 
 /* Header */
