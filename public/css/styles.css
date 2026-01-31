@@ -1083,7 +1083,7 @@ body {
 }
 
 .bs-cell.hit::after {
-  content: 'рџ’Ґ';
+  content: '💥';
   font-size: 0.9rem;
 }
 
@@ -1103,7 +1103,7 @@ body {
 }
 
 .bs-cell.sunk::after {
-  content: 'рџ’Ђ';
+  content: '💀';
   font-size: 0.8rem;
 }
 
