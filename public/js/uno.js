@@ -42,10 +42,15 @@ const UNO = {
 
     canPlay(card) {
         if (!this.currentCard || !this.isMyTurn) return false;
+        // Wild cards always playable
         if (card.color === 'wild') return true;
+        // Match by color (including chosen color for wild)
         const matchColor = this.chosenColor || this.currentCard.color;
         if (card.color === matchColor) return true;
-        if (card.value === this.currentCard.value) return true;
+        // Match by value (number or action) - this allows same number different color
+        if (this.currentCard.color !== 'wild' && card.value === this.currentCard.value) return true;
+        // Also allow matching value after wild card
+        if (this.chosenColor && card.value === this.currentCard.value) return true;
         return false;
     },
 
@@ -62,12 +67,11 @@ const UNO = {
             return `
                 <div class="u-card ${playable ? 'playable' : ''}" 
                      data-index="${index}"
-                     draggable="true"
                      style="--bg: ${style.bg}; --text: ${style.text}"
-                     onclick="UNO.playCard(${index})"
-                     ontouchstart="startDrag(event, ${index}, 'uno')"
-                     ontouchmove="onDrag(event)"
-                     ontouchend="endDrag(event, 'uno')">
+                     ${!('ontouchstart' in window) ? `onclick="UNO.playCard(${index})"` : ''}
+                     ontouchstart="UNO.startCardDrag(event, ${index})"
+                     ontouchmove="UNO.onCardDrag(event)"
+                     ontouchend="UNO.endCardDrag(event)">
                     <div class="u-card-inner ${isWild ? 'wild-card' : ''}">
                         <span class="u-card-tl">${displayVal}</span>
                         <div class="u-card-oval">
@@ -310,6 +314,63 @@ const UNO = {
         }
 
         App.showVictory(isWinner);
+    },
+
+    // Touch drag handling (same as Durak)
+    draggedCard: null,
+    dragStartPos: { x: 0, y: 0 },
+    dragThreshold: 30,
+
+    startCardDrag(event, index) {
+        const card = this.hand[index];
+        if (!card || !this.canPlay(card)) return;
+
+        this.draggedCard = { index, element: event.target.closest('.u-card') };
+        const touch = event.touches[0];
+        this.dragStartPos = { x: touch.clientX, y: touch.clientY };
+
+        if (this.draggedCard.element) {
+            this.draggedCard.element.classList.add('dragging');
+        }
+    },
+
+    onCardDrag(event) {
+        if (!this.draggedCard) return;
+        event.preventDefault();
+
+        const touch = event.touches[0];
+        const dx = touch.clientX - this.dragStartPos.x;
+        const dy = touch.clientY - this.dragStartPos.y;
+
+        if (this.draggedCard.element) {
+            this.draggedCard.element.style.transform = `translate(${dx}px, ${dy}px) scale(1.1)`;
+        }
+    },
+
+    endCardDrag(event) {
+        if (!this.draggedCard) return;
+
+        const touch = event.changedTouches[0];
+        const dx = touch.clientX - this.dragStartPos.x;
+        const dy = touch.clientY - this.dragStartPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Only play if dragged far enough
+        if (distance >= this.dragThreshold) {
+            const pileRect = document.getElementById('uno-pile')?.getBoundingClientRect();
+            if (pileRect &&
+                touch.clientX >= pileRect.left && touch.clientX <= pileRect.right &&
+                touch.clientY >= pileRect.top && touch.clientY <= pileRect.bottom) {
+                this.playCard(this.draggedCard.index);
+            }
+        }
+
+        if (this.draggedCard.element) {
+            this.draggedCard.element.classList.remove('dragging');
+            this.draggedCard.element.style.transform = '';
+        }
+
+        this.draggedCard = null;
     }
 };
 
