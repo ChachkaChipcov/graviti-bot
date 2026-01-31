@@ -172,7 +172,8 @@ function createRpsRoom() {
     const isPrivate = document.getElementById('rps-private-toggle')?.checked || false;
     const password = document.getElementById('rps-password')?.value.trim() || null;
 
-    Multiplayer.createRoom('rps', isPrivate ? password : null, !isPrivate);
+    // Pass winsToWin in settings
+    Multiplayer.createRoom('rps', isPrivate ? password : null, !isPrivate, { winsToWin: rpsSettings.winsToWin });
 }
 
 function toggleSetupPassword(game) {

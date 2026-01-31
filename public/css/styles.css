@@ -1093,7 +1093,7 @@ body {
 }
 
 .bs-cell.miss::after {
-  content: 'рџЊЉ';
+  content: '🌊';
   font-size: 0.7rem;
 }
 
@@ -3477,9 +3477,8 @@ body {
   max-width: 350px;
   padding: 25px 40px;
   background: rgba(0, 80, 60, 0.25);
-  border-radius: 50%;
+  border-radius: 16px;
   border: 3px solid rgba(0, 100, 80, 0.3);
-  aspect-ratio: 1.5;
 }
 
 .dk-table-empty {

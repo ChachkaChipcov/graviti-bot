@@ -144,7 +144,8 @@ io.on('connection', (socket) => {
         maxPlayers,
         mode: settings?.mode || 'podkidnoy',
         isPublic: isPublic !== false && settings?.isPublic !== false, // Check both
-        password: password || settings?.password || null
+        password: password || settings?.password || null,
+        winsToWin: settings?.winsToWin || 3 // For RPS
       }
     };
 
