@@ -1,6 +1,3 @@
-// DEBUG: Check if app.js loads at all
-alert('app.js загружен!');
-
 // Main App Controller
 const App = {
     currentScreen: 'lobby',
@@ -306,7 +303,6 @@ const App = {
 
 // Global functions for onclick handlers
 function selectGame(gameType) {
-    alert('selectGame вызвана: ' + gameType);
     App.selectGame(gameType);
 }
 
@@ -677,22 +673,4 @@ function endDrag(e, game) {
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
-    alert('App инициализирован');
-
-    // Event delegation on document with pointerdown (works for both touch and mouse)
-    document.addEventListener('pointerdown', function (e) {
-        alert('Pointerdown target: ' + e.target.tagName + ' ' + e.target.className);
-        const card = e.target.closest('.game-card');
-        if (card) {
-            alert('Найдена карточка!');
-            const onclick = card.getAttribute('onclick');
-            if (onclick) {
-                const match = onclick.match(/selectGame\('([^']+)'\)/);
-                if (match) {
-                    alert('Игра: ' + match[1]);
-                    selectGame(match[1]);
-                }
-            }
-        }
-    }, { capture: true });
 });
