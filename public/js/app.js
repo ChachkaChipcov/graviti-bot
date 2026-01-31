@@ -1,3 +1,6 @@
+// DEBUG: Check if app.js loads at all
+alert('app.js загружен!');
+
 // Main App Controller
 const App = {
     currentScreen: 'lobby',
