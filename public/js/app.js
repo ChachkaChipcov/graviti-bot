@@ -678,37 +678,21 @@ function endDrag(e, game) {
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
     alert('App инициализирован');
+
+    // Event delegation on document with pointerdown (works for both touch and mouse)
+    document.addEventListener('pointerdown', function (e) {
+        alert('Pointerdown target: ' + e.target.tagName + ' ' + e.target.className);
+        const card = e.target.closest('.game-card');
+        if (card) {
+            alert('Найдена карточка!');
+            const onclick = card.getAttribute('onclick');
+            if (onclick) {
+                const match = onclick.match(/selectGame\('([^']+)'\)/);
+                if (match) {
+                    alert('Игра: ' + match[1]);
+                    selectGame(match[1]);
+                }
+            }
+        }
+    }, { capture: true });
 });
-
-// Event delegation - capture all clicks on body
-document.body.addEventListener('touchstart', function (e) {
-    const card = e.target.closest('.game-card');
-    if (card) {
-        e.preventDefault();
-        e.stopPropagation();
-        const onclick = card.getAttribute('onclick');
-        if (onclick) {
-            const match = onclick.match(/selectGame\('([^']+)'\)/);
-            if (match) {
-                alert('Touchstart на: ' + match[1]);
-                selectGame(match[1]);
-            }
-        }
-    }
-}, { capture: true, passive: false });
-
-document.body.addEventListener('click', function (e) {
-    const card = e.target.closest('.game-card');
-    if (card) {
-        e.preventDefault();
-        e.stopPropagation();
-        const onclick = card.getAttribute('onclick');
-        if (onclick) {
-            const match = onclick.match(/selectGame\('([^']+)'\)/);
-            if (match) {
-                alert('Click на: ' + match[1]);
-                selectGame(match[1]);
-            }
-        }
-    }
-}, { capture: true });
