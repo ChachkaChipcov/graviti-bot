@@ -14,6 +14,14 @@ const io = new Server(httpServer, {
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+// Disable caching for development/updates
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
