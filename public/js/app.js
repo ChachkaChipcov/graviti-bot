@@ -306,6 +306,7 @@ const App = {
 
 // Global functions for onclick handlers
 function selectGame(gameType) {
+    alert('selectGame вызвана: ' + gameType);
     App.selectGame(gameType);
 }
 
@@ -676,4 +677,31 @@ function endDrag(e, game) {
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
+
+    // Add touch handlers for game cards (backup for Telegram WebApp)
+    document.querySelectorAll('.game-card').forEach(card => {
+        const onclick = card.getAttribute('onclick');
+        if (onclick) {
+            // Extract game type from onclick="selectGame('rps')"
+            const match = onclick.match(/selectGame\('([^']+)'\)/);
+            if (match) {
+                const gameType = match[1];
+
+                // Add touchstart handler
+                card.addEventListener('touchstart', function (e) {
+                    e.preventDefault();
+                    alert('Touch на: ' + gameType);
+                    selectGame(gameType);
+                }, { passive: false });
+
+                // Also add click handler
+                card.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    selectGame(gameType);
+                });
+            }
+        }
+    });
+
+    alert('Обработчики добавлены: ' + document.querySelectorAll('.game-card').length + ' карточек');
 });
