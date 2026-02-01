@@ -59,8 +59,9 @@ const Durak = {
         const isRed = card.suit === '♥' || card.suit === '♦';
         const colorClass = isRed ? 'red' : 'black';
 
-        // Both click AND drag work on all devices
-        const clickHandler = inHand && index >= 0 ? `onclick="Durak.playCard(${index})"` : '';
+        // Touch devices: use drag only; Desktop: use click
+        const isTouchDevice = 'ontouchstart' in window;
+        const clickHandler = inHand && index >= 0 && !isTouchDevice ? `onclick="Durak.playCard(${index})"` : '';
         const dragHandlers = inHand ? `
             ontouchstart="Durak.startCardDrag(event, ${index})"
             ontouchmove="Durak.onCardDrag(event)"
@@ -360,8 +361,8 @@ const Durak = {
         const touch = event.changedTouches[0];
         const dy = touch.clientY - this.dragStartPos.y;
 
-        // Play card if dragged UP (towards table) by at least 50px
-        if (dy < -50) {
+        // Play card if dragged UP (towards table) by at least 30px
+        if (dy < -30) {
             this.playCard(this.draggedCard.index);
         }
 
