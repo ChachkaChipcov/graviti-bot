@@ -59,9 +59,8 @@ const Durak = {
         const isRed = card.suit === '♥' || card.suit === '♦';
         const colorClass = isRed ? 'red' : 'black';
 
-        // Only use click for non-touch, touch uses drag
-        const isTouchDevice = 'ontouchstart' in window;
-        const clickHandler = inHand && index >= 0 && !isTouchDevice ? `onclick="Durak.playCard(${index})"` : '';
+        // Both click AND drag work on all devices
+        const clickHandler = inHand && index >= 0 ? `onclick="Durak.playCard(${index})"` : '';
         const dragHandlers = inHand ? `
             ontouchstart="Durak.startCardDrag(event, ${index})"
             ontouchmove="Durak.onCardDrag(event)"
@@ -356,20 +355,14 @@ const Durak = {
 
     endCardDrag(event) {
         if (!this.draggedCard) return;
+        event.preventDefault();
 
         const touch = event.changedTouches[0];
-        const dx = touch.clientX - this.dragStartPos.x;
         const dy = touch.clientY - this.dragStartPos.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Only play if dragged far enough (not accidental touch)
-        if (distance >= this.dragThreshold) {
-            const tableRect = document.getElementById('dk-table')?.getBoundingClientRect();
-            if (tableRect &&
-                touch.clientX >= tableRect.left && touch.clientX <= tableRect.right &&
-                touch.clientY >= tableRect.top && touch.clientY <= tableRect.bottom) {
-                this.playCard(this.draggedCard.index);
-            }
+        // Play card if dragged UP (towards table) by at least 50px
+        if (dy < -50) {
+            this.playCard(this.draggedCard.index);
         }
 
         if (this.draggedCard.element) {
