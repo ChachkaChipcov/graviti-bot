@@ -395,7 +395,8 @@ function createUnoRoom() {
     const isPrivate = document.getElementById('uno-private-toggle')?.checked || false;
     const password = document.getElementById('uno-password')?.value.trim() || null;
 
-    Multiplayer.createRoom('uno', isPrivate ? password : null, !isPrivate);
+    // Pass maxPlayers from settings
+    Multiplayer.createRoom('uno', isPrivate ? password : null, !isPrivate, { maxPlayers: unoSettings.playerCount });
 }
 
 function unoDraw() {
