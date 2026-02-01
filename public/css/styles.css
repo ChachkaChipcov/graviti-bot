@@ -1720,7 +1720,7 @@ body {
   justify-content: center;
   border: 4px solid #000;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-  animation: cardDrop 0.2s ease;
+  /* animation removed - was causing re-animation on every render */
 }
 
 @keyframes cardDrop {

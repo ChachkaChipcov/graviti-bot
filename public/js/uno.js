@@ -284,6 +284,10 @@ const UNO = {
 
         if (data.hand) {
             this.hand = data.hand;
+            // Reset unoCalled if player has more than 2 cards
+            if (this.hand.length > 2) {
+                this.unoCalled = false;
+            }
         }
         if (data.players) {
             this.players = data.players;
