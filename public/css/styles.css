@@ -1749,6 +1749,7 @@ body {
 .u-pile-value {
   font-size: 2rem;
   font-weight: 900;
+  color: #333 !important;
 }
 
 /* Players Bar */
