@@ -762,6 +762,43 @@ io.on('connection', (socket) => {
     sendUnoUpdate(room);
   });
 
+  // UNO: Call UNO (when player has 2 cards)
+  socket.on('uno_call', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+
+    // Track who called UNO
+    if (!room.state.unoCalled) room.state.unoCalled = {};
+    room.state.unoCalled[odId] = true;
+
+    io.to(socket.roomId).emit('uno_called', { playerId: odId });
+  });
+
+  // UNO: Challenge player who didn't call UNO
+  socket.on('uno_challenge', ({ odId, targetId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+
+    const targetHand = room.state.hands[targetId];
+
+    // If target has 1 card and didn't call UNO, give them +2
+    if (targetHand && targetHand.length === 1 && !room.state.unoCalled?.[targetId]) {
+      // Draw 2 cards for target
+      for (let i = 0; i < 2; i++) {
+        if (room.state.deck.length > 0) {
+          targetHand.push(room.state.deck.pop());
+        }
+      }
+
+      io.to(socket.roomId).emit('uno_penalty', {
+        playerId: targetId,
+        challengedBy: odId
+      });
+
+      sendUnoUpdate(room);
+    }
+  });
+
   // ========== MONOPOLY GAME EVENTS ==========
 
   // Monopoly board data (for server-side calculations)
