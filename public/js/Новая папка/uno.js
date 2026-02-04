@@ -247,15 +247,38 @@ const UNO = {
         // Show UNO button only if 2 cards, my turn, and not already called
         const showUno = this.hand.length === 2 && this.isMyTurn && !this.unoCalled;
 
+        // Show catch button if someone can be caught
+        const canCatch = this.unoNotCalled && this.unoNotCalled !== App.userId;
+
+        // Show Wild4 challenge buttons if we're the target
+        const showWild4Buttons = this.awaitingWild4Response && this.wild4Target === App.userId;
+
         actionsEl.innerHTML = `
-            <button class="btn secondary u-draw-btn" onclick="unoDraw()" ${!this.isMyTurn ? 'disabled' : ''}>
-                📥 Взять карту
-            </button>
-            ${showUno ? `
-                <button class="btn primary u-uno-btn" onclick="unoCall()">
-                    🔥 UNO!
+            ${showWild4Buttons ? `
+                <div class="u-wild4-choice">
+                    <p>⚠️ +4 на вас! Оспорить?</p>
+                    <button class="btn danger" onclick="unoWild4Challenge()">
+                        🎯 Оспорить (+6 если неправ)
+                    </button>
+                    <button class="btn secondary" onclick="unoWild4Accept()">
+                        📥 Принять +4
+                    </button>
+                </div>
+            ` : `
+                <button class="btn secondary u-draw-btn" onclick="unoDraw()" ${!this.isMyTurn || this.awaitingWild4Response ? 'disabled' : ''}>
+                    📥 Взять карту
                 </button>
-            ` : ''}
+                ${showUno ? `
+                    <button class="btn primary u-uno-btn" onclick="unoCall()">
+                        🔥 UNO!
+                    </button>
+                ` : ''}
+                ${canCatch ? `
+                    <button class="btn danger u-catch-btn" onclick="unoCatch()">
+                        👀 Поймал!
+                    </button>
+                ` : ''}
+            `}
         `;
     },
 
@@ -281,6 +304,13 @@ const UNO = {
         this.isMyTurn = this.currentPlayer === App.userId;
         this.deckCount = data.deckCount || 0;
         this.isPlaying = false; // Reset lock
+
+        // Wild4 challenge state
+        this.awaitingWild4Response = data.awaitingWild4Response || false;
+        this.wild4Target = data.wild4Target || null;
+
+        // UNO not called - can be caught
+        this.unoNotCalled = data.unoNotCalled || null;
 
         if (data.hand) {
             this.hand = data.hand;
@@ -416,4 +446,26 @@ function unoCall() {
         UNO.updateUI(); // Hide the UNO button
         App.haptic('heavy');
     }
+}
+
+// Catch player who didn't call UNO
+function unoCatch() {
+    Multiplayer.socket.emit('uno_catch', { odId: App.userId });
+    App.haptic('heavy');
+}
+
+// Accept Wild Draw Four (+4 cards)
+function unoWild4Accept() {
+    Multiplayer.socket.emit('uno_wild4_accept', { odId: App.userId });
+    UNO.awaitingWild4Response = false;
+    UNO.updateUI();
+    App.haptic('medium');
+}
+
+// Challenge Wild Draw Four
+function unoWild4Challenge() {
+    Multiplayer.socket.emit('uno_wild4_challenge', { odId: App.userId });
+    UNO.awaitingWild4Response = false;
+    UNO.updateUI();
+    App.haptic('heavy');
 }

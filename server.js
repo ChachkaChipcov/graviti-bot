@@ -459,12 +459,39 @@ io.on('connection', (socket) => {
 
   // ========== DURAK GAME EVENTS ==========
 
-  // Durak: Attack with a card
+  // Durak: Attack with a card (or throw in more cards)
   socket.on('durak_attack', ({ odId, card }) => {
     const room = rooms.get(socket.roomId);
     if (!room || room.gameType !== 'durak') return;
-    if (room.state.currentAttacker !== odId) return;
-    if (room.state.phase !== 'attack') return;
+
+    // Allow attack from current attacker OR any player except defender (for throwing in)
+    const isAttacker = room.state.currentAttacker === odId;
+    const isDefender = room.state.currentDefender === odId;
+
+    // Only attacker can start (empty table), others can throw in on existing cards
+    if (room.state.table.length === 0 && !isAttacker) return;
+    if (isDefender) return; // Defender can't throw in
+
+    // For throwing in: must match values on table
+    if (room.state.table.length > 0 && !isAttacker) {
+      const tableValues = new Set();
+      room.state.table.forEach(pair => {
+        tableValues.add(pair.attack.value);
+        if (pair.defense) tableValues.add(pair.defense.value);
+      });
+      if (!tableValues.has(card.value)) return;
+    }
+
+    // Limit: max 6 cards total on table
+    if (room.state.table.length >= 6) return;
+
+    // Limit: can't throw more cards than defender has
+    const defenderHandCount = room.state.hands[room.state.currentDefender]?.length || 0;
+    if (room.state.table.length >= defenderHandCount) return;
+
+    // Only allow attack phase or if all defended (can throw more)
+    const allDefended = room.state.table.every(p => p.defense !== null);
+    if (room.state.phase !== 'attack' && !allDefended) return;
 
     // Remove card from attacker's hand
     const hand = room.state.hands[odId];
@@ -548,12 +575,40 @@ io.on('connection', (socket) => {
     if (room.state.currentDefender !== odId) return;
 
     // Only allow transfer in perevodnoy or combined mode
-    const mode = room.settings?.mode || 'podkidnoy';
+    const mode = room.state.mode || room.settings?.mode || 'podkidnoy';
     if (mode !== 'perevodnoy' && mode !== 'combined') return;
+
+    // Cannot transfer in first round
+    if (room.state.isFirstRound) {
+      io.to(socket.roomId).emit('durak_error', { message: 'Нельзя переводить в первом раунде' });
+      return;
+    }
+
+    // Cannot transfer if already started defending (any card defended)
+    const hasDefended = room.state.table.some(p => p.defense !== null);
+    if (hasDefended) {
+      io.to(socket.roomId).emit('durak_error', { message: 'Вы уже начали защищаться' });
+      return;
+    }
 
     // Check if card value matches any attack card on table
     const attackValues = room.state.table.map(p => p.attack.value);
     if (!attackValues.includes(card.value)) return;
+
+    // Check if next player has enough cards
+    const players = room.players;
+    const currentDefenderIdx = players.findIndex(p => p.odId === room.state.currentDefender);
+    const nextDefenderIdx = (currentDefenderIdx + 1) % players.length;
+    const nextDefender = players[nextDefenderIdx];
+    const nextDefenderCards = room.state.hands[nextDefender.odId]?.length || 0;
+    const cardsToTransfer = room.state.table.length + 1; // Current table + new card
+
+    if (nextDefenderCards < cardsToTransfer) {
+      io.to(socket.roomId).emit('durak_error', {
+        message: `У ${nextDefender.name} недостаточно карт для перевода`
+      });
+      return;
+    }
 
     // Remove card from defender's hand
     const hand = room.state.hands[odId];
@@ -565,15 +620,8 @@ io.on('connection', (socket) => {
     room.state.table.push({ attack: card, defense: null });
 
     // Transfer: current defender becomes attacker, next player becomes defender
-    const players = room.players;
-    const currentDefenderIdx = players.findIndex(p => p.odId === room.state.currentDefender);
-    const nextDefenderIdx = (currentDefenderIdx + 1) % players.length;
-
-    // Skip if next player would be original attacker with no cards
-    const newDefender = players[nextDefenderIdx].odId;
-
     room.state.currentAttacker = room.state.currentDefender;
-    room.state.currentDefender = newDefender;
+    room.state.currentDefender = nextDefender.odId;
     room.state.phase = 'defense';
 
     io.to(socket.roomId).emit('durak_transfer', {
@@ -643,6 +691,7 @@ io.on('connection', (socket) => {
     room.state.currentAttacker = players[nextAttackerIdx].odId;
     room.state.currentDefender = players[nextDefenderIdx].odId;
     room.state.phase = 'attack';
+    room.state.isFirstRound = false; // Allow transfers after first round
 
     // Check win condition
     checkDurakWinner(room);
@@ -673,11 +722,28 @@ io.on('connection', (socket) => {
 
     if (!isWild && !sameColor && !sameValue) return;
 
-    // Remove card from hand
+    // Wild Draw Four: Check if player has matching color cards (for challenge)
     const hand = room.state.hands[odId];
+    let wild4WasLegal = true;
+    if (card.value === 'wild4') {
+      const matchColor = room.state.chosenColor || currentCard.color;
+      const hasColorMatch = hand.some(c => c.color === matchColor && c.id !== card.id);
+      wild4WasLegal = !hasColorMatch; // Legal only if no matching color
+      room.state.lastWild4Legal = wild4WasLegal;
+      room.state.lastWild4Player = odId;
+    }
+
+    // Remove card from hand
     const cardIndex = hand.findIndex(c => c.id === card.id);
     if (cardIndex === -1) return;
     hand.splice(cardIndex, 1);
+
+    // Track for UNO penalty: if player had 2 cards and didn't call UNO
+    if (hand.length === 1 && !room.state.unoCalled?.[odId]) {
+      room.state.unoNotCalled = odId; // Can be caught
+    } else {
+      room.state.unoNotCalled = null;
+    }
 
     // Add to discard pile
     room.state.discardPile.push(card);
@@ -692,6 +758,10 @@ io.on('connection', (socket) => {
 
     if (card.value === 'reverse') {
       room.state.direction *= -1;
+      // In 2-player game, Reverse acts like Skip
+      if (players.length === 2) {
+        skipNext = true;
+      }
     } else if (card.value === 'skip') {
       skipNext = true;
     } else if (card.value === 'draw2') {
@@ -700,10 +770,33 @@ io.on('connection', (socket) => {
     } else if (card.value === 'wild4') {
       drawCards = 4;
       skipNext = true;
+      // Store pending +4 for possible challenge
+      room.state.pendingWild4 = {
+        from: odId,
+        wasLegal: wild4WasLegal
+      };
     }
 
     // Next player
     let nextIdx = (currentIdx + room.state.direction + players.length) % players.length;
+
+    // Handle Wild Draw Four with challenge option
+    if (card.value === 'wild4') {
+      room.state.wild4Target = players[nextIdx].odId;
+      room.state.wild4DrawCards = 4;
+      // Don't draw yet - wait for challenge or accept
+      io.to(socket.roomId).emit('uno_wild4_played', {
+        from: odId,
+        target: players[nextIdx].odId,
+        canChallenge: true
+      });
+      // Move to next player but mark as pending
+      room.state.currentPlayer = players[nextIdx].odId;
+      room.state.awaitingWild4Response = true;
+      sendUnoUpdate(room);
+      return;
+    }
+
     if (skipNext) {
       // Give cards to skipped player
       const skippedPlayer = players[nextIdx].odId;
@@ -770,8 +863,127 @@ io.on('connection', (socket) => {
     // Track who called UNO
     if (!room.state.unoCalled) room.state.unoCalled = {};
     room.state.unoCalled[odId] = true;
+    // Clear unoNotCalled if this player called
+    if (room.state.unoNotCalled === odId) {
+      room.state.unoNotCalled = null;
+    }
 
     io.to(socket.roomId).emit('uno_called', { playerId: odId });
+  });
+
+  // UNO: Catch player who didn't call UNO (+2 penalty)
+  socket.on('uno_catch', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+
+    const targetId = room.state.unoNotCalled;
+    if (!targetId || targetId === odId) return; // Can't catch yourself
+
+    // Give target +2 cards
+    const targetHand = room.state.hands[targetId];
+    for (let i = 0; i < 2; i++) {
+      if (room.state.deck.length > 0) {
+        targetHand.push(room.state.deck.pop());
+      }
+    }
+
+    room.state.unoNotCalled = null;
+
+    io.to(socket.roomId).emit('uno_caught', {
+      caughtPlayer: targetId,
+      caughtBy: odId
+    });
+
+    sendUnoUpdate(room);
+  });
+
+  // UNO: Accept Wild Draw Four (don't challenge)
+  socket.on('uno_wild4_accept', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+    if (!room.state.awaitingWild4Response) return;
+    if (room.state.wild4Target !== odId) return;
+
+    // Draw 4 cards
+    const hand = room.state.hands[odId];
+    for (let i = 0; i < 4; i++) {
+      if (room.state.deck.length > 0) {
+        hand.push(room.state.deck.pop());
+      }
+    }
+
+    // Move to next player (skip target)
+    const players = room.players;
+    const currentIdx = players.findIndex(p => p.odId === odId);
+    const nextIdx = (currentIdx + room.state.direction + players.length) % players.length;
+    room.state.currentPlayer = players[nextIdx].odId;
+
+    room.state.awaitingWild4Response = false;
+    room.state.pendingWild4 = null;
+
+    io.to(socket.roomId).emit('uno_wild4_resolved', {
+      target: odId,
+      challenged: false,
+      cardsDrawn: 4
+    });
+
+    sendUnoUpdate(room);
+  });
+
+  // UNO: Challenge Wild Draw Four
+  socket.on('uno_wild4_challenge', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'uno') return;
+    if (!room.state.awaitingWild4Response) return;
+    if (room.state.wild4Target !== odId) return;
+
+    const pending = room.state.pendingWild4;
+    if (!pending) return;
+
+    const wasLegal = pending.wasLegal;
+    const wild4Player = pending.from;
+
+    if (!wasLegal) {
+      // Challenge successful! Wild4 player draws 4
+      const wild4Hand = room.state.hands[wild4Player];
+      for (let i = 0; i < 4; i++) {
+        if (room.state.deck.length > 0) {
+          wild4Hand.push(room.state.deck.pop());
+        }
+      }
+      io.to(socket.roomId).emit('uno_wild4_resolved', {
+        target: odId,
+        challenged: true,
+        challengeSuccess: true,
+        wild4Player,
+        cardsDrawn: 4
+      });
+    } else {
+      // Challenge failed! Challenger draws 6
+      const challengerHand = room.state.hands[odId];
+      for (let i = 0; i < 6; i++) {
+        if (room.state.deck.length > 0) {
+          challengerHand.push(room.state.deck.pop());
+        }
+      }
+      io.to(socket.roomId).emit('uno_wild4_resolved', {
+        target: odId,
+        challenged: true,
+        challengeSuccess: false,
+        cardsDrawn: 6
+      });
+    }
+
+    // Move to next player (skip challenger either way)
+    const players = room.players;
+    const currentIdx = players.findIndex(p => p.odId === odId);
+    const nextIdx = (currentIdx + room.state.direction + players.length) % players.length;
+    room.state.currentPlayer = players[nextIdx].odId;
+
+    room.state.awaitingWild4Response = false;
+    room.state.pendingWild4 = null;
+
+    sendUnoUpdate(room);
   });
 
   // UNO: Challenge player who didn't call UNO
@@ -1576,16 +1788,37 @@ function initDurakGame(room) {
     hands[player.odId] = deck.splice(0, 6);
   });
 
+  // Find player with lowest trump card (first to attack)
+  const valueOrder = { '6': 0, '7': 1, '8': 2, '9': 3, '10': 4, 'J': 5, 'Q': 6, 'K': 7, 'A': 8 };
+  let firstAttacker = room.players[0];
+  let lowestTrumpValue = 999;
+
+  room.players.forEach(player => {
+    const trumpCards = hands[player.odId].filter(c => c.suit === trump.suit);
+    trumpCards.forEach(card => {
+      const cardValue = valueOrder[card.value];
+      if (cardValue < lowestTrumpValue) {
+        lowestTrumpValue = cardValue;
+        firstAttacker = player;
+      }
+    });
+  });
+
+  // Defender is next player after attacker
+  const attackerIdx = room.players.indexOf(firstAttacker);
+  const defenderIdx = (attackerIdx + 1) % room.players.length;
+
   room.state = {
     deck,
     trump,
     trumpSuit: trump.suit,
     hands,
     table: [],
-    currentAttacker: room.players[0].odId,
-    currentDefender: room.players[1].odId,
+    currentAttacker: firstAttacker.odId,
+    currentDefender: room.players[defenderIdx].odId,
     phase: 'attack',
-    mode: room.settings?.mode || 'podkidnoy'
+    mode: room.settings?.mode || 'podkidnoy',
+    isFirstRound: true // For transfer restrictions
   };
 
   // Send individual hands to each player
@@ -1725,13 +1958,31 @@ function initMonopolyGame(room) {
 // ========== HELPER FUNCTIONS ==========
 
 // Durak: Draw cards for all players (to 6)
+// Order: attacker first, then clockwise, defender last
 function drawCardsForPlayers(room) {
   const targetCards = 6;
 
-  // Attacker draws first, then others
-  const drawOrder = [room.state.currentAttacker, ...room.players
-    .filter(p => p.odId !== room.state.currentAttacker)
-    .map(p => p.odId)];
+  // Build draw order: attacker first, then clockwise, defender last
+  const attackerIdx = room.players.findIndex(p => p.odId === room.state.currentAttacker);
+  const defenderIdx = room.players.findIndex(p => p.odId === room.state.currentDefender);
+
+  const drawOrder = [];
+
+  // Start with attacker
+  drawOrder.push(room.state.currentAttacker);
+
+  // Then clockwise from attacker (skipping defender until the end)
+  let idx = (attackerIdx + 1) % room.players.length;
+  while (idx !== attackerIdx) {
+    const playerId = room.players[idx].odId;
+    if (playerId !== room.state.currentDefender) {
+      drawOrder.push(playerId);
+    }
+    idx = (idx + 1) % room.players.length;
+  }
+
+  // Defender draws last
+  drawOrder.push(room.state.currentDefender);
 
   for (const playerId of drawOrder) {
     while (room.state.hands[playerId].length < targetCards && room.state.deck.length > 0) {
@@ -1797,7 +2048,12 @@ function sendUnoUpdate(room) {
           odId: p.odId,
           cardCount: room.state.hands[p.odId].length
         })),
-        deckCount: room.state.deck.length
+        deckCount: room.state.deck.length,
+        // Wild4 challenge state
+        awaitingWild4Response: room.state.awaitingWild4Response || false,
+        wild4Target: room.state.wild4Target || null,
+        // UNO penalty - who can be caught
+        unoNotCalled: room.state.unoNotCalled || null
       });
     }
   });
