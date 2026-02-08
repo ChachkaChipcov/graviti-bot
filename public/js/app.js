@@ -673,4 +673,132 @@ function endDrag(e, game) {
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
+    initSettings();
 });
+
+// ========== SETTINGS & LOCALIZATION ==========
+
+// Translations
+const translations = {
+    ru: {
+        subtitle: 'Играй с друзьями!',
+        settings: 'Настройки',
+        language: 'Язык',
+        theme: 'Тема',
+        dark: 'Тёмная',
+        light: 'Светлая',
+        rps: 'Камень-Ножницы-Бумага',
+        tictactoe: 'Крестики-Нолики',
+        battleship: 'Морской Бой',
+        durak: 'Дурак',
+        uno: 'UNO',
+        monopoly: 'Монополия'
+    },
+    en: {
+        subtitle: 'Play with friends!',
+        settings: 'Settings',
+        language: 'Language',
+        theme: 'Theme',
+        dark: 'Dark',
+        light: 'Light',
+        rps: 'Rock-Paper-Scissors',
+        tictactoe: 'Tic-Tac-Toe',
+        battleship: 'Battleship',
+        durak: 'Durak',
+        uno: 'UNO',
+        monopoly: 'Monopoly'
+    },
+    uk: {
+        subtitle: 'Грай з друзями!',
+        settings: 'Налаштування',
+        language: 'Мова',
+        theme: 'Тема',
+        dark: 'Темна',
+        light: 'Світла',
+        rps: 'Камінь-Ножиці-Папір',
+        tictactoe: 'Хрестики-Нулики',
+        battleship: 'Морський Бій',
+        durak: 'Дурень',
+        uno: 'UNO',
+        monopoly: 'Монополія'
+    }
+};
+
+let currentLang = 'ru';
+let currentTheme = 'dark';
+
+function initSettings() {
+    // Load saved settings
+    const savedLang = localStorage.getItem('gamezone_lang') || 'ru';
+    const savedTheme = localStorage.getItem('gamezone_theme') || 'dark';
+
+    setLanguage(savedLang, false);
+    setTheme(savedTheme, false);
+}
+
+function toggleSettings() {
+    const panel = document.getElementById('settings-panel');
+    const btn = document.querySelector('.hamburger-btn');
+
+    if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        btn.classList.add('active');
+    } else {
+        panel.classList.add('hidden');
+        btn.classList.remove('active');
+    }
+
+    App.haptic('light');
+}
+
+function setLanguage(lang, save = true) {
+    currentLang = lang;
+
+    // Update option buttons
+    document.querySelectorAll('[data-lang]').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.lang === lang);
+    });
+
+    // Apply translations
+    const t = translations[lang] || translations.ru;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (t[key]) {
+            el.textContent = t[key];
+        }
+    });
+
+    // Save to localStorage
+    if (save) {
+        localStorage.setItem('gamezone_lang', lang);
+        App.haptic('light');
+    }
+}
+
+function setTheme(theme, save = true) {
+    currentTheme = theme;
+
+    // Update option buttons
+    document.querySelectorAll('[data-theme]').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.theme === theme);
+    });
+
+    // Apply theme
+    if (theme === 'light') {
+        document.body.classList.add('light-theme');
+    } else {
+        document.body.classList.remove('light-theme');
+    }
+
+    // Update theme-color meta tag
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+        themeColorMeta.content = theme === 'light' ? '#f5f5f7' : '#0f0f1a';
+    }
+
+    // Save to localStorage
+    if (save) {
+        localStorage.setItem('gamezone_theme', theme);
+        App.haptic('light');
+    }
+}

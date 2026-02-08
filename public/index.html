@@ -3,22 +3,24 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Game Zone</title>
-  
+
   <!-- iOS Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Game Zone">
-  
+
   <!-- Android/Chrome Meta Tags -->
   <meta name="theme-color" content="#0f0f1a">
   <meta name="mobile-web-app-capable" content="yes">
-  
+
   <!-- General -->
-  <meta name="description" content="Играй с друзьями в Telegram! КНБ, Крестики-Нолики, Морской Бой, Дурак, UNO, Монополия">
+  <meta name="description"
+    content="Играй с друзьями в Telegram! КНБ, Крестики-Нолики, Морской Бой, Дурак, UNO, Монополия">
   <meta name="format-detection" content="telephone=no">
-  
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/animations.css">
@@ -30,8 +32,52 @@
     <!-- Lobby Screen -->
     <div id="lobby" class="screen active">
       <div class="header">
+        <button class="hamburger-btn" onclick="toggleSettings()" aria-label="Настройки">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <h1>🎮 Game Zone</h1>
-        <p class="subtitle">Играй с друзьями!</p>
+        <p class="subtitle" data-i18n="subtitle">Играй с друзьями!</p>
+      </div>
+
+      <!-- Settings Panel -->
+      <div id="settings-panel" class="settings-panel hidden">
+        <div class="settings-header">
+          <h3>⚙️ <span data-i18n="settings">Настройки</span></h3>
+          <button class="close-btn" onclick="toggleSettings()">✕</button>
+        </div>
+
+        <div class="settings-content">
+          <!-- Language Selection -->
+          <div class="settings-section">
+            <h4>🌍 <span data-i18n="language">Язык</span></h4>
+            <div class="settings-options">
+              <button class="option-btn selected" data-lang="ru" onclick="setLanguage('ru')">
+                🇷🇺 Русский
+              </button>
+              <button class="option-btn" data-lang="en" onclick="setLanguage('en')">
+                🇬🇧 English
+              </button>
+              <button class="option-btn" data-lang="uk" onclick="setLanguage('uk')">
+                🇺🇦 Українська
+              </button>
+            </div>
+          </div>
+
+          <!-- Theme Selection -->
+          <div class="settings-section">
+            <h4>🎨 <span data-i18n="theme">Тема</span></h4>
+            <div class="settings-options">
+              <button class="option-btn selected" data-theme="dark" onclick="setTheme('dark')">
+                🌙 <span data-i18n="dark">Тёмная</span>
+              </button>
+              <button class="option-btn" data-theme="light" onclick="setTheme('light')">
+                ☀️ <span data-i18n="light">Светлая</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="games-grid">
