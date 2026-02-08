@@ -103,30 +103,18 @@
             </div>
           </div>
 
-          <!-- Info Button -->
-          <div class="settings-section">
-            <button class="info-btn" onclick="showInfo()">
+          <!-- Info Accordion -->
+          <div class="settings-section info-accordion">
+            <button class="accordion-header" onclick="toggleInfo()">
               <span>ℹ️</span>
               <span data-i18n="information">Информация</span>
-              <span class="arrow">›</span>
+              <span class="accordion-arrow">▼</span>
             </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Info Modal -->
-      <div id="info-modal" class="modal hidden">
-        <div class="modal-content info-modal-content">
-          <div class="modal-header">
-            <h3>ℹ️ <span data-i18n="about_project">О проекте</span></h3>
-            <button class="close-btn" onclick="hideInfo()">✕</button>
-          </div>
-          <div class="modal-body">
-            <div class="info-text">
-              <p data-i18n="info_text_1">🚀 Разработка Game Zone началась <strong>20 ноября 2025 года</strong>.</p>
-              <p data-i18n="info_text_2">📈 Проект активно развивается и будет продолжать расти!</p>
-              <p data-i18n="info_text_3">🎮 Впереди новые игры, улучшения и функции.</p>
-              <p data-i18n="info_text_4">💜 Спасибо, что играете с нами!</p>
+            <div id="info-content" class="accordion-content hidden">
+              <p>🚀 Разработка Game Zone началась <strong>20 ноября 2025 года</strong>.</p>
+              <p>📈 Проект активно развивается и будет продолжать расти!</p>
+              <p>🎮 Впереди новые игры, улучшения и функции.</p>
+              <p>💜 Спасибо, что играете с нами!</p>
             </div>
           </div>
         </div>

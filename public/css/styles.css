@@ -365,52 +365,75 @@ body.light-theme .hamburger-btn span {
   opacity: 0.6;
 }
 
-/* Info Modal */
-.info-modal-content {
-  max-width: 380px;
-  animation: slideUp 0.3s ease;
+/* Info Accordion */
+.info-accordion {
+  padding: 0;
+  overflow: hidden;
 }
 
-.modal-header {
+.accordion-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  width: 100%;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--glass-border);
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.1rem;
+.accordion-header:hover {
+  background: rgba(138, 43, 226, 0.1);
 }
 
-.modal-body {
-  padding: 20px;
+.accordion-arrow {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  transition: transform 0.3s;
 }
 
-.info-text p {
-  margin: 0 0 14px 0;
+.accordion-header.active .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--glass-border);
+  animation: accordionOpen 0.3s ease;
+}
+
+.accordion-content.hidden {
+  display: none;
+}
+
+.accordion-content p {
+  margin: 12px 0 0;
   line-height: 1.6;
   color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
-.info-text p:last-child {
-  margin-bottom: 0;
+.accordion-content p:first-child {
+  margin-top: 16px;
 }
 
-.info-text strong {
+.accordion-content strong {
   color: var(--accent-primary);
 }
 
-@keyframes slideUp {
+@keyframes accordionOpen {
   from {
-    transform: translateY(20px);
     opacity: 0;
+    transform: translateY(-10px);
   }
 
   to {
-    transform: translateY(0);
     opacity: 1;
+    transform: translateY(0);
   }
 }
 

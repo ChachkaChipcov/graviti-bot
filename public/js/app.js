@@ -879,16 +879,18 @@ function setTheme(theme, save = true) {
     }
 }
 
-// Show info modal
-function showInfo() {
-    const modal = document.getElementById('info-modal');
-    modal.classList.remove('hidden');
-    App.haptic('light');
-}
+// Toggle info accordion
+function toggleInfo() {
+    const content = document.getElementById('info-content');
+    const header = document.querySelector('.accordion-header');
 
-// Hide info modal
-function hideInfo() {
-    const modal = document.getElementById('info-modal');
-    modal.classList.add('hidden');
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        header.classList.add('active');
+    } else {
+        content.classList.add('hidden');
+        header.classList.remove('active');
+    }
+
     App.haptic('light');
 }
