@@ -737,7 +737,8 @@ const translations = {
         info_text_1: '🚀 Разработка Game Zone началась <strong>20 ноября 2025 года</strong>.',
         info_text_2: '📈 Проект активно развивается и будет продолжать расти!',
         info_text_3: '🎮 Впереди новые игры, улучшения и функции.',
-        info_text_4: '💜 Спасибо, что играете с нами!'
+        info_text_4: '💜 Спасибо, что играете с нами!',
+        close_settings: 'Закрыть настройки'
     },
     en: {
         // Main
@@ -796,7 +797,8 @@ const translations = {
         info_text_1: '🚀 Game Zone development started on <strong>November 20, 2025</strong>.',
         info_text_2: '📈 The project is actively developing and will continue to grow!',
         info_text_3: '🎮 New games, improvements and features are coming.',
-        info_text_4: '💜 Thank you for playing with us!'
+        info_text_4: '💜 Thank you for playing with us!',
+        close_settings: 'Close Settings'
     }
 };
 

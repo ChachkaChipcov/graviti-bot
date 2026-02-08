@@ -32,20 +32,21 @@
     <!-- Lobby Screen -->
     <div id="lobby" class="screen active">
       <div class="header">
-        <button class="hamburger-btn" onclick="toggleSettings()" aria-label="Настройки">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
         <h1>🎮 Game Zone</h1>
         <p class="subtitle" data-i18n="subtitle">Играй с друзьями!</p>
+      </div>
+
+      <!-- Settings Bar (click to open settings) -->
+      <div class="settings-bar" onclick="toggleSettings()">
+        <span class="settings-bar-icon">⚙️</span>
+        <span class="settings-bar-text" data-i18n="settings">Настройки</span>
+        <span class="settings-bar-arrow">›</span>
       </div>
 
       <!-- Settings Panel (Telegram-style) -->
       <div id="settings-panel" class="settings-panel hidden">
         <div class="settings-header">
           <h3>⚙️ <span data-i18n="settings">Настройки</span></h3>
-          <button class="close-btn" onclick="toggleSettings()">✕</button>
         </div>
 
         <div class="settings-content">
@@ -117,6 +118,11 @@
               <span class="about-value">1.0.0</span>
             </div>
           </div>
+
+          <!-- Close Button -->
+          <button class="settings-close-btn" onclick="toggleSettings()">
+            <span data-i18n="close_settings">Закрыть настройки</span>
+          </button>
         </div>
       </div>
 

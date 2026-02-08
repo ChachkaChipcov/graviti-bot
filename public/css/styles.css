@@ -83,53 +83,67 @@ body {
   font-size: 1rem;
 }
 
-/* Hamburger Menu Button - FAB Style */
-.hamburger-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
+/* Settings Bar (above games) */
+.settings-bar {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.settings-bar:hover {
+  background: rgba(138, 43, 226, 0.15);
+  border-color: var(--accent-primary);
+}
+
+.settings-bar-icon {
+  font-size: 1.3rem;
+}
+
+.settings-bar-text {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-bar-arrow {
+  font-size: 1.3rem;
+  color: var(--text-secondary);
+  transition: transform 0.3s;
+}
+
+.settings-bar:hover .settings-bar-arrow {
+  transform: translateX(4px);
+}
+
+/* Settings Close Button */
+.settings-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   padding: 16px;
-  transition: all 0.3s;
-  z-index: 999;
-  box-shadow: 0 4px 20px rgba(138, 43, 226, 0.4);
-}
-
-.hamburger-btn:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 30px rgba(138, 43, 226, 0.6);
-}
-
-
-.hamburger-btn span {
-  display: block;
-  width: 22px;
-  height: 3px;
-  background: #fff;
-  border-radius: 2px;
+  margin-top: 20px;
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
   transition: all 0.3s;
 }
 
-.hamburger-btn.active span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
-}
-
-.hamburger-btn.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger-btn.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(5px, -5px);
+.settings-close-btn:hover {
+  background: #ff4757;
+  transform: scale(1.02);
 }
 
 /* Settings Panel */
