@@ -262,6 +262,81 @@ body.light-theme .hamburger-btn span {
   }
 }
 
+/* Settings Divider */
+.settings-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 20px 0;
+}
+
+/* Donate Button */
+.donate-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7c634 100%);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.donate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+.donate-btn:active {
+  transform: translateY(0);
+}
+
+.donate-icon {
+  font-size: 1.5rem;
+}
+
+.donate-platform {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.9;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* About Section */
+.settings-about {
+  background: transparent;
+  border: none;
+  padding: 10px 0;
+}
+
+.about-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.about-item:last-child {
+  border-bottom: none;
+}
+
+.about-value {
+  margin-left: auto;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 /* Game Cards */
 .games-grid {
   display: flex;

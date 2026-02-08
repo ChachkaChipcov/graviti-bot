@@ -41,7 +41,7 @@
         <p class="subtitle" data-i18n="subtitle">Играй с друзьями!</p>
       </div>
 
-      <!-- Settings Panel -->
+      <!-- Settings Panel (Telegram-style) -->
       <div id="settings-panel" class="settings-panel hidden">
         <div class="settings-header">
           <h3>⚙️ <span data-i18n="settings">Настройки</span></h3>
@@ -72,6 +72,34 @@
               <button class="option-btn" data-theme="light" onclick="setTheme('light')">
                 ☀️ <span data-i18n="light">Светлая</span>
               </button>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="settings-divider"></div>
+
+          <!-- Support Developer -->
+          <div class="settings-section">
+            <h4>💝 <span data-i18n="support_dev">Поддержка разработчика</span></h4>
+            <a href="https://www.donationalerts.com/r/chachka_chipcov" target="_blank" class="donate-btn"
+              onclick="App.haptic('medium')">
+              <span class="donate-icon">💰</span>
+              <span data-i18n="donate">Поддержать</span>
+              <span class="donate-platform">DonationAlerts</span>
+            </a>
+          </div>
+
+          <!-- About -->
+          <div class="settings-section settings-about">
+            <div class="about-item">
+              <span>👨‍💻</span>
+              <span data-i18n="developer">Разработчик</span>
+              <span class="about-value">@Chachka_Chipcov</span>
+            </div>
+            <div class="about-item">
+              <span>📱</span>
+              <span data-i18n="version">Версия</span>
+              <span class="about-value">1.0.0</span>
             </div>
           </div>
         </div>

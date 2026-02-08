@@ -723,7 +723,13 @@ const translations = {
         room_code: 'Код комнаты',
         players: 'Игроки',
         password: 'Пароль',
-        private_room: 'Приватная комната'
+        private_room: 'Приватная комната',
+
+        // Support
+        support_dev: 'Поддержка разработчика',
+        donate: 'Поддержать',
+        developer: 'Разработчик',
+        version: 'Версия'
     },
     en: {
         // Main
@@ -768,7 +774,13 @@ const translations = {
         room_code: 'Room Code',
         players: 'Players',
         password: 'Password',
-        private_room: 'Private Room'
+        private_room: 'Private Room',
+
+        // Support
+        support_dev: 'Support Developer',
+        donate: 'Donate',
+        developer: 'Developer',
+        version: 'Version'
     }
 };
 
