@@ -681,46 +681,94 @@ document.addEventListener('DOMContentLoaded', () => {
 // Translations
 const translations = {
     ru: {
+        // Main
         subtitle: 'Играй с друзьями!',
         settings: 'Настройки',
         language: 'Язык',
         theme: 'Тема',
         dark: 'Тёмная',
         light: 'Светлая',
-        rps: 'Камень-Ножницы-Бумага',
-        tictactoe: 'Крестики-Нолики',
-        battleship: 'Морской Бой',
-        durak: 'Дурак',
-        uno: 'UNO',
-        monopoly: 'Монополия'
+        beta: 'БЕТА',
+
+        // Games
+        rps_title: 'Камень-Ножницы-Бумага',
+        rps_desc: 'Классическая игра на удачу',
+        ttt_title: 'Крестики-Нолики',
+        ttt_desc: 'Стратегическая дуэль 3x3',
+        bs_title: 'Морской Бой',
+        bs_desc: 'Потопи флот противника!',
+        durak_title: 'Дурак',
+        durak_desc: 'Карточная игра 2-7 игроков',
+        uno_title: 'UNO',
+        uno_desc: 'Цветные карты 2-7 игроков',
+        monopoly_title: 'Монополия',
+        monopoly_desc: 'Классическая настольная игра',
+
+        // Common UI
+        create_room: 'Создать комнату',
+        join_room: 'Присоединиться',
+        waiting: 'Ожидание...',
+        your_turn: 'Ваш ход!',
+        opponent_turn: 'Ход соперника...',
+        you_win: '🎉 Вы победили!',
+        you_lose: '😢 Вы проиграли',
+        draw: '🤝 Ничья!',
+        play_again: 'Играть снова',
+        exit: 'Выход',
+        ready: 'Готово',
+        start: 'Начать',
+        cancel: 'Отмена',
+        confirm: 'Подтвердить',
+        invite_friend: 'Пригласить друга',
+        room_code: 'Код комнаты',
+        players: 'Игроки',
+        password: 'Пароль',
+        private_room: 'Приватная комната'
     },
     en: {
+        // Main
         subtitle: 'Play with friends!',
         settings: 'Settings',
         language: 'Language',
         theme: 'Theme',
         dark: 'Dark',
         light: 'Light',
-        rps: 'Rock-Paper-Scissors',
-        tictactoe: 'Tic-Tac-Toe',
-        battleship: 'Battleship',
-        durak: 'Durak',
-        uno: 'UNO',
-        monopoly: 'Monopoly'
-    },
-    uk: {
-        subtitle: 'Грай з друзями!',
-        settings: 'Налаштування',
-        language: 'Мова',
-        theme: 'Тема',
-        dark: 'Темна',
-        light: 'Світла',
-        rps: 'Камінь-Ножиці-Папір',
-        tictactoe: 'Хрестики-Нулики',
-        battleship: 'Морський Бій',
-        durak: 'Дурень',
-        uno: 'UNO',
-        monopoly: 'Монополія'
+        beta: 'BETA',
+
+        // Games
+        rps_title: 'Rock-Paper-Scissors',
+        rps_desc: 'Classic game of luck',
+        ttt_title: 'Tic-Tac-Toe',
+        ttt_desc: 'Strategic 3x3 duel',
+        bs_title: 'Battleship',
+        bs_desc: 'Sink the enemy fleet!',
+        durak_title: 'Durak',
+        durak_desc: 'Card game for 2-7 players',
+        uno_title: 'UNO',
+        uno_desc: 'Color cards for 2-7 players',
+        monopoly_title: 'Monopoly',
+        monopoly_desc: 'Classic board game',
+
+        // Common UI
+        create_room: 'Create Room',
+        join_room: 'Join Room',
+        waiting: 'Waiting...',
+        your_turn: 'Your turn!',
+        opponent_turn: 'Opponent\'s turn...',
+        you_win: '🎉 You won!',
+        you_lose: '😢 You lost',
+        draw: '🤝 Draw!',
+        play_again: 'Play Again',
+        exit: 'Exit',
+        ready: 'Ready',
+        start: 'Start',
+        cancel: 'Cancel',
+        confirm: 'Confirm',
+        invite_friend: 'Invite Friend',
+        room_code: 'Room Code',
+        players: 'Players',
+        password: 'Password',
+        private_room: 'Private Room'
     }
 };
 
