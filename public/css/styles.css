@@ -337,6 +337,83 @@ body.light-theme .hamburger-btn span {
   font-weight: 500;
 }
 
+/* Info Button */
+.info-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.info-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #fff;
+}
+
+.info-btn .arrow {
+  margin-left: auto;
+  font-size: 1.2rem;
+  opacity: 0.6;
+}
+
+/* Info Modal */
+.info-modal-content {
+  max-width: 380px;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.info-text p {
+  margin: 0 0 14px 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.info-text p:last-child {
+  margin-bottom: 0;
+}
+
+.info-text strong {
+  color: var(--accent-primary);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Game Cards */
 .games-grid {
   display: flex;

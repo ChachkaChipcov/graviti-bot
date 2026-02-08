@@ -729,7 +729,15 @@ const translations = {
         support_dev: 'Поддержка разработчика',
         donate: 'Поддержать',
         developer: 'Разработчик',
-        version: 'Версия'
+        version: 'Версия',
+
+        // Info
+        information: 'Информация',
+        about_project: 'О проекте',
+        info_text_1: '🚀 Разработка Game Zone началась <strong>20 ноября 2025 года</strong>.',
+        info_text_2: '📈 Проект активно развивается и будет продолжать расти!',
+        info_text_3: '🎮 Впереди новые игры, улучшения и функции.',
+        info_text_4: '💜 Спасибо, что играете с нами!'
     },
     en: {
         // Main
@@ -780,7 +788,15 @@ const translations = {
         support_dev: 'Support Developer',
         donate: 'Donate',
         developer: 'Developer',
-        version: 'Version'
+        version: 'Version',
+
+        // Info
+        information: 'Information',
+        about_project: 'About Project',
+        info_text_1: '🚀 Game Zone development started on <strong>November 20, 2025</strong>.',
+        info_text_2: '📈 The project is actively developing and will continue to grow!',
+        info_text_3: '🎮 New games, improvements and features are coming.',
+        info_text_4: '💜 Thank you for playing with us!'
     }
 };
 
@@ -861,4 +877,18 @@ function setTheme(theme, save = true) {
         localStorage.setItem('gamezone_theme', theme);
         App.haptic('light');
     }
+}
+
+// Show info modal
+function showInfo() {
+    const modal = document.getElementById('info-modal');
+    modal.classList.remove('hidden');
+    App.haptic('light');
+}
+
+// Hide info modal
+function hideInfo() {
+    const modal = document.getElementById('info-modal');
+    modal.classList.add('hidden');
+    App.haptic('light');
 }
