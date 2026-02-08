@@ -3822,3 +3822,272 @@ body {
     height: 91px;
   }
 }
+
+/* ================================================
+   CROSS-PLATFORM RESPONSIVE DESIGN
+   PC (Desktop), Tablet, iOS, Android
+   ================================================ */
+
+/* iOS Safe Area Support */
+@supports (padding: env(safe-area-inset-bottom)) {
+  #app {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .dk-hand-area,
+  .uno-hand,
+  .mp-actions-bar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Desktop (PC) - Large screens */
+@media (min-width: 768px) {
+  #app {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  .header h1 {
+    font-size: 2.5rem;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .game-card {
+    padding: 28px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(108, 92, 231, 0.3);
+  }
+
+  .btn {
+    padding: 16px 32px;
+    font-size: 1.1rem;
+  }
+
+  /* Card games on desktop */
+  .dk-card,
+  .uno-card {
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .dk-card:hover,
+  .uno-card:hover {
+    transform: translateY(-10px) scale(1.05);
+  }
+
+  /* Game screens */
+  .rps-choices {
+    gap: 24px;
+  }
+
+  .rps-choice {
+    width: 120px;
+    height: 120px;
+  }
+
+  .ttt-board {
+    width: 360px;
+    height: 360px;
+  }
+
+  .ttt-cell {
+    font-size: 3rem;
+  }
+
+  /* Battleship */
+  .bs-grid {
+    width: 320px;
+    height: 320px;
+  }
+
+  .bs-grids {
+    flex-direction: row;
+    gap: 40px;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1024px) {
+  #app {
+    max-width: 800px;
+  }
+
+  .games-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Monopoly board */
+  .mp-classic-board {
+    width: 600px;
+    height: 600px;
+  }
+}
+
+/* Tablets */
+@media (min-width: 600px) and (max-width: 767px) {
+  #app {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .dk-card {
+    width: 70px;
+    height: 98px;
+  }
+}
+
+/* Small Mobile (iPhone SE, etc) */
+@media (max-width: 360px) {
+  #app {
+    padding: 12px;
+  }
+
+  .header h1 {
+    font-size: 1.6rem;
+  }
+
+  .game-card {
+    padding: 16px;
+  }
+
+  .game-card h3 {
+    font-size: 1rem;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+  }
+
+  .dk-card {
+    width: 55px;
+    height: 77px;
+  }
+
+  .dk-card-value {
+    font-size: 0.8rem;
+  }
+
+  .uno-card {
+    width: 50px;
+    height: 75px;
+  }
+
+  .rps-choice {
+    width: 70px;
+    height: 70px;
+  }
+
+  .ttt-board {
+    width: 270px;
+    height: 270px;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  #app {
+    padding: 8px 16px;
+  }
+
+  .header {
+    padding: 10px 0;
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+  }
+
+  .games-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .game-card {
+    padding: 12px;
+  }
+
+  /* Card games in landscape */
+  .dk-game-area,
+  .uno-table {
+    flex-direction: row;
+  }
+
+  .dk-hand-area,
+  .uno-hand {
+    max-height: 45vh;
+  }
+}
+
+/* Android specific - prevent tap highlight */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn,
+  .game-card,
+  .dk-card,
+  .uno-card {
+    touch-action: manipulation;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
+
+  .game-card,
+  .dk-card,
+  .uno-card {
+    border-width: 0.5px;
+  }
+}
+
+/* Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode enhancement */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #0a0a14;
+    --bg-secondary: #14142a;
+  }
+}
+
+/* Print styles (если нужно скрыть игру при печати) */
+@media print {
+  body {
+    display: none;
+  }
+}
