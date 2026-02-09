@@ -146,6 +146,39 @@ body {
   transform: scale(1.02);
 }
 
+/* Help Button */
+.help-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border: none;
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.help-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+.help-icon {
+  font-size: 1.3rem;
+}
+
+.help-arrow {
+  margin-left: auto;
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
 /* Settings Panel */
 .settings-panel {
   position: fixed;

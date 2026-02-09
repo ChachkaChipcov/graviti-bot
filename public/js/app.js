@@ -738,7 +738,9 @@ const translations = {
         info_text_2: '📈 Проект активно развивается и будет продолжать расти!',
         info_text_3: '🎮 Впереди новые игры, улучшения и функции.',
         info_text_4: '💜 Спасибо, что играете с нами!',
-        close_settings: 'Закрыть настройки'
+        close_settings: 'Закрыть настройки',
+        help: 'Помощь',
+        contact_support: 'Связаться с поддержкой'
     },
     en: {
         // Main
@@ -798,7 +800,9 @@ const translations = {
         info_text_2: '📈 The project is actively developing and will continue to grow!',
         info_text_3: '🎮 New games, improvements and features are coming.',
         info_text_4: '💜 Thank you for playing with us!',
-        close_settings: 'Close Settings'
+        close_settings: 'Close Settings',
+        help: 'Help',
+        contact_support: 'Contact Support'
     }
 };
 
