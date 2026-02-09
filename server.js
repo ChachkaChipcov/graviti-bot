@@ -2134,15 +2134,94 @@ setInterval(() => {
   }
 }, 60000);
 
+// ========== SUPPORT BOT ==========
+const SUPPORT_BOT_TOKEN = '7713888286:AAEqAezUVp_DDx1NCSkvH1UuZ9VOXW9_RNY';
+const ADMIN_CHAT_ID = 1177236734; // @Chachka_Chipcov
+
+let supportBot = null;
+
+if (SUPPORT_BOT_TOKEN) {
+  supportBot = new Telegraf(SUPPORT_BOT_TOKEN);
+
+  // /start command
+  supportBot.start((ctx) => {
+    const userName = ctx.from.first_name || 'Друг';
+    ctx.replyWithMarkdown(`👋 Здравствуйте, *${userName}*!
+
+🎮 Добро пожаловать в поддержку *Game Zone*!
+
+📝 С чем вам нужна помощь?
+Отправьте вашу проблему *текстом*, *фото* или *видео* и вам обязательно помогут!
+
+⏳ Ожидайте ответ технической поддержки.`);
+  });
+
+  // Handle all messages
+  supportBot.on('message', async (ctx) => {
+    const userId = ctx.from.id;
+    const userName = ctx.from.first_name || 'Пользователь';
+    const username = ctx.from.username ? `@${ctx.from.username}` : 'нет username';
+
+    // Skip commands
+    if (ctx.message.text && ctx.message.text.startsWith('/')) return;
+
+    // Admin replying to forwarded message
+    if (ctx.message.reply_to_message && ctx.message.reply_to_message.forward_from) {
+      const originalUserId = ctx.message.reply_to_message.forward_from.id;
+
+      try {
+        if (ctx.message.text) {
+          await supportBot.telegram.sendMessage(originalUserId, `💬 *Ответ поддержки:*\n\n${ctx.message.text}`, { parse_mode: 'Markdown' });
+        } else if (ctx.message.photo) {
+          const photo = ctx.message.photo[ctx.message.photo.length - 1];
+          await supportBot.telegram.sendPhoto(originalUserId, photo.file_id, { caption: '💬 Ответ поддержки' });
+        } else if (ctx.message.document) {
+          await supportBot.telegram.sendDocument(originalUserId, ctx.message.document.file_id, { caption: '💬 Ответ поддержки' });
+        }
+        ctx.reply('✅ Ответ отправлен пользователю!');
+      } catch (err) {
+        ctx.reply('❌ Не удалось отправить ответ: ' + err.message);
+      }
+      return;
+    }
+
+    // Forward user message to admin
+    try {
+      await ctx.forwardMessage(ADMIN_CHAT_ID);
+      await supportBot.telegram.sendMessage(ADMIN_CHAT_ID,
+        `📩 Сообщение от: ${userName} (${username})\nID: ${userId}\n\n💡 Ответьте на пересланное сообщение, чтобы ответить пользователю.`);
+      ctx.reply('✅ Ваше сообщение получено! Ожидайте ответа поддержки.');
+    } catch (err) {
+      console.error('Support bot forward error:', err);
+      ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    }
+  });
+}
+
 // Start server
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   bot.launch().then(() => {
-    console.log('🤖 Bot started!');
+    console.log('🤖 Main Bot started!');
   });
+
+  // Launch support bot
+  if (supportBot) {
+    supportBot.launch().then(() => {
+      console.log('🆘 Support Bot started!');
+    }).catch(err => {
+      console.error('Support bot launch error:', err);
+    });
+  }
 });
 
 // Graceful shutdown
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGINT', () => {
+  bot.stop('SIGINT');
+  if (supportBot) supportBot.stop('SIGINT');
+});
+process.once('SIGTERM', () => {
+  bot.stop('SIGTERM');
+  if (supportBot) supportBot.stop('SIGTERM');
+});
