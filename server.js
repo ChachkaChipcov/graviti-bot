@@ -2138,6 +2138,9 @@ setInterval(() => {
 const SUPPORT_BOT_TOKEN = '7713888286:AAEqAezUVp_DDx1NCSkvH1UuZ9VOXW9_RNY';
 const ADMIN_CHAT_ID = 1177236734; // @Chachka_Chipcov
 
+// Store: forwarded message ID -> original user ID
+const supportMessageMap = new Map();
+
 let supportBot = null;
 
 if (SUPPORT_BOT_TOKEN) {
@@ -2159,37 +2162,58 @@ if (SUPPORT_BOT_TOKEN) {
   // Handle all messages
   supportBot.on('message', async (ctx) => {
     const userId = ctx.from.id;
+    const chatId = ctx.chat.id;
     const userName = ctx.from.first_name || 'Пользователь';
     const username = ctx.from.username ? `@${ctx.from.username}` : 'нет username';
 
     // Skip commands
     if (ctx.message.text && ctx.message.text.startsWith('/')) return;
 
-    // Admin replying to forwarded message
-    if (ctx.message.reply_to_message && ctx.message.reply_to_message.forward_from) {
-      const originalUserId = ctx.message.reply_to_message.forward_from.id;
+    // Check if this is ADMIN replying
+    if (userId === ADMIN_CHAT_ID) {
+      // Admin is replying to a forwarded message
+      if (ctx.message.reply_to_message) {
+        const replyToMsgId = ctx.message.reply_to_message.message_id;
+        const originalUserId = supportMessageMap.get(replyToMsgId);
 
-      try {
-        if (ctx.message.text) {
-          await supportBot.telegram.sendMessage(originalUserId, `💬 *Ответ поддержки:*\n\n${ctx.message.text}`, { parse_mode: 'Markdown' });
-        } else if (ctx.message.photo) {
-          const photo = ctx.message.photo[ctx.message.photo.length - 1];
-          await supportBot.telegram.sendPhoto(originalUserId, photo.file_id, { caption: '💬 Ответ поддержки' });
-        } else if (ctx.message.document) {
-          await supportBot.telegram.sendDocument(originalUserId, ctx.message.document.file_id, { caption: '💬 Ответ поддержки' });
+        if (originalUserId) {
+          try {
+            if (ctx.message.text) {
+              await supportBot.telegram.sendMessage(originalUserId, `💬 *Ответ поддержки:*\n\n${ctx.message.text}`, { parse_mode: 'Markdown' });
+            } else if (ctx.message.photo) {
+              const photo = ctx.message.photo[ctx.message.photo.length - 1];
+              await supportBot.telegram.sendPhoto(originalUserId, photo.file_id, { caption: '💬 Ответ поддержки' });
+            } else if (ctx.message.video) {
+              await supportBot.telegram.sendVideo(originalUserId, ctx.message.video.file_id, { caption: '💬 Ответ поддержки' });
+            } else if (ctx.message.document) {
+              await supportBot.telegram.sendDocument(originalUserId, ctx.message.document.file_id, { caption: '💬 Ответ поддержки' });
+            } else if (ctx.message.voice) {
+              await supportBot.telegram.sendVoice(originalUserId, ctx.message.voice.file_id, { caption: '💬 Ответ поддержки' });
+            }
+            ctx.reply('✅ Ответ отправлен пользователю!');
+          } catch (err) {
+            ctx.reply('❌ Не удалось отправить: ' + err.message);
+          }
+        } else {
+          ctx.reply('⚠️ Не могу определить пользователя. Ответьте на пересланное сообщение.');
         }
-        ctx.reply('✅ Ответ отправлен пользователю!');
-      } catch (err) {
-        ctx.reply('❌ Не удалось отправить ответ: ' + err.message);
       }
+      // Don't process admin messages further
       return;
     }
 
-    // Forward user message to admin
+    // Regular user sending message - forward to admin
     try {
-      await ctx.forwardMessage(ADMIN_CHAT_ID);
-      await supportBot.telegram.sendMessage(ADMIN_CHAT_ID,
-        `📩 Сообщение от: ${userName} (${username})\nID: ${userId}\n\n💡 Ответьте на пересланное сообщение, чтобы ответить пользователю.`);
+      const forwarded = await ctx.forwardMessage(ADMIN_CHAT_ID);
+
+      // Save mapping: forwarded message ID -> original user ID
+      supportMessageMap.set(forwarded.message_id, userId);
+
+      // Also send info message and save its ID too
+      const infoMsg = await supportBot.telegram.sendMessage(ADMIN_CHAT_ID,
+        `📩 От: ${userName} (${username})\nID: ${userId}\n\n💡 Ответьте на сообщение выше, чтобы ответить пользователю.`);
+      supportMessageMap.set(infoMsg.message_id, userId);
+
       ctx.reply('✅ Ваше сообщение получено! Ожидайте ответа поддержки.');
     } catch (err) {
       console.error('Support bot forward error:', err);
