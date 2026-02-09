@@ -184,14 +184,19 @@ const Durak = {
             const statusClass = isAttacker ? 'attacking' : (isDefender ? 'defending' : '');
             const cardCount = player.cardCount || 0;
 
-            // Card backs for opponent
-            const cardBacks = Array(Math.min(cardCount, 6)).fill(this.renderCardBack()).join('');
+            // Card backs for opponent (max 4 shown)
+            const cardBacks = Array(Math.min(cardCount, 4)).fill(this.renderCardBack()).join('');
+
+            // TG avatar or default
+            const avatarHtml = player.photoUrl
+                ? `<img src="${player.photoUrl}" alt="">`
+                : '👤';
 
             html += `
                 <div class="dk-opponent ${statusClass}" data-player="${player.odId}">
                     <div class="dk-opponent-avatar">
-                        <span class="dk-avatar-icon">👤</span>
-                        <span class="dk-avatar-name">${player.name?.slice(0, 8) || 'Игрок'}</span>
+                        <span class="dk-avatar-icon">${avatarHtml}</span>
+                        <span class="dk-avatar-name">${player.name?.slice(0, 10) || 'Игрок'}</span>
                     </div>
                     <div class="dk-opponent-cards">${cardBacks}</div>
                     <span class="dk-opponent-count">${cardCount}</span>
