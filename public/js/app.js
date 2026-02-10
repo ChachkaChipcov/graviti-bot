@@ -137,7 +137,7 @@ const App = {
             // From setup screens - go to lobby
             this.showScreen('lobby');
             this.currentGame = null;
-        } else if (this.currentScreen === 'minesweeper-game' || this.currentScreen === 'snake-game') {
+        } else if (this.currentScreen === 'minesweeper-game' || this.currentScreen === 'snake-game' || this.currentScreen === 'match3-game') {
             // Solo games - back to lobby
             if (this.currentScreen === 'snake-game' && typeof SnakeGame !== 'undefined') {
                 SnakeGame.running = false;
@@ -939,6 +939,9 @@ function startSoloGame(gameType) {
     } else if (gameType === 'snake') {
         App.showScreen('snake-game');
         if (typeof SnakeGame !== 'undefined') SnakeGame.init();
+    } else if (gameType === 'match3') {
+        App.showScreen('match3-game');
+        if (typeof Match3Game !== 'undefined') Match3Game.init();
     }
 }
 

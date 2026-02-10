@@ -247,6 +247,16 @@
             <h3 data-i18n="snake_title">Змейка</h3>
             <p data-i18n="snake_desc">Классическая аркада</p>
           </div>
+
+          <div class="game-card" onclick="startSoloGame('match3')">
+            <div class="game-icon">
+              <span class="emoji-bounce">🔴</span>
+              <span class="emoji-bounce delay-1">🟢</span>
+              <span class="emoji-bounce delay-2">🔵</span>
+            </div>
+            <h3 data-i18n="m3_title">3 в ряд</h3>
+            <p data-i18n="m3_desc">Собирай кристаллы!</p>
+          </div>
         </div>
       </div>
     </div>
@@ -942,6 +952,28 @@
     </div>
   </div>
 
+  <!-- Match-3 Screen -->
+  <div id="match3-game" class="screen">
+    <div class="m3-header">
+      <button class="back-btn" onclick="goBackToLobby()">←</button>
+      <h2>💎 <span data-i18n="m3_title">3 в ряд</span></h2>
+      <div class="m3-info">
+        <span id="m3-score">⭐ 0</span>
+        <span id="m3-moves">🔄 30</span>
+        <span id="m3-best">🏆 0</span>
+      </div>
+    </div>
+    <div id="m3-field" class="m3-field"></div>
+    <div id="m3-result" class="m3-result hidden">
+      <div class="m3-result-content">
+        <h2 id="m3-result-title"></h2>
+        <p id="m3-result-text"></p>
+        <button class="btn primary" onclick="Match3Game.startLevel()">🔄 <span data-i18n="m3_restart">Ещё
+            раз</span></button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/multiplayer.js?v=33"></script>
   <script src="/js/app.js?v=33"></script>
@@ -953,7 +985,8 @@
   <script src="/js/monopoly.js?v=33"></script>
   <script src="/js/minesweeper.js?v=33"></script>
   <script src="/js/snake.js?v=33"></script>
-  <script src="/js/mafia.js?v=33"></script>
+  <script src="/js/mafia.js?v=34"></script>
+  <script src="/js/match3.js?v=34"></script>
 </body>
 
 </html>
