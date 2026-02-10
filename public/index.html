@@ -201,17 +201,6 @@
             <span class="beta-badge" data-i18n="beta">БЕТА</span>
           </div>
 
-          <div class="game-card" onclick="selectGame('monopoly')">
-            <div class="game-icon">
-              <span>🎲</span>
-              <span>🏠</span>
-              <span>💰</span>
-            </div>
-            <h3 data-i18n="monopoly_title">Монополия</h3>
-            <p data-i18n="monopoly_desc">Классическая настольная игра</p>
-            <span class="beta-badge" data-i18n="beta">БЕТА</span>
-          </div>
-
           <div class="game-card" onclick="selectGame('mafia')">
             <div class="game-icon">
               <span class="emoji-bounce">🎭</span>
@@ -220,6 +209,17 @@
             </div>
             <h3 data-i18n="mafia_title">Мафия</h3>
             <p data-i18n="mafia_desc">Социальная игра 5-12 игроков</p>
+            <span class="beta-badge" data-i18n="beta">БЕТА</span>
+          </div>
+
+          <div class="game-card" onclick="selectGame('monopoly')">
+            <div class="game-icon">
+              <span>🎲</span>
+              <span>🏠</span>
+              <span>💰</span>
+            </div>
+            <h3 data-i18n="monopoly_title">Монополия</h3>
+            <p data-i18n="monopoly_desc">Классическая настольная игра</p>
             <span class="beta-badge" data-i18n="beta">БЕТА</span>
           </div>
         </div>
@@ -806,136 +806,138 @@
         </button>
       </div>
     </div>
-  </div>
 
-  <!-- Minesweeper Screen -->
-  <div id="minesweeper-game" class="screen">
-    <div class="ms-header">
-      <button class="back-btn" onclick="goBackToLobby()">←</button>
-      <h2>💣 <span data-i18n="ms_title">Сапёр</span></h2>
-      <div class="ms-info">
-        <span id="ms-mines-count">🚩 10</span>
-        <span id="ms-timer">⏱ 0:00</span>
-      </div>
-    </div>
-    <div class="ms-difficulty">
-      <button class="ms-diff-btn active" data-diff="easy" onclick="Minesweeper.setDifficulty('easy')">
-        <span data-i18n="ms_easy">Лёгкий</span><br><small>9×9 · 10 мин</small>
-      </button>
-      <button class="ms-diff-btn" data-diff="medium" onclick="Minesweeper.setDifficulty('medium')">
-        <span data-i18n="ms_medium">Средний</span><br><small>16×16 · 40 мин</small>
-      </button>
-      <button class="ms-diff-btn" data-diff="hard" onclick="Minesweeper.setDifficulty('hard')">
-        <span data-i18n="ms_hard">Сложный</span><br><small>16×30 · 99 мин</small>
-      </button>
-    </div>
-    <div id="ms-field" class="ms-field"></div>
-    <div id="ms-result" class="ms-result hidden">
-      <div class="ms-result-content">
-        <h2 id="ms-result-title"></h2>
-        <p id="ms-result-text"></p>
-        <button class="btn primary" onclick="Minesweeper.restart()">🔄 <span data-i18n="ms_restart">Ещё
-            раз</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Snake Screen -->
-  <div id="snake-game" class="screen">
-    <div class="snake-header">
-      <button class="back-btn" onclick="goBackToLobby()">←</button>
-      <h2>🐍 <span data-i18n="snake_title">Змейка</span></h2>
-      <div class="snake-info">
-        <span id="snake-score">🍎 0</span>
-        <span id="snake-best">🏆 0</span>
-      </div>
-    </div>
-    <div class="snake-canvas-wrap">
-      <canvas id="snake-canvas"></canvas>
-    </div>
-    <div id="snake-overlay" class="snake-overlay">
-      <div class="snake-overlay-content">
-        <h2 id="snake-overlay-title">🐍 Змейка</h2>
-        <p id="snake-overlay-text" data-i18n="snake_start">Нажмите чтобы начать</p>
-        <button class="btn primary" id="snake-start-btn" onclick="SnakeGame.start()">▶ <span
-            data-i18n="snake_play">Играть</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mafia Screen -->
-  <div id="mafia-screen" class="screen">
-    <div class="mf-header">
-      <button class="back-btn" onclick="goBackToLobby()">←</button>
-      <h2>🎭 <span data-i18n="mafia_title">Мафия</span> <span class="beta-badge">БЕТА</span></h2>
-    </div>
-
-    <!-- Mafia Mode Selection -->
-    <div id="mf-mode-select" class="mf-mode-select">
-      <h3 data-i18n="mf_choose_mode">Выберите режим</h3>
-      <div class="mf-modes">
-        <div class="mf-mode-card" onclick="MafiaGame.selectMode('bot')">
-          <span class="mf-mode-icon">🤖</span>
-          <h4 data-i18n="mf_bot_host">Бот-ведущий</h4>
-          <p data-i18n="mf_bot_desc">Автоматические фазы и раздача ролей</p>
+    <!-- Minesweeper Screen -->
+    <div id="minesweeper-game" class="screen">
+      <div class="ms-header">
+        <button class="back-btn" onclick="goBackToLobby()">←</button>
+        <h2>💣 <span data-i18n="ms_title">Сапёр</span></h2>
+        <div class="ms-info">
+          <span id="ms-mines-count">🚩 10</span>
+          <span id="ms-timer">⏱ 0:00</span>
         </div>
-        <div class="mf-mode-card" onclick="MafiaGame.selectMode('human')">
-          <span class="mf-mode-icon">🧑</span>
-          <h4 data-i18n="mf_human_host">Человек-ведущий</h4>
-          <p data-i18n="mf_human_desc">Бросок кубиков, ведущий управляет</p>
+      </div>
+      <div class="ms-difficulty">
+        <button class="ms-diff-btn active" data-diff="easy" onclick="Minesweeper.setDifficulty('easy')">
+          <span data-i18n="ms_easy">Лёгкий</span><br><small>9×9 · 10 мин</small>
+        </button>
+        <button class="ms-diff-btn" data-diff="medium" onclick="Minesweeper.setDifficulty('medium')">
+          <span data-i18n="ms_medium">Средний</span><br><small>16×16 · 40 мин</small>
+        </button>
+        <button class="ms-diff-btn" data-diff="hard" onclick="Minesweeper.setDifficulty('hard')">
+          <span data-i18n="ms_hard">Сложный</span><br><small>16×30 · 99 мин</small>
+        </button>
+      </div>
+      <div id="ms-field" class="ms-field"></div>
+      <div id="ms-result" class="ms-result hidden">
+        <div class="ms-result-content">
+          <h2 id="ms-result-title"></h2>
+          <p id="ms-result-text"></p>
+          <button class="btn primary" onclick="Minesweeper.restart()">🔄 <span data-i18n="ms_restart">Ещё
+              раз</span></button>
         </div>
       </div>
     </div>
 
-    <!-- Mafia Game Area -->
-    <div id="mf-game-area" class="mf-game-area hidden">
-      <!-- Phase overlay -->
-      <div id="mf-phase-overlay" class="mf-phase-overlay hidden">
-        <div class="mf-phase-text" id="mf-phase-text"></div>
+    <!-- Snake Screen -->
+    <div id="snake-game" class="screen">
+      <div class="snake-header">
+        <button class="back-btn" onclick="goBackToLobby()">←</button>
+        <h2>🐍 <span data-i18n="snake_title">Змейка</span></h2>
+        <div class="snake-info">
+          <span id="snake-score">🍎 0</span>
+          <span id="snake-best">🏆 0</span>
+        </div>
+      </div>
+      <div class="snake-canvas-wrap">
+        <canvas id="snake-canvas"></canvas>
+      </div>
+      <div id="snake-overlay" class="snake-overlay">
+        <div class="snake-overlay-content">
+          <h2 id="snake-overlay-title">🐍 Змейка</h2>
+          <p id="snake-overlay-text" data-i18n="snake_start">Нажмите чтобы начать</p>
+          <button class="btn primary" id="snake-start-btn" onclick="SnakeGame.start()">▶ <span
+              data-i18n="snake_play">Играть</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mafia Screen -->
+    <div id="mafia-screen" class="screen">
+      <div class="mf-header">
+        <button class="back-btn" onclick="goBackToLobby()">←</button>
+        <h2>🎭 <span data-i18n="mafia_title">Мафия</span> <span class="beta-badge">БЕТА</span></h2>
       </div>
 
-      <!-- Status -->
-      <div id="mf-status" class="mf-status"></div>
-
-      <!-- Players circle -->
-      <div id="mf-players" class="mf-players"></div>
-
-      <!-- Your role card -->
-      <div id="mf-role-card" class="mf-role-card hidden">
-        <div class="mf-role-inner">
-          <span id="mf-role-icon" class="mf-role-icon"></span>
-          <h3 id="mf-role-name"></h3>
-          <p id="mf-role-desc"></p>
+      <!-- Mafia Mode Selection -->
+      <div id="mf-mode-select" class="mf-mode-select">
+        <h3 data-i18n="mf_choose_mode">Выберите режим</h3>
+        <div class="mf-modes">
+          <div class="mf-mode-card" onclick="MafiaGame.selectMode('bot')">
+            <span class="mf-mode-icon">🤖</span>
+            <h4 data-i18n="mf_bot_host">Бот-ведущий</h4>
+            <p data-i18n="mf_bot_desc">Автоматические фазы и раздача ролей</p>
+          </div>
+          <div class="mf-mode-card" onclick="MafiaGame.selectMode('human')">
+            <span class="mf-mode-icon">🧑</span>
+            <h4 data-i18n="mf_human_host">Человек-ведущий</h4>
+            <p data-i18n="mf_human_desc">Бросок кубиков, ведущий управляет</p>
+          </div>
         </div>
       </div>
 
-      <!-- Action area -->
-      <div id="mf-actions" class="mf-actions hidden">
-        <h4 id="mf-action-title"></h4>
-        <div id="mf-action-targets" class="mf-action-targets"></div>
-      </div>
-
-      <!-- Voting area -->
-      <div id="mf-voting" class="mf-voting hidden">
-        <h4 data-i18n="mf_vote_title">🗳 Голосование</h4>
-        <div id="mf-vote-targets" class="mf-vote-targets"></div>
-      </div>
-
-      <!-- Chat/Discussion -->
-      <div id="mf-chat" class="mf-chat hidden">
-        <div id="mf-chat-messages" class="mf-chat-messages"></div>
-        <div class="mf-chat-input">
-          <input type="text" id="mf-chat-text" placeholder="Сообщение..." maxlength="200">
-          <button onclick="MafiaGame.sendChat()">📤</button>
+      <!-- Mafia Game Area -->
+      <div id="mf-game-area" class="mf-game-area hidden">
+        <!-- Phase overlay -->
+        <div id="mf-phase-overlay" class="mf-phase-overlay hidden">
+          <div class="mf-phase-text" id="mf-phase-text"></div>
         </div>
-      </div>
 
-      <!-- Dice roll (for human host) -->
-      <div id="mf-dice-area" class="mf-dice-area hidden">
-        <h3 data-i18n="mf_dice_title">🎲 Бросок кубиков</h3>
-        <div id="mf-dice-result" class="mf-dice-result"></div>
-        <button class="btn primary" id="mf-dice-btn" onclick="MafiaGame.rollDice()">🎲 <span
-            data-i18n="mf_roll">Бросить</span></button>
+        <!-- Status -->
+        <div id="mf-status" class="mf-status"></div>
+
+        <!-- Players circle -->
+        <div id="mf-players" class="mf-players"></div>
+
+        <!-- Your role card -->
+        <div id="mf-role-card" class="mf-role-card hidden">
+          <div class="mf-role-inner">
+            <span id="mf-role-icon" class="mf-role-icon"></span>
+            <h3 id="mf-role-name"></h3>
+            <p id="mf-role-desc"></p>
+          </div>
+        </div>
+
+        <!-- Action area -->
+        <div id="mf-actions" class="mf-actions hidden">
+          <h4 id="mf-action-title"></h4>
+          <div id="mf-action-targets" class="mf-action-targets"></div>
+        </div>
+
+        <!-- Voting area -->
+        <div id="mf-voting" class="mf-voting hidden">
+          <h4 data-i18n="mf_vote_title">🗳 Голосование</h4>
+          <div id="mf-vote-targets" class="mf-vote-targets"></div>
+        </div>
+
+        <!-- Chat/Discussion -->
+        <div id="mf-chat" class="mf-chat hidden">
+          <h4 style="margin:0 0 8px;font-size:0.9rem;opacity:0.7">💬 Чат</h4>
+          <div id="mf-chat-messages" class="mf-chat-messages"></div>
+          <div class="mf-chat-input">
+            <input type="text" id="mf-chat-text" placeholder="💬 Обсуждайте, кто мафия..." maxlength="200"
+              onkeypress="if(event.key==='Enter')MafiaGame.sendChat()">
+            <button id="mf-chat-send" onclick="MafiaGame.sendChat()">📤</button>
+          </div>
+        </div>
+
+        <!-- Dice roll (for human host) -->
+        <div id="mf-dice-area" class="mf-dice-area hidden">
+          <h3 data-i18n="mf_dice_title">🎲 Бросок кубиков</h3>
+          <div id="mf-dice-result" class="mf-dice-result"></div>
+          <button class="btn primary" id="mf-dice-btn" onclick="MafiaGame.rollDice()">🎲 <span
+              data-i18n="mf_roll">Бросить</span></button>
+        </div>
       </div>
     </div>
   </div>

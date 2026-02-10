@@ -180,13 +180,21 @@ const MafiaGame = {
     },
 
     handlePhase(data) {
-        // Hide all action areas
+        // Hide action areas but keep chat always visible
         document.getElementById('mf-actions').classList.add('hidden');
         document.getElementById('mf-voting').classList.add('hidden');
-        document.getElementById('mf-chat').classList.add('hidden');
         document.getElementById('mf-dice-area').classList.add('hidden');
 
+        // Chat is always visible, but input is disabled at night
+        document.getElementById('mf-chat').classList.remove('hidden');
+        const chatInput = document.getElementById('mf-chat-text');
+        const chatSendBtn = document.getElementById('mf-chat-send');
+
         if (data.phase === 'night') {
+            // Disable chat input at night
+            if (chatInput) { chatInput.disabled = true; chatInput.placeholder = '🌙 Ночь — чат недоступен'; }
+            if (chatSendBtn) chatSendBtn.disabled = true;
+
             // Check if this player has a night action
             if (data.activeRole === this.myRole && data.canAct) {
                 this.showActionUI(data);
@@ -194,7 +202,9 @@ const MafiaGame = {
                 document.getElementById('mf-status').innerHTML = '🌙 Ночь... Ждите своей очереди.';
             }
         } else if (data.phase === 'day') {
-            document.getElementById('mf-chat').classList.remove('hidden');
+            // Enable chat input during the day
+            if (chatInput) { chatInput.disabled = false; chatInput.placeholder = '💬 Обсуждайте, кто мафия...'; }
+            if (chatSendBtn) chatSendBtn.disabled = false;
             document.getElementById('mf-status').innerHTML = '☀️ День — обсуждайте!';
 
             if (data.showVoteButton) {
@@ -202,6 +212,9 @@ const MafiaGame = {
                     `<br><button class="btn primary" style="margin-top:10px" onclick="MafiaGame.socket.emit('mafia:start_vote', {roomId: MafiaGame.roomId})">🗳 Начать голосование</button>`;
             }
         } else if (data.phase === 'vote') {
+            // Disable chat during voting
+            if (chatInput) { chatInput.disabled = true; chatInput.placeholder = '🗳 Голосование — чат недоступен'; }
+            if (chatSendBtn) chatSendBtn.disabled = true;
             this.showVotingUI(data);
         }
     },
