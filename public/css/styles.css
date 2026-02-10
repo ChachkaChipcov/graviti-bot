@@ -5561,19 +5561,90 @@ body.light-theme .hamburger-btn span {
   }
 }
 
-/* ====== MATCH-3 ANIMATIONS ====== */
+/* ====== MATCH-3 ANIMATIONS v2 ====== */
 .m3-cell {
   position: relative;
+  overflow: visible;
 }
 
-.m3-cell.drop-in {
-  animation: m3-drop 0.3s ease-out;
+.m3-gem {
+  display: block;
+  transition: transform 0.15s;
 }
 
-@keyframes m3-drop {
+/* Selection */
+.m3-cell.selected .m3-gem {
+  animation: m3-selected-pulse 0.6s infinite alternate;
+}
+
+@keyframes m3-selected-pulse {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.15);
+  }
+}
+
+/* ---- Burst (pop/explode) ---- */
+.m3-cell.burst .m3-gem {
+  animation: m3-burst 0.35s ease-out forwards;
+}
+
+@keyframes m3-burst {
   0% {
-    transform: translateY(-40px);
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  40% {
+    transform: scale(1.4);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(0);
     opacity: 0;
+  }
+}
+
+/* Particles flying out */
+.m3-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 0.5rem;
+  pointer-events: none;
+  z-index: 15;
+  animation: m3-particle-fly 0.5s ease-out forwards;
+}
+
+@keyframes m3-particle-fly {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(35px);
+    opacity: 0;
+  }
+}
+
+/* ---- Smooth drop from top ---- */
+@keyframes m3-drop-smooth {
+  0% {
+    transform: translateY(-60px);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  80% {
+    transform: translateY(3px);
   }
 
   100% {
@@ -5582,33 +5653,112 @@ body.light-theme .hamburger-btn span {
   }
 }
 
+/* ---- Shake (invalid swap) ---- */
+.m3-cell.shake {
+  animation: m3-shake 0.4s ease;
+}
+
+@keyframes m3-shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px);
+  }
+
+  40% {
+    transform: translateX(6px);
+  }
+
+  60% {
+    transform: translateX(-4px);
+  }
+
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* ---- Chain overlay ---- */
+.m3-chain {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.55rem;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+.m3-cell.chained {
+  border: 2px solid rgba(150, 130, 80, 0.6);
+  background: rgba(150, 130, 80, 0.15);
+}
+
+.m3-cell.chained .m3-gem {
+  filter: brightness(0.85);
+}
+
+.m3-cell.chain-break {
+  animation: m3-chain-break 0.4s ease;
+}
+
+@keyframes m3-chain-break {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.15);
+    filter: brightness(1.5);
+  }
+
+  60% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* ---- Score popup ---- */
 .m3-score-pop {
   position: absolute;
-  top: -5px;
+  top: -8px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 800;
   color: #ffd700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   pointer-events: none;
-  animation: m3-float-up 0.8s ease-out forwards;
-  z-index: 20;
+  animation: m3-float-up 0.9s ease-out forwards;
+  z-index: 25;
   white-space: nowrap;
 }
 
 @keyframes m3-float-up {
   0% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateX(-50%) translateY(0) scale(0.8);
+  }
+
+  20% {
+    transform: translateX(-50%) translateY(-5px) scale(1.2);
   }
 
   100% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-30px);
+    transform: translateX(-50%) translateY(-35px) scale(0.9);
   }
 }
 
+/* ---- Progress bar ---- */
 .m3-progress {
   height: 6px;
   background: rgba(255, 255, 255, 0.1);
@@ -5629,6 +5779,7 @@ body.light-theme .hamburger-btn span {
   background: linear-gradient(135deg, #00d9a0, #00b894);
 }
 
+/* ---- Low moves warning ---- */
 .m3-info .low {
   color: #ff6b6b;
   animation: m3-blink 0.6s infinite;
