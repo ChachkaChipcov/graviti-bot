@@ -5435,3 +5435,128 @@ body.light-theme .hamburger-btn span {
     padding: 4px;
   }
 }
+
+/* ====== MATCH-3 LEVEL MAP ====== */
+.m3-level-map {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 8px 0;
+}
+
+.m3-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.m3-map-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.m3-map-nav {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.m3-map-nav:hover:not(:disabled) {
+  background: var(--accent-primary);
+}
+
+.m3-map-nav:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.m3-map-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.m3-map-level {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass);
+  border: 2px solid var(--glass-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+}
+
+.m3-map-level:hover:not(.locked) {
+  transform: scale(1.08);
+  background: rgba(108, 92, 231, 0.2);
+}
+
+.m3-map-level.current {
+  border-color: var(--accent-primary);
+  background: rgba(108, 92, 231, 0.15);
+  box-shadow: 0 0 16px rgba(108, 92, 231, 0.4);
+  animation: m3-pulse 2s infinite;
+}
+
+.m3-map-level.completed {
+  border-color: var(--success);
+  background: rgba(0, 217, 160, 0.1);
+}
+
+.m3-map-level.locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.m3-map-num {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.m3-map-lock {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.6rem;
+}
+
+.m3-map-stars {
+  font-size: 0.5rem;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+@keyframes m3-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(108, 92, 231, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(108, 92, 231, 0.6);
+  }
+}
+
+@media (max-width: 360px) {
+  .m3-map-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .m3-map-num {
+    font-size: 0.9rem;
+  }
+}
