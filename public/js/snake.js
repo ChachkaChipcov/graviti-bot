@@ -252,5 +252,15 @@ const SnakeGame = {
 
     hideOverlay() {
         document.getElementById('snake-overlay').classList.add('hidden');
+    },
+
+    dpad(dir) {
+        if (!this.running) return;
+        switch (dir) {
+            case 'up': if (this.dy !== 1) { this.nextDx = 0; this.nextDy = -1; } break;
+            case 'down': if (this.dy !== -1) { this.nextDx = 0; this.nextDy = 1; } break;
+            case 'left': if (this.dx !== 1) { this.nextDx = -1; this.nextDy = 0; } break;
+            case 'right': if (this.dx !== -1) { this.nextDx = 1; this.nextDy = 0; } break;
+        }
     }
 };

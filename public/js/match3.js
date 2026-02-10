@@ -1,4 +1,4 @@
-// ==================== MATCH-3 (3 в ряд) — 1000 LEVELS ====================
+// ==================== MATCH-3 (3 в ряд) — FULL VERSION ====================
 const Match3Game = {
     BOARD_SIZE: 8,
     GEMS: ['🔴', '🟢', '🔵', '🟡', '🟣', '🟠'],
@@ -12,14 +12,87 @@ const Match3Game = {
     level: 1,
     maxLevel: 1000,
     unlockedLevel: 1,
-    levelStars: {},   // { level: stars(1-3) }
+    levelStars: {},
     showingMap: true,
     mapPage: 0,
     LEVELS_PER_PAGE: 30,
+    touchStartX: 0,
+    touchStartY: 0,
+    touchCell: null,
+    tutorialShown: false,
+    comboCount: 0,
 
     init() {
         this.loadProgress();
-        this.showMap();
+        this.tutorialShown = localStorage.getItem('m3_tutorial') === '1';
+        if (!this.tutorialShown) {
+            this.showTutorial();
+        } else {
+            this.showMap();
+        }
+    },
+
+    // ========== TUTORIAL ==========
+    showTutorial() {
+        const field = document.getElementById('m3-field');
+        if (!field) return;
+        this.showingMap = true;
+        const header = document.querySelector('.m3-info');
+        if (header) header.style.display = 'none';
+
+        field.className = 'm3-tutorial';
+        field.innerHTML = `
+      <div class="m3-tut-slide active" data-slide="0">
+        <div class="m3-tut-emoji">💎</div>
+        <h3>Добро пожаловать!</h3>
+        <p>Собирай 3 или больше одинаковых кристалла в ряд, чтобы набрать очки!</p>
+      </div>
+      <div class="m3-tut-slide" data-slide="1">
+        <div class="m3-tut-emoji">👆</div>
+        <h3>Как играть</h3>
+        <p>Свайпай кристаллы в любом направлении или нажми на два соседних, чтобы поменять их местами.</p>
+      </div>
+      <div class="m3-tut-slide" data-slide="2">
+        <div class="m3-tut-emoji">⭐</div>
+        <h3>Собирай звёзды!</h3>
+        <p>Набери нужное количество очков за ограниченное число ходов. За больше очков — больше звёзд!</p>
+      </div>
+      <div class="m3-tut-slide" data-slide="3">
+        <div class="m3-tut-emoji">🗺️</div>
+        <h3>1000 уровней!</h3>
+        <p>Проходи уровень за уровнем. Каждый сложнее предыдущего!</p>
+      </div>
+      <div class="m3-tut-nav">
+        <span class="m3-tut-dots">
+          <span class="m3-tut-dot active" data-d="0"></span>
+          <span class="m3-tut-dot" data-d="1"></span>
+          <span class="m3-tut-dot" data-d="2"></span>
+          <span class="m3-tut-dot" data-d="3"></span>
+        </span>
+        <button class="btn primary" onclick="Match3Game.nextTutSlide()">Далее ➡️</button>
+      </div>
+    `;
+        this._tutSlide = 0;
+    },
+
+    nextTutSlide() {
+        this._tutSlide++;
+        if (this._tutSlide > 3) {
+            this.tutorialShown = true;
+            localStorage.setItem('m3_tutorial', '1');
+            this.showMap();
+            return;
+        }
+        const slides = document.querySelectorAll('.m3-tut-slide');
+        const dots = document.querySelectorAll('.m3-tut-dot');
+        slides.forEach(s => s.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        const current = document.querySelector(`.m3-tut-slide[data-slide="${this._tutSlide}"]`);
+        const currentDot = document.querySelector(`.m3-tut-dot[data-d="${this._tutSlide}"]`);
+        if (current) current.classList.add('active');
+        if (currentDot) currentDot.classList.add('active');
+        const btn = document.querySelector('.m3-tut-nav .btn');
+        if (btn && this._tutSlide === 3) btn.textContent = 'Начать! 🎮';
     },
 
     // ========== SAVE / LOAD ==========
@@ -39,25 +112,13 @@ const Match3Game = {
         localStorage.setItem('m3_stars', JSON.stringify(this.levelStars));
     },
 
-    // ========== LEVEL CONFIG (procedural) ==========
+    // ========== LEVEL CONFIG ==========
     getLevelConfig(lvl) {
-        // Progressive difficulty
-        const baseMoves = 30;
-        const baseTarget = 300;
-
-        // Moves decrease over levels (min 12)
-        const moves = Math.max(12, baseMoves - Math.floor(lvl / 25));
-
-        // Target score increases
-        const target = baseTarget + (lvl - 1) * 80 + Math.floor(lvl / 10) * 50;
-
-        // Number of gem types: start with 5, add 6th at level 20
+        const moves = Math.max(12, 30 - Math.floor(lvl / 25));
+        const target = 300 + (lvl - 1) * 80 + Math.floor(lvl / 10) * 50;
         const gemCount = lvl < 20 ? 5 : 6;
-
-        // Star thresholds
         const star2 = Math.floor(target * 1.3);
         const star3 = Math.floor(target * 1.7);
-
         return { moves, target, gemCount, star2, star3, level: lvl };
     },
 
@@ -65,22 +126,16 @@ const Match3Game = {
     showMap() {
         this.showingMap = true;
         this.mapPage = Math.floor((this.unlockedLevel - 1) / this.LEVELS_PER_PAGE);
-
-        const field = document.getElementById('m3-field');
         const result = document.getElementById('m3-result');
         if (result) result.classList.add('hidden');
-
-        // Update header
         const header = document.querySelector('.m3-info');
         if (header) header.style.display = 'none';
-
         this.renderMap();
     },
 
     renderMap() {
         const field = document.getElementById('m3-field');
         if (!field) return;
-
         field.className = 'm3-level-map';
         const start = this.mapPage * this.LEVELS_PER_PAGE + 1;
         const end = Math.min(start + this.LEVELS_PER_PAGE - 1, this.maxLevel);
@@ -89,9 +144,8 @@ const Match3Game = {
         html += `<button class="m3-map-nav" onclick="Match3Game.prevPage()" ${this.mapPage <= 0 ? 'disabled' : ''}>◀</button>`;
         html += `<span class="m3-map-title">Уровни ${start}-${end}</span>`;
         html += `<button class="m3-map-nav" onclick="Match3Game.nextPage()" ${end >= this.maxLevel ? 'disabled' : ''}>▶</button>`;
-        html += '</div>';
+        html += '</div><div class="m3-map-grid">';
 
-        html += '<div class="m3-map-grid">';
         for (let i = start; i <= end; i++) {
             const unlocked = i <= this.unlockedLevel;
             const stars = this.levelStars[i] || 0;
@@ -101,40 +155,25 @@ const Match3Game = {
             if (current) cls += ' current';
             if (stars > 0) cls += ' completed';
 
-            const starsHtml = stars > 0 ? '<div class="m3-map-stars">' + '⭐'.repeat(stars) + '</div>' : '';
-
             html += `<div class="${cls}" onclick="${unlocked ? `Match3Game.playLevel(${i})` : ''}">`
                 + `<span class="m3-map-num">${i}</span>`
                 + (unlocked ? '' : '<span class="m3-map-lock">🔒</span>')
-                + starsHtml
+                + (stars > 0 ? `<div class="m3-map-stars">${'⭐'.repeat(stars)}</div>` : '')
                 + '</div>';
         }
         html += '</div>';
-
         field.innerHTML = html;
     },
 
-    prevPage() {
-        if (this.mapPage > 0) {
-            this.mapPage--;
-            this.renderMap();
-        }
-    },
-
-    nextPage() {
-        const maxPage = Math.floor((this.maxLevel - 1) / this.LEVELS_PER_PAGE);
-        if (this.mapPage < maxPage) {
-            this.mapPage++;
-            this.renderMap();
-        }
-    },
+    prevPage() { if (this.mapPage > 0) { this.mapPage--; this.renderMap(); } },
+    nextPage() { if (this.mapPage < Math.floor((this.maxLevel - 1) / this.LEVELS_PER_PAGE)) { this.mapPage++; this.renderMap(); } },
 
     // ========== PLAY LEVEL ==========
     playLevel(lvl) {
         if (lvl > this.unlockedLevel) return;
         this.level = lvl;
         this.showingMap = false;
-
+        this.comboCount = 0;
         const config = this.getLevelConfig(lvl);
         this.maxMoves = config.moves;
         this.moves = config.moves;
@@ -143,22 +182,16 @@ const Match3Game = {
         this.selected = null;
         this.animating = false;
 
-        // Show info header
         const header = document.querySelector('.m3-info');
         if (header) header.style.display = 'flex';
 
         this.generateBoard(config.gemCount);
-
         const field = document.getElementById('m3-field');
         if (field) field.className = 'm3-field';
 
         this.render();
         this.updateUI();
-
-        const result = document.getElementById('m3-result');
-        if (result) result.classList.add('hidden');
-
-        // Show level start info
+        this.setupTouch();
         this.showLevelInfo(config);
     },
 
@@ -169,15 +202,70 @@ const Match3Game = {
         document.getElementById('m3-result-title').textContent = `🎯 Уровень ${this.level}`;
         document.getElementById('m3-result-text').innerHTML =
             `Набери <b>${config.target}</b> очков за <b>${config.moves}</b> ходов!`
-            + `<br><small>⭐ ${config.target} · ⭐⭐ ${config.star2} · ⭐⭐⭐ ${config.star3}</small>`;
+            + `<br><small>⭐${config.target} · ⭐⭐${config.star2} · ⭐⭐⭐${config.star3}</small>`;
         const btn = result.querySelector('.btn');
         if (btn) {
             btn.textContent = '▶ Играть!';
-            btn.onclick = () => {
-                result.classList.add('hidden');
-                btn.onclick = () => Match3Game.showMap();
-            };
+            btn.onclick = () => { result.classList.add('hidden'); };
         }
+    },
+
+    // ========== TOUCH / SWIPE ==========
+    setupTouch() {
+        const field = document.getElementById('m3-field');
+        if (!field || field._m3touch) return;
+        field._m3touch = true;
+        field.style.touchAction = 'none';
+
+        field.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const t = e.touches[0];
+            this.touchStartX = t.clientX;
+            this.touchStartY = t.clientY;
+            // Find the cell under touch
+            const el = document.elementFromPoint(t.clientX, t.clientY);
+            if (el && el.classList.contains('m3-cell')) {
+                this.touchCell = { r: parseInt(el.dataset.r), c: parseInt(el.dataset.c) };
+            } else {
+                this.touchCell = null;
+            }
+        }, { passive: false });
+
+        field.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        field.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!this.touchCell || this.animating || this.showingMap) return;
+            const t = e.changedTouches[0];
+            const dx = t.clientX - this.touchStartX;
+            const dy = t.clientY - this.touchStartY;
+            const minSwipe = 20;
+
+            if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) {
+                // Tap — select cell
+                this.onCellClick(this.touchCell.r, this.touchCell.c);
+                return;
+            }
+
+            // Swipe direction
+            let tr, tc;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                tr = this.touchCell.r;
+                tc = this.touchCell.c + (dx > 0 ? 1 : -1);
+            } else {
+                tr = this.touchCell.r + (dy > 0 ? 1 : -1);
+                tc = this.touchCell.c;
+            }
+
+            // Bounds check
+            if (tr < 0 || tr >= this.BOARD_SIZE || tc < 0 || tc >= this.BOARD_SIZE) return;
+
+            // Do swap directly
+            this.selected = { r: this.touchCell.r, c: this.touchCell.c };
+            this.onCellClick(tr, tc);
+        }, { passive: false });
     },
 
     // ========== BOARD GENERATION ==========
@@ -227,6 +315,7 @@ const Match3Game = {
         }
 
         const sr = this.selected.r, sc = this.selected.c;
+        if (sr === r && sc === c) { this.selected = null; this.render(); return; }
         const isAdjacent = (Math.abs(sr - r) + Math.abs(sc - c)) === 1;
 
         if (!isAdjacent) {
@@ -235,23 +324,50 @@ const Match3Game = {
             return;
         }
 
-        // Try swap
-        this.swap(sr, sc, r, c);
-        const matches = this.findMatches();
-
-        if (matches.length === 0) {
+        // Animate swap
+        this.animateSwap(sr, sc, r, c, () => {
             this.swap(sr, sc, r, c);
-            this.selected = null;
-            this.render();
-            const cell = document.querySelector(`.m3-cell[data-r="${r}"][data-c="${c}"]`);
-            if (cell) { cell.classList.add('shake'); setTimeout(() => cell.classList.remove('shake'), 300); }
-            return;
-        }
+            const matches = this.findMatches();
 
-        this.selected = null;
-        this.moves--;
+            if (matches.length === 0) {
+                // Swap back with animation
+                this.swap(sr, sc, r, c);
+                this.animateSwap(r, c, sr, sc, () => {
+                    this.selected = null;
+                    this.render();
+                });
+                return;
+            }
+
+            this.selected = null;
+            this.moves--;
+            this.comboCount = 0;
+            this.animating = true;
+            this.processMatches(matches);
+        });
+    },
+
+    animateSwap(r1, c1, r2, c2, callback) {
         this.animating = true;
-        this.processMatches(matches);
+        const cell1 = document.querySelector(`.m3-cell[data-r="${r1}"][data-c="${c1}"]`);
+        const cell2 = document.querySelector(`.m3-cell[data-r="${r2}"][data-c="${c2}"]`);
+        if (!cell1 || !cell2) { if (callback) callback(); return; }
+
+        const dx = (c2 - c1) * 100;
+        const dy = (r2 - r1) * 100;
+        cell1.style.transition = 'transform 0.2s ease';
+        cell2.style.transition = 'transform 0.2s ease';
+        cell1.style.transform = `translate(${dx}%, ${dy}%)`;
+        cell2.style.transform = `translate(${-dx}%, ${-dy}%)`;
+
+        setTimeout(() => {
+            cell1.style.transition = '';
+            cell2.style.transition = '';
+            cell1.style.transform = '';
+            cell2.style.transform = '';
+            this.animating = false;
+            if (callback) callback();
+        }, 220);
     },
 
     swap(r1, c1, r2, c2) {
@@ -288,12 +404,25 @@ const Match3Game = {
     },
 
     processMatches(matches) {
-        const points = matches.length * 10 * (matches.length > 3 ? 2 : 1);
+        this.comboCount++;
+        const combo = this.comboCount;
+        const points = matches.length * 10 * combo * (matches.length > 3 ? 2 : 1);
         this.score += points;
+
+        // Show floating score
+        if (matches.length > 0) {
+            const firstCell = document.querySelector(`.m3-cell[data-r="${matches[0].r}"][data-c="${matches[0].c}"]`);
+            if (firstCell) {
+                const scorePop = document.createElement('div');
+                scorePop.className = 'm3-score-pop';
+                scorePop.textContent = `+${points}${combo > 1 ? ` x${combo}` : ''}`;
+                firstCell.appendChild(scorePop);
+                setTimeout(() => scorePop.remove(), 800);
+            }
+        }
 
         matches.forEach(({ r, c }) => { this.board[r][c] = -1; });
         this.render();
-
         matches.forEach(({ r, c }) => {
             const cell = document.querySelector(`.m3-cell[data-r="${r}"][data-c="${c}"]`);
             if (cell) cell.classList.add('matched');
@@ -304,6 +433,11 @@ const Match3Game = {
             this.dropGems();
             this.fillEmpty(config.gemCount);
             this.render();
+            // Animate new gems falling in
+            document.querySelectorAll('.m3-cell').forEach(cell => {
+                cell.classList.add('drop-in');
+                setTimeout(() => cell.classList.remove('drop-in'), 300);
+            });
             this.updateUI();
 
             setTimeout(() => {
@@ -312,18 +446,18 @@ const Match3Game = {
                     this.processMatches(newMatches);
                 } else {
                     this.animating = false;
+                    this.comboCount = 0;
                     if (!this.hasValidMoves(config.gemCount)) {
                         this.shuffleBoard(config.gemCount);
                     }
-                    // Check win/lose
                     if (this.score >= this.targetScore) {
                         this.levelWin();
                     } else if (this.moves <= 0) {
                         this.levelLose();
                     }
                 }
-            }, 200);
-        }, 300);
+            }, 300);
+        }, 350);
     },
 
     dropGems() {
@@ -371,23 +505,17 @@ const Match3Game = {
 
     shuffleBoard(gemCount) {
         const gems = [];
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            for (let c = 0; c < this.BOARD_SIZE; c++) { gems.push(this.board[r][c]); }
-        }
+        for (let r = 0; r < this.BOARD_SIZE; r++)
+            for (let c = 0; c < this.BOARD_SIZE; c++) gems.push(this.board[r][c]);
         for (let i = gems.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [gems[i], gems[j]] = [gems[j], gems[i]];
         }
         let idx = 0;
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            for (let c = 0; c < this.BOARD_SIZE; c++) { this.board[r][c] = gems[idx++]; }
-        }
-        const matches = this.findMatches();
-        if (matches.length > 0) {
-            matches.forEach(({ r, c }) => { this.board[r][c] = -1; });
-            this.dropGems();
-            this.fillEmpty(gemCount);
-        }
+        for (let r = 0; r < this.BOARD_SIZE; r++)
+            for (let c = 0; c < this.BOARD_SIZE; c++) this.board[r][c] = gems[idx++];
+        const m = this.findMatches();
+        if (m.length > 0) { m.forEach(({ r, c }) => { this.board[r][c] = -1; }); this.dropGems(); this.fillEmpty(gemCount); }
         this.render();
     },
 
@@ -398,11 +526,8 @@ const Match3Game = {
         if (this.score >= config.star3) stars = 3;
         else if (this.score >= config.star2) stars = 2;
 
-        // Save best stars
         const prev = this.levelStars[this.level] || 0;
         if (stars > prev) this.levelStars[this.level] = stars;
-
-        // Unlock next level
         if (this.level >= this.unlockedLevel && this.level < this.maxLevel) {
             this.unlockedLevel = this.level + 1;
         }
@@ -412,12 +537,12 @@ const Match3Game = {
         if (result) result.classList.remove('hidden');
         document.getElementById('m3-result-title').textContent = '🎉 Уровень пройден!';
         document.getElementById('m3-result-text').innerHTML =
-            `${'⭐'.repeat(stars)}<br>Очки: ${this.score} / ${config.target}`;
+            `${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}<br>Очки: ${this.score} / ${config.target}`;
         const btn = result.querySelector('.btn');
         if (btn) {
             if (this.level < this.maxLevel) {
                 btn.textContent = '▶ Следующий уровень';
-                btn.onclick = () => Match3Game.playLevel(this.level + 1);
+                btn.onclick = () => Match3Game.playLevel(Match3Game.level + 1);
             } else {
                 btn.textContent = '🏆 Все уровни пройдены!';
                 btn.onclick = () => Match3Game.showMap();
@@ -438,13 +563,37 @@ const Match3Game = {
         }
     },
 
-    // ========== UI ==========
     updateUI() {
         const scoreEl = document.getElementById('m3-score');
         const movesEl = document.getElementById('m3-moves');
         const bestEl = document.getElementById('m3-best');
         if (scoreEl) scoreEl.textContent = `⭐ ${this.score}/${this.targetScore}`;
-        if (movesEl) movesEl.textContent = `🔄 ${this.moves}`;
+        if (movesEl) {
+            movesEl.textContent = `🔄 ${this.moves}`;
+            if (this.moves <= 5) movesEl.classList.add('low');
+            else movesEl.classList.remove('low');
+        }
         if (bestEl) bestEl.textContent = `📍 Ур. ${this.level}`;
+
+        // Progress bar
+        const pct = Math.min(100, Math.round((this.score / this.targetScore) * 100));
+        let bar = document.getElementById('m3-progress');
+        if (!bar) {
+            const field = document.getElementById('m3-field');
+            if (field) {
+                bar = document.createElement('div');
+                bar.id = 'm3-progress';
+                bar.className = 'm3-progress';
+                bar.innerHTML = '<div class="m3-progress-fill"></div>';
+                field.parentNode.insertBefore(bar, field);
+            }
+        }
+        if (bar) {
+            const fill = bar.querySelector('.m3-progress-fill');
+            if (fill) {
+                fill.style.width = pct + '%';
+                fill.className = 'm3-progress-fill' + (pct >= 100 ? ' complete' : '');
+            }
+        }
     }
 };
