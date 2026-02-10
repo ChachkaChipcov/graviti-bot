@@ -2124,12 +2124,584 @@ function sendMonopolyUpdate(room) {
   });
 }
 
+// ========== MAFIA GAME LOGIC ==========
+const mafiaRooms = new Map();
+
+function setupMafiaSocket(socket) {
+  socket.on('mafia:join', ({ mode, userId, userName, photoUrl }) => {
+    // Find or create mafia room
+    let roomId = null;
+    let room = null;
+
+    for (const [id, r] of mafiaRooms) {
+      if (!r.started && r.mode === mode && r.players.length < 12) {
+        roomId = id;
+        room = r;
+        break;
+      }
+    }
+
+    if (!room) {
+      roomId = 'MF-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+      room = {
+        id: roomId,
+        mode: mode,
+        players: [],
+        started: false,
+        phase: null,
+        nightActions: {},
+        votes: {},
+        round: 0,
+        lastHealed: null,
+        hostId: null,
+        created: Date.now()
+      };
+      mafiaRooms.set(roomId, room);
+    }
+
+    // Add player
+    const player = {
+      id: socket.id,
+      odId: userId,
+      name: userName,
+      photoUrl: photoUrl,
+      role: null,
+      alive: true
+    };
+    room.players.push(player);
+    socket.join(roomId);
+    socket.mafiaRoom = roomId;
+
+    // First player is host by default
+    if (room.players.length === 1) room.hostId = socket.id;
+
+    // Send player list to all
+    emitMafiaPlayerList(room);
+  });
+
+  socket.on('mafia:start', ({ roomId }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || room.started || room.players.length < 5) return;
+
+    room.started = true;
+
+    if (room.mode === 'bot') {
+      // Auto-assign roles
+      assignMafiaRoles(room);
+      // Send roles to players
+      room.players.forEach(p => {
+        const ps = getSocketById(p.id);
+        if (ps) ps.emit('mafia:role', { role: p.role });
+      });
+      // Start night phase after delay
+      setTimeout(() => startMafiaPhase(room, 'night'), 3000);
+    } else {
+      // Human host mode - dice roll to determine host
+      io.to(roomId).emit('mafia:phase', {
+        phase: 'setup',
+        phaseMsg: '🎲 Бросаем кубики для определения ведущего!',
+        phaseType: 'night',
+        duration: 2000
+      });
+      setTimeout(() => {
+        io.to(roomId).emit('mafia:host_controls', {
+          action: 'dice_roll',
+          players: room.players.map(p => ({ id: p.odId, name: p.name }))
+        });
+        const diceArea = true;
+        room.dicePhase = true;
+        room.diceRolls = {};
+      }, 2500);
+    }
+  });
+
+  socket.on('mafia:roll_dice', ({ roomId }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || !room.dicePhase) return;
+
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player || room.diceRolls?.[socket.id]) return;
+
+    const value = Math.floor(Math.random() * 6) + 1;
+    if (!room.diceRolls) room.diceRolls = {};
+    room.diceRolls[socket.id] = value;
+
+    io.to(roomId).emit('mafia:dice', {
+      playerId: player.odId,
+      playerName: player.name,
+      value: value
+    });
+
+    // Check if all players rolled
+    if (Object.keys(room.diceRolls).length === room.players.length) {
+      // Find highest roller
+      let maxVal = 0, hostSocketId = null;
+      for (const [sid, v] of Object.entries(room.diceRolls)) {
+        if (v > maxVal) { maxVal = v; hostSocketId = sid; }
+      }
+      room.hostId = hostSocketId;
+      room.dicePhase = false;
+
+      const hostPlayer = room.players.find(p => p.id === hostSocketId);
+      io.to(roomId).emit('mafia:chat', {
+        name: '', text: `🎲 Ведущий — ${hostPlayer?.name || 'Игрок'}! (выбросил ${maxVal})`, system: true
+      });
+
+      // Host assigns roles
+      setTimeout(() => {
+        const hostSocket = getSocketById(hostSocketId);
+        if (hostSocket) {
+          hostSocket.emit('mafia:host_controls', {
+            action: 'assign_roles',
+            players: room.players.filter(p => p.id !== hostSocketId).map(p => ({ id: p.odId, socketId: p.id, name: p.name }))
+          });
+        }
+      }, 2000);
+    }
+  });
+
+  socket.on('mafia:assign_roles', ({ roomId, roles }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || socket.id !== room.hostId) return;
+
+    for (const p of room.players) {
+      if (roles[p.odId]) {
+        p.role = roles[p.odId];
+        const ps = getSocketById(p.id);
+        if (ps) ps.emit('mafia:role', { role: p.role });
+      }
+    }
+
+    io.to(roomId).emit('mafia:chat', {
+      name: '', text: '🎭 Роли розданы! Игра начинается...', system: true
+    });
+
+    setTimeout(() => startMafiaPhase(room, 'night'), 3000);
+  });
+
+  socket.on('mafia:action', ({ roomId, targetId, role }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || room.phase !== 'night') return;
+
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player || !player.alive || player.role !== role) return;
+
+    if (!room.nightActions) room.nightActions = {};
+    room.nightActions[role] = targetId;
+
+    // For mafia, need all mafia to agree (or take first vote)
+    if (role === 'mafia') {
+      room.nightActions.mafia = targetId;
+    }
+
+    // Sheriff check - immediate result
+    if (role === 'sheriff') {
+      const target = room.players.find(p => p.odId === targetId);
+      socket.emit('mafia:action_result', {
+        type: 'sheriff_check',
+        targetId: targetId,
+        isMafia: target?.role === 'mafia'
+      });
+    }
+
+    // Check if all night actions are done
+    checkNightActionsComplete(room);
+  });
+
+  socket.on('mafia:start_vote', ({ roomId }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || room.phase !== 'day') return;
+    startMafiaPhase(room, 'vote');
+  });
+
+  socket.on('mafia:vote', ({ roomId, targetId }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || room.phase !== 'vote') return;
+
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player || !player.alive) return;
+
+    if (!room.votes) room.votes = {};
+    room.votes[socket.id] = targetId;
+
+    // Check if all alive voted
+    const aliveCount = room.players.filter(p => p.alive).length;
+    const voteCount = Object.keys(room.votes).length;
+
+    if (voteCount >= aliveCount) {
+      resolveVotes(room);
+    }
+  });
+
+  socket.on('mafia:chat', ({ roomId, text }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room) return;
+
+    const player = room.players.find(p => p.id === socket.id);
+    if (!player || !player.alive) return;
+    if (room.phase !== 'day') return;
+
+    io.to(roomId).emit('mafia:chat', {
+      name: player.name,
+      text: text,
+      system: false
+    });
+  });
+
+  socket.on('mafia:next_phase', ({ roomId }) => {
+    const room = mafiaRooms.get(roomId);
+    if (!room || socket.id !== room.hostId) return;
+
+    if (room.phase === 'night') {
+      resolveNight(room);
+    } else if (room.phase === 'day') {
+      startMafiaPhase(room, 'vote');
+    } else if (room.phase === 'vote') {
+      resolveVotes(room);
+    }
+  });
+
+  // Handle disconnect for mafia
+  socket.on('disconnect', () => {
+    if (socket.mafiaRoom) {
+      const room = mafiaRooms.get(socket.mafiaRoom);
+      if (room) {
+        const idx = room.players.findIndex(p => p.id === socket.id);
+        if (idx >= 0) {
+          room.players[idx].alive = false;
+          io.to(room.id).emit('mafia:chat', {
+            name: '', text: `❌ ${room.players[idx].name} отключился`, system: true
+          });
+          emitMafiaPlayerList(room);
+          if (room.started) checkMafiaWin(room);
+        }
+        if (room.players.every(p => !p.alive || !getSocketById(p.id))) {
+          mafiaRooms.delete(room.id);
+        }
+      }
+    }
+  });
+}
+
+function assignMafiaRoles(room) {
+  const count = room.players.length;
+  const mafiaCount = count <= 6 ? 1 : count <= 9 ? 2 : 3;
+  const roles = [];
+
+  for (let i = 0; i < mafiaCount; i++) roles.push('mafia');
+  roles.push('sheriff');
+  roles.push('medic');
+  while (roles.length < count) roles.push('civilian');
+
+  // Shuffle
+  for (let i = roles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [roles[i], roles[j]] = [roles[j], roles[i]];
+  }
+
+  room.players.forEach((p, i) => { p.role = roles[i]; });
+}
+
+function emitMafiaPlayerList(room) {
+  room.players.forEach((p, i) => {
+    const ps = getSocketById(p.id);
+    if (ps) {
+      ps.emit('mafia:player_list', {
+        roomId: room.id,
+        myId: p.odId,
+        isHost: p.id === room.hostId,
+        players: room.players.map(pl => ({
+          id: pl.odId,
+          name: pl.name,
+          photoUrl: pl.photoUrl,
+          alive: pl.alive
+        }))
+      });
+    }
+  });
+}
+
+function startMafiaPhase(room, phase) {
+  room.phase = phase;
+  room.nightActions = {};
+  room.votes = {};
+
+  if (phase === 'night') {
+    room.round++;
+    io.to(room.id).emit('mafia:phase', {
+      phase: 'night',
+      phaseMsg: '🌙 Наступает ночь...',
+      phaseType: 'night',
+      duration: 2500
+    });
+
+    // Send wake-up messages sequentially
+    setTimeout(() => {
+      // Mafia wakes
+      const mafiaPlayers = room.players.filter(p => p.role === 'mafia' && p.alive);
+      io.to(room.id).emit('mafia:phase', {
+        phase: 'night',
+        phaseMsg: '🔫 Просыпается мафия...',
+        phaseType: 'night',
+        duration: 2000,
+        activeRole: 'mafia',
+        canAct: false
+      });
+      mafiaPlayers.forEach(mp => {
+        const ms = getSocketById(mp.id);
+        if (ms) {
+          ms.emit('mafia:phase', {
+            phase: 'night',
+            phaseMsg: '🔫 Ваш ход, мафия!',
+            phaseType: 'night',
+            duration: 2000,
+            activeRole: 'mafia',
+            canAct: true
+          });
+        }
+      });
+    }, 3000);
+
+    // Sheriff wakes
+    setTimeout(() => {
+      const sheriff = room.players.find(p => p.role === 'sheriff' && p.alive);
+      io.to(room.id).emit('mafia:phase', {
+        phase: 'night',
+        phaseMsg: '🔍 Просыпается шериф...',
+        phaseType: 'night',
+        duration: 2000,
+        activeRole: 'sheriff',
+        canAct: false
+      });
+      if (sheriff) {
+        const ss = getSocketById(sheriff.id);
+        if (ss) {
+          ss.emit('mafia:phase', {
+            phase: 'night',
+            phaseMsg: '🔍 Ваш ход, шериф!',
+            phaseType: 'night',
+            duration: 2000,
+            activeRole: 'sheriff',
+            canAct: true
+          });
+        }
+      }
+    }, 8000);
+
+    // Medic wakes
+    setTimeout(() => {
+      const medic = room.players.find(p => p.role === 'medic' && p.alive);
+      io.to(room.id).emit('mafia:phase', {
+        phase: 'night',
+        phaseMsg: '💊 Просыпается медик...',
+        phaseType: 'night',
+        duration: 2000,
+        activeRole: 'medic',
+        canAct: false
+      });
+      if (medic) {
+        const ms = getSocketById(medic.id);
+        if (ms) {
+          ms.emit('mafia:phase', {
+            phase: 'night',
+            phaseMsg: '💊 Ваш ход, медик!',
+            phaseType: 'night',
+            duration: 2000,
+            activeRole: 'medic',
+            canAct: true
+          });
+        }
+      }
+    }, 13000);
+
+    // Auto-resolve night after timeout (for bot mode)
+    if (room.mode === 'bot') {
+      setTimeout(() => {
+        if (room.phase === 'night') resolveNight(room);
+      }, 20000);
+    }
+
+  } else if (phase === 'day') {
+    io.to(room.id).emit('mafia:phase', {
+      phase: 'day',
+      phaseMsg: '☀️ Наступает день...',
+      phaseType: 'day',
+      duration: 2500,
+      showVoteButton: true
+    });
+
+    // Auto start vote after 60 sec (bot mode)
+    if (room.mode === 'bot') {
+      setTimeout(() => {
+        if (room.phase === 'day') startMafiaPhase(room, 'vote');
+      }, 60000);
+    }
+
+  } else if (phase === 'vote') {
+    io.to(room.id).emit('mafia:phase', {
+      phase: 'vote',
+      phaseMsg: '🗳 Голосование!',
+      phaseType: 'vote',
+      duration: 2000
+    });
+
+    // Auto-resolve vote after 30 sec (bot mode)
+    if (room.mode === 'bot') {
+      setTimeout(() => {
+        if (room.phase === 'vote') resolveVotes(room);
+      }, 30000);
+    }
+  }
+}
+
+function checkNightActionsComplete(room) {
+  const hasAliveMafia = room.players.some(p => p.role === 'mafia' && p.alive);
+  const hasAliveSheriff = room.players.some(p => p.role === 'sheriff' && p.alive);
+  const hasAliveMedic = room.players.some(p => p.role === 'medic' && p.alive);
+
+  const mafiaActed = room.nightActions.mafia !== undefined || !hasAliveMafia;
+  const sheriffActed = room.nightActions.sheriff !== undefined || !hasAliveSheriff;
+  const medicActed = room.nightActions.medic !== undefined || !hasAliveMedic;
+
+  if (mafiaActed && sheriffActed && medicActed) {
+    resolveNight(room);
+  }
+}
+
+function resolveNight(room) {
+  if (room.phase !== 'night') return;
+
+  const mafiaTarget = room.nightActions.mafia;
+  const medicTarget = room.nightActions.medic;
+  let killed = null;
+  let saved = false;
+
+  if (mafiaTarget) {
+    if (mafiaTarget === medicTarget) {
+      saved = true;
+      // Medic can't heal same target twice in a row
+      if (room.lastHealed === medicTarget) {
+        killed = mafiaTarget;
+        saved = false;
+      }
+    } else {
+      killed = mafiaTarget;
+    }
+  }
+
+  room.lastHealed = medicTarget;
+
+  if (killed) {
+    const victim = room.players.find(p => p.odId === killed);
+    if (victim) victim.alive = false;
+  }
+
+  io.to(room.id).emit('mafia:night_result', {
+    killed: killed,
+    saved: saved,
+    players: room.players.map(p => ({
+      id: p.odId, name: p.name, photoUrl: p.photoUrl, alive: p.alive
+    }))
+  });
+
+  // Check win
+  if (!checkMafiaWin(room)) {
+    setTimeout(() => startMafiaPhase(room, 'day'), 3000);
+  }
+}
+
+function resolveVotes(room) {
+  if (room.phase !== 'vote') return;
+
+  const voteCounts = {};
+  for (const targetId of Object.values(room.votes)) {
+    if (targetId) voteCounts[targetId] = (voteCounts[targetId] || 0) + 1;
+  }
+
+  let maxVotes = 0, eliminated = null;
+  let tie = false;
+  for (const [id, count] of Object.entries(voteCounts)) {
+    if (count > maxVotes) { maxVotes = count; eliminated = id; tie = false; }
+    else if (count === maxVotes) { tie = true; }
+  }
+
+  let eliminatedRole = null;
+  if (!tie && eliminated && maxVotes > 1) {
+    const victim = room.players.find(p => p.odId === eliminated);
+    if (victim) {
+      victim.alive = false;
+      eliminatedRole = victim.role;
+    }
+  } else {
+    eliminated = null;
+  }
+
+  io.to(room.id).emit('mafia:vote_result', {
+    eliminated: eliminated,
+    eliminatedRole: eliminatedRole,
+    players: room.players.map(p => ({
+      id: p.odId, name: p.name, photoUrl: p.photoUrl, alive: p.alive
+    }))
+  });
+
+  room.votes = {};
+
+  if (!checkMafiaWin(room)) {
+    setTimeout(() => startMafiaPhase(room, 'night'), 3000);
+  }
+}
+
+function checkMafiaWin(room) {
+  const aliveMafia = room.players.filter(p => p.role === 'mafia' && p.alive).length;
+  const aliveCivil = room.players.filter(p => p.role !== 'mafia' && p.alive).length;
+
+  if (aliveMafia === 0) {
+    io.to(room.id).emit('mafia:game_over', {
+      winner: 'civilian',
+      players: room.players.map(p => ({
+        id: p.odId, name: p.name, photoUrl: p.photoUrl, alive: p.alive, role: p.role
+      }))
+    });
+    return true;
+  }
+
+  if (aliveMafia >= aliveCivil) {
+    io.to(room.id).emit('mafia:game_over', {
+      winner: 'mafia',
+      players: room.players.map(p => ({
+        id: p.odId, name: p.name, photoUrl: p.photoUrl, alive: p.alive, role: p.role
+      }))
+    });
+    return true;
+  }
+
+  return false;
+}
+
+function getSocketById(id) {
+  return io.sockets.sockets.get(id) || null;
+}
+
+// Hook mafia into existing connection handler
+const originalOnConnection = io.listeners('connection')[0];
+io.removeAllListeners('connection');
+io.on('connection', (socket) => {
+  if (originalOnConnection) originalOnConnection(socket);
+  setupMafiaSocket(socket);
+});
+
 // Clean up old rooms periodically
 setInterval(() => {
   const now = Date.now();
   for (const [id, room] of rooms) {
     if (now - room.created > 3600000) { // 1 hour
       rooms.delete(id);
+    }
+  }
+  // Clean up mafia rooms too
+  for (const [id, room] of mafiaRooms) {
+    if (now - room.created > 7200000) { // 2 hours
+      mafiaRooms.delete(id);
     }
   }
 }, 60000);

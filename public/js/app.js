@@ -55,7 +55,8 @@ const App = {
             'battleship': '🚢 Морской Бой',
             'durak': '🃏 Дурак',
             'uno': '🎴 UNO',
-            'monopoly': '🎲 Монополия'
+            'monopoly': '🎲 Монополия',
+            'mafia': '🎭 Мафия'
         };
 
         // Games with setup screens
@@ -69,6 +70,10 @@ const App = {
         }
         if (gameType === 'monopoly') {
             this.showScreen('monopoly-setup');
+            return;
+        }
+        if (gameType === 'mafia') {
+            this.showScreen('mafia-screen');
             return;
         }
         if (gameType === 'rps') {
@@ -130,6 +135,20 @@ const App = {
             this.roomId = null;
         } else if (this.currentScreen.includes('-setup')) {
             // From setup screens - go to lobby
+            this.showScreen('lobby');
+            this.currentGame = null;
+        } else if (this.currentScreen === 'minesweeper-game' || this.currentScreen === 'snake-game') {
+            // Solo games - back to lobby
+            if (this.currentScreen === 'snake-game' && typeof SnakeGame !== 'undefined') {
+                SnakeGame.running = false;
+                clearInterval(SnakeGame.gameLoop);
+            }
+            if (this.currentScreen === 'minesweeper-game' && typeof Minesweeper !== 'undefined') {
+                clearInterval(Minesweeper.timerInterval);
+            }
+            this.showScreen('lobby');
+            this.currentGame = null;
+        } else if (this.currentScreen === 'mafia-screen') {
             this.showScreen('lobby');
             this.currentGame = null;
         } else if (this.currentScreen.includes('-game')) {
@@ -899,4 +918,30 @@ function toggleInfo() {
     }
 
     App.haptic('light');
+}
+
+// ========== TAB SWITCHING ==========
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.dataset.tab === tab);
+    });
+    if (typeof App !== 'undefined') App.haptic('light');
+}
+
+// ========== SOLO GAMES ==========
+function startSoloGame(gameType) {
+    if (gameType === 'minesweeper') {
+        App.showScreen('minesweeper-game');
+        if (typeof Minesweeper !== 'undefined') Minesweeper.init();
+    } else if (gameType === 'snake') {
+        App.showScreen('snake-game');
+        if (typeof SnakeGame !== 'undefined') SnakeGame.init();
+    }
+}
+
+function goBackToLobby() {
+    App.goBack();
 }

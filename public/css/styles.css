@@ -4569,9 +4569,708 @@ body.light-theme .hamburger-btn span {
   }
 }
 
-/* Print styles (если нужно скрыть игру при печати) */
+/* Print styles */
 @media print {
   body {
     display: none;
   }
+}
+
+/* ==================== GAME TABS ==================== */
+.game-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #6c5ce7, #a855f7);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+}
+
+.tab-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== MINESWEEPER ==================== */
+.ms-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.ms-header h2 {
+  flex: 1;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.ms-info {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ms-info span {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.ms-difficulty {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  justify-content: center;
+}
+
+.ms-diff-btn {
+  padding: 8px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.ms-diff-btn small {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.ms-diff-btn.active {
+  background: linear-gradient(135deg, #00b894, #00cec9);
+  border-color: #00b894;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+}
+
+.ms-field {
+  display: grid;
+  gap: 1px;
+  padding: 8px;
+  justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ms-cell {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #2d2d4a, #1e1e35);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ms-cell:active {
+  transform: scale(0.9);
+}
+
+.ms-cell.revealed {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.03);
+  cursor: default;
+}
+
+.ms-cell.mine {
+  background: #e74c3c;
+  color: #fff;
+}
+
+.ms-cell.mine-hit {
+  background: #ff0000;
+  animation: mineExplode 0.5s ease;
+}
+
+@keyframes mineExplode {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ms-cell.flagged {
+  background: linear-gradient(145deg, #3d2d5a, #2e1e45);
+}
+
+.ms-cell[data-num="1"] {
+  color: #3498db;
+}
+
+.ms-cell[data-num="2"] {
+  color: #2ecc71;
+}
+
+.ms-cell[data-num="3"] {
+  color: #e74c3c;
+}
+
+.ms-cell[data-num="4"] {
+  color: #9b59b6;
+}
+
+.ms-cell[data-num="5"] {
+  color: #e67e22;
+}
+
+.ms-cell[data-num="6"] {
+  color: #1abc9c;
+}
+
+.ms-cell[data-num="7"] {
+  color: #34495e;
+}
+
+.ms-cell[data-num="8"] {
+  color: #95a5a6;
+}
+
+.ms-result {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s;
+}
+
+.ms-result.hidden {
+  display: none;
+}
+
+.ms-result-content {
+  text-align: center;
+  padding: 40px;
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ms-result-content h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.ms-result-content p {
+  margin-bottom: 20px;
+  opacity: 0.7;
+}
+
+/* ==================== SNAKE ==================== */
+.snake-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.snake-header h2 {
+  flex: 1;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.snake-info {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.snake-info span {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.snake-canvas-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 16px;
+  touch-action: none;
+}
+
+#snake-canvas {
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: #0a0a14;
+  max-width: 100%;
+  max-height: 70vh;
+}
+
+.snake-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.snake-overlay.hidden {
+  display: none;
+}
+
+.snake-overlay-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.snake-overlay-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.snake-overlay-content p {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  opacity: 0.7;
+}
+
+/* ==================== MAFIA ==================== */
+.mf-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.mf-header h2 {
+  flex: 1;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.mf-mode-select {
+  padding: 30px 16px;
+  text-align: center;
+}
+
+.mf-mode-select h3 {
+  font-size: 1.3rem;
+  margin-bottom: 24px;
+}
+
+.mf-modes {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mf-mode-card {
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px 24px;
+  width: 160px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.mf-mode-card:hover {
+  transform: translateY(-5px);
+  border-color: #a855f7;
+  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
+}
+
+.mf-mode-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.mf-mode-card h4 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.mf-mode-card p {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.mf-game-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.mf-game-area.hidden {
+  display: none;
+}
+
+/* Phase overlay */
+.mf-phase-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: phaseAppear 0.5s ease;
+}
+
+.mf-phase-overlay.hidden {
+  display: none;
+}
+
+.mf-phase-overlay.night {
+  background: linear-gradient(180deg, #0a0a1a 0%, #1a1a3e 50%, #0d0d2b 100%);
+}
+
+.mf-phase-overlay.day {
+  background: linear-gradient(180deg, #f39c12 0%, #e74c3c 30%, #e67e22 100%);
+}
+
+.mf-phase-overlay.vote {
+  background: linear-gradient(180deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+}
+
+.mf-phase-text {
+  font-size: 2rem;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  animation: phaseTextPulse 2s ease infinite;
+}
+
+@keyframes phaseAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes phaseTextPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Status */
+.mf-status {
+  text-align: center;
+  padding: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Players */
+.mf-players {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  justify-content: center;
+}
+
+.mf-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  min-width: 80px;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.mf-player.dead {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.mf-player.selected {
+  border-color: #e74c3c;
+  box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+}
+
+.mf-player-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c5ce7, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.mf-player-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Role card */
+.mf-role-card {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 600;
+  animation: roleCardAppear 0.6s ease;
+}
+
+.mf-role-card.hidden {
+  display: none;
+}
+
+.mf-role-inner {
+  background: linear-gradient(145deg, #1a1a2e, #0f3460);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  padding: 40px 30px;
+  text-align: center;
+  min-width: 220px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.mf-role-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.mf-role-inner h3 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.mf-role-inner p {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+@keyframes roleCardAppear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotateY(90deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotateY(0);
+  }
+}
+
+/* Actions */
+.mf-actions,
+.mf-voting {
+  padding: 16px;
+  text-align: center;
+}
+
+.mf-actions.hidden,
+.mf-voting.hidden {
+  display: none;
+}
+
+.mf-actions h4,
+.mf-voting h4 {
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.mf-action-targets,
+.mf-vote-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* Chat */
+.mf-chat {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
+  padding: 8px;
+}
+
+.mf-chat.hidden {
+  display: none;
+}
+
+.mf-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+}
+
+.mf-chat-msg {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.mf-chat-msg .name {
+  font-weight: 600;
+  color: #a855f7;
+}
+
+.mf-chat-msg.system {
+  background: rgba(168, 85, 247, 0.15);
+  text-align: center;
+  font-style: italic;
+}
+
+.mf-chat-input {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.mf-chat-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.mf-chat-input button {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #6c5ce7, #a855f7);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Dice area */
+.mf-dice-area {
+  text-align: center;
+  padding: 30px;
+}
+
+.mf-dice-area.hidden {
+  display: none;
+}
+
+.mf-dice-result {
+  font-size: 5rem;
+  margin: 20px 0;
+  min-height: 80px;
+}
+
+.mf-dice-area h3 {
+  margin-bottom: 16px;
+}
+
+/* goBackToLobby helper for solo screens */
+#minesweeper-game,
+#snake-game,
+#mafia-screen {
+  position: relative;
 }
