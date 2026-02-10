@@ -2805,6 +2805,8 @@ httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   bot.launch().then(() => {
     console.log('🤖 Main Bot started!');
+  }).catch(err => {
+    console.error('Main bot launch error:', err.message);
   });
 
   // Launch support bot
