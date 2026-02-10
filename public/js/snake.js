@@ -48,28 +48,49 @@ const SnakeGame = {
             }
         });
 
-        // Touch swipes
+        // Touch swipes — prevent Telegram from closing on swipe down
         const canvasWrap = document.querySelector('.snake-canvas-wrap');
         if (canvasWrap) {
+            // Prevent all default touch behavior on the game area
+            canvasWrap.style.touchAction = 'none';
+            canvasWrap.style.overscrollBehavior = 'none';
+
             canvasWrap.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 this.touchStartX = e.touches[0].clientX;
                 this.touchStartY = e.touches[0].clientY;
-            }, { passive: true });
+                this.touchHandled = false;
 
-            canvasWrap.addEventListener('touchend', (e) => {
-                if (!this.running) return;
-                const diffX = e.changedTouches[0].clientX - this.touchStartX;
-                const diffY = e.changedTouches[0].clientY - this.touchStartY;
-                const minSwipe = 30;
+                // Disable Telegram vertical swipes while playing
+                if (window.Telegram && window.Telegram.WebApp) {
+                    try { window.Telegram.WebApp.disableVerticalSwipes(); } catch (err) { }
+                }
+            }, { passive: false });
+
+            canvasWrap.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // Block scroll & TG close
+                if (!this.running || this.touchHandled) return;
+
+                const diffX = e.touches[0].clientX - this.touchStartX;
+                const diffY = e.touches[0].clientY - this.touchStartY;
+                const minSwipe = 15; // Very sensitive
+
+                if (Math.abs(diffX) < minSwipe && Math.abs(diffY) < minSwipe) return;
+
+                this.touchHandled = true;
 
                 if (Math.abs(diffX) > Math.abs(diffY)) {
-                    if (diffX > minSwipe && this.dx !== -1) { this.nextDx = 1; this.nextDy = 0; }
-                    else if (diffX < -minSwipe && this.dx !== 1) { this.nextDx = -1; this.nextDy = 0; }
+                    if (diffX > 0 && this.dx !== -1) { this.nextDx = 1; this.nextDy = 0; }
+                    else if (diffX < 0 && this.dx !== 1) { this.nextDx = -1; this.nextDy = 0; }
                 } else {
-                    if (diffY > minSwipe && this.dy !== -1) { this.nextDx = 0; this.nextDy = 1; }
-                    else if (diffY < -minSwipe && this.dy !== 1) { this.nextDx = 0; this.nextDy = -1; }
+                    if (diffY > 0 && this.dy !== -1) { this.nextDx = 0; this.nextDy = 1; }
+                    else if (diffY < 0 && this.dy !== 1) { this.nextDx = 0; this.nextDy = -1; }
                 }
-            }, { passive: true });
+            }, { passive: false });
+
+            canvasWrap.addEventListener('touchend', (e) => {
+                e.preventDefault();
+            }, { passive: false });
         }
     },
 
