@@ -605,6 +605,23 @@ io.on('connection', (socket) => {
 
     const moveData = { fr, fc, tr, tc };
 
+    // Server-side mandatory capture validation
+    // Check if any of my pieces can capture
+    let anyCaptureAvailable = false;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r]?.[c]?.color === myColor) {
+          if (checkersGetCaptures(r, c, board).length > 0) {
+            anyCaptureAvailable = true;
+            break;
+          }
+        }
+      }
+      if (anyCaptureAvailable) break;
+    }
+    // If captures available but this move is not a capture, reject
+    if (anyCaptureAvailable && !captured) return;
+
     // Move piece
     board[tr][tc] = piece;
     board[fr][fc] = null;
@@ -2152,17 +2169,10 @@ function initCheckersRoom(room) {
     }
   }
 
-  const settings = room.settings || {};
-  let timers = null;
-  if (settings.timer && settings.timer > 0) {
-    const ms = settings.timer * 60 * 1000;
-    timers = { w: ms, b: ms, increment: 2000 };
-  }
-
   room.state = {
     board,
     captured: { w: 0, b: 0 },
-    timers
+    timers: null
   };
   room.currentTurn = room.players[0].odId;
 }

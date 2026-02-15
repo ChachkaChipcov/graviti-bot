@@ -32,18 +32,12 @@ const Checkers = {
         this.isMyTurn = this.myColor === 'w';
 
         const settings = room.settings || {};
-        if (settings.timer && settings.timer > 0) {
-            const ms = settings.timer * 60 * 1000;
-            this.timers = { w: ms, b: ms, increment: 2000, lastTick: Date.now() };
-        } else {
-            this.timers = null;
-        }
+        this.timers = null; // No timer in checkers
 
         this.setupBoard();
         this.findMustCapture();
         this.render();
         this.updateUI();
-        this.startTimerTick();
     },
 
     setupBoard() {

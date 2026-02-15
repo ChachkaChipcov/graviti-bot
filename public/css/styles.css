@@ -6035,13 +6035,13 @@ body.light-theme .hamburger-btn span {
 .chess-board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  width: min(90vw, 400px);
+  width: min(92vw, 400px);
   aspect-ratio: 1;
   margin: 8px auto;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .chess-cell,
@@ -6052,12 +6052,17 @@ body.light-theme .hamburger-btn span {
   justify-content: center;
   position: relative;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.chess-cell:active,
+.ck-cell:active {
+  transform: scale(0.95);
 }
 
 .chess-cell.light,
 .ck-cell.light {
-  background: #e8d6b3;
+  background: #f0d9b5;
 }
 
 .chess-cell.dark,
@@ -6067,98 +6072,201 @@ body.light-theme .hamburger-btn span {
 
 .chess-cell.selected,
 .ck-cell.selected {
-  background: rgba(100, 200, 100, 0.5) !important;
-  box-shadow: inset 0 0 8px rgba(100, 200, 100, 0.6);
+  background: rgba(80, 200, 120, 0.55) !important;
+  box-shadow: inset 0 0 12px rgba(80, 200, 120, 0.7);
+  animation: cell-select-pulse 0.8s ease infinite alternate;
+}
+
+@keyframes cell-select-pulse {
+  from {
+    box-shadow: inset 0 0 8px rgba(80, 200, 120, 0.5);
+  }
+
+  to {
+    box-shadow: inset 0 0 16px rgba(80, 200, 120, 0.8);
+  }
 }
 
 .chess-cell.last-move,
 .ck-cell.last-move {
-  background: rgba(255, 255, 100, 0.25) !important;
+  background: rgba(255, 255, 100, 0.35) !important;
+  animation: last-move-glow 0.5s ease-out;
+}
+
+@keyframes last-move-glow {
+  from {
+    box-shadow: inset 0 0 20px rgba(255, 255, 0, 0.5);
+  }
+
+  to {
+    box-shadow: none;
+  }
 }
 
 .chess-cell.move-hint::after,
 .ck-cell.move-hint::after {
   content: '';
   position: absolute;
-  width: 28%;
-  height: 28%;
-  background: rgba(0, 0, 0, 0.2);
+  width: 30%;
+  height: 30%;
+  background: rgba(0, 0, 0, 0.22);
   border-radius: 50%;
+  animation: hint-appear 0.2s ease-out;
+}
+
+@keyframes hint-appear {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .chess-cell.capture-hint {
-  box-shadow: inset 0 0 0 3px rgba(255, 60, 60, 0.5);
+  box-shadow: inset 0 0 0 4px rgba(255, 50, 50, 0.55);
+  animation: capture-ring 0.8s ease infinite alternate;
+}
+
+@keyframes capture-ring {
+  from {
+    box-shadow: inset 0 0 0 3px rgba(255, 50, 50, 0.4);
+  }
+
+  to {
+    box-shadow: inset 0 0 0 5px rgba(255, 50, 50, 0.7);
+  }
 }
 
 .chess-cell.in-check {
-  background: rgba(255, 0, 0, 0.4) !important;
-  animation: chess-check-pulse 0.8s infinite alternate;
+  background: rgba(255, 0, 0, 0.45) !important;
+  animation: chess-check-pulse 0.6s infinite alternate;
 }
 
 @keyframes chess-check-pulse {
   from {
-    box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.5);
+    box-shadow: inset 0 0 12px rgba(255, 0, 0, 0.5);
   }
 
   to {
-    box-shadow: inset 0 0 20px rgba(255, 0, 0, 0.8);
+    box-shadow: inset 0 0 24px rgba(255, 0, 0, 0.9);
   }
 }
 
 .ck-cell.must-capture {
-  box-shadow: inset 0 0 6px rgba(255, 180, 0, 0.5);
+  box-shadow: inset 0 0 8px rgba(255, 180, 0, 0.6);
+  animation: must-cap-pulse 0.8s ease infinite alternate;
 }
 
+@keyframes must-cap-pulse {
+  from {
+    box-shadow: inset 0 0 5px rgba(255, 180, 0, 0.4);
+  }
+
+  to {
+    box-shadow: inset 0 0 12px rgba(255, 180, 0, 0.8);
+  }
+}
+
+/* Chess pieces — clear white/black distinction */
 .chess-piece {
-  font-size: clamp(1.2rem, 5vw, 2.2rem);
+  font-size: clamp(1.5rem, 5.5vw, 2.6rem);
   line-height: 1;
   user-select: none;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
-  transition: transform 0.15s;
+  transition: transform 0.2s ease, filter 0.2s;
+  animation: piece-appear 0.3s ease-out;
+}
+
+@keyframes piece-appear {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.chess-piece.w {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+  color: #fff;
+  -webkit-text-stroke: 0.5px #333;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.chess-piece.b {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  color: #1a1a1a;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
 .chess-piece:active {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
+/* Checkers pieces — bigger, clearer */
 .ck-piece {
-  font-size: clamp(1rem, 4.5vw, 1.8rem);
+  font-size: clamp(1.3rem, 5vw, 2.2rem);
   user-select: none;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
-  transition: transform 0.15s;
+  transition: transform 0.2s ease, filter 0.2s;
+  animation: piece-appear 0.3s ease-out;
+}
+
+.ck-piece.w {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.ck-piece.b {
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
 }
 
 .ck-piece.king {
-  filter: drop-shadow(0 0 4px gold) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  filter: drop-shadow(0 0 6px gold) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  animation: crown-glow 1.5s ease infinite alternate;
+}
+
+@keyframes crown-glow {
+  from {
+    filter: drop-shadow(0 0 4px gold) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  }
+
+  to {
+    filter: drop-shadow(0 0 10px gold) drop-shadow(0 0 6px rgba(255, 215, 0, 0.6)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  }
 }
 
 .ck-piece:active {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
 /* Players / Timer */
 .chess-players {
   display: flex;
   justify-content: center;
-  padding: 4px 16px;
+  padding: 6px 16px;
 }
 
 .chess-pinfo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
+  gap: 12px;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
 .chess-timer {
   font-family: 'Inter', monospace;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
   background: var(--glass);
-  min-width: 50px;
+  min-width: 55px;
   text-align: center;
 }
 
@@ -6167,11 +6275,16 @@ body.light-theme .hamburger-btn span {
   animation: m3-blink 0.6s infinite;
 }
 
+/* Captured pieces — LARGER, clearer */
 .chess-captured {
-  font-size: 0.7rem;
-  letter-spacing: -2px;
-  opacity: 0.8;
-  min-height: 1em;
+  font-size: 1.1rem;
+  letter-spacing: -1px;
+  opacity: 1;
+  min-height: 1.3em;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Promotion modal */
@@ -6183,30 +6296,43 @@ body.light-theme .hamburger-btn span {
   background: var(--card-bg);
   border: 2px solid var(--glass-border);
   border-radius: 16px;
-  padding: 16px;
+  padding: 20px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   z-index: 100;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  animation: promo-appear 0.3s ease-out;
+}
+
+@keyframes promo-appear {
+  from {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
 
 .chess-promo-btn {
-  font-size: 2rem;
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
+  font-size: 2.2rem;
+  width: 55px;
+  height: 55px;
+  border-radius: 12px;
   border: 2px solid var(--glass-border);
   background: var(--glass);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 
 .chess-promo-btn:hover {
   background: var(--accent-primary);
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .chess-actions {
@@ -6218,8 +6344,68 @@ body.light-theme .hamburger-btn span {
 .chess-coord-file {
   position: absolute;
   bottom: 1px;
-  font-size: 0.45rem;
+  font-size: 0.5rem;
   color: rgba(0, 0, 0, 0.4);
   pointer-events: none;
   transform: translateX(-50%);
+}
+
+/* Turn indicator animation */
+.turn-indicator {
+  animation: turn-slide-in 0.3s ease-out;
+}
+
+@keyframes turn-slide-in {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Move animation for pieces */
+@keyframes piece-move {
+  0% {
+    transform: scale(1.1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Capture flash */
+@keyframes capture-flash {
+  0% {
+    background: rgba(255, 80, 80, 0.5);
+  }
+
+  100% {
+    background: transparent;
+  }
+}
+
+/* Game result overlay */
+.game-result {
+  animation: result-appear 0.5s ease-out;
+}
+
+@keyframes result-appear {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

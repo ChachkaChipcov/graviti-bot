@@ -169,6 +169,26 @@
             <p data-i18n="ttt_desc">Стратегическая дуэль 3x3</p>
           </div>
 
+          <div class="game-card" onclick="selectGame('chess')">
+            <div class="game-icon">
+              <span class="emoji-bounce">♟️</span>
+              <span class="emoji-bounce delay-1">♚</span>
+              <span class="emoji-bounce delay-2">♛</span>
+            </div>
+            <h3>Шахматы</h3>
+            <p>Классическая стратегия</p>
+          </div>
+
+          <div class="game-card" onclick="selectGame('checkers')">
+            <div class="game-icon">
+              <span class="emoji-bounce">⚫</span>
+              <span class="emoji-bounce delay-1">⚪</span>
+              <span class="emoji-bounce delay-2">👑</span>
+            </div>
+            <h3>Шашки</h3>
+            <p>Русские шашки 8×8</p>
+          </div>
+
           <div class="game-card" onclick="selectGame('battleship')">
             <div class="game-icon">
               <span class="ship-float">🚢</span>
@@ -221,26 +241,6 @@
             <h3 data-i18n="monopoly_title">Монополия</h3>
             <p data-i18n="monopoly_desc">Классическая настольная игра</p>
             <span class="beta-badge" data-i18n="beta">БЕТА</span>
-          </div>
-
-          <div class="game-card" onclick="selectGame('chess')">
-            <div class="game-icon">
-              <span class="emoji-bounce">♟️</span>
-              <span class="emoji-bounce delay-1">♚</span>
-              <span class="emoji-bounce delay-2">♛</span>
-            </div>
-            <h3>Шахматы</h3>
-            <p>Классическая стратегия</p>
-          </div>
-
-          <div class="game-card" onclick="selectGame('checkers')">
-            <div class="game-icon">
-              <span class="emoji-bounce">⚫</span>
-              <span class="emoji-bounce delay-1">⚪</span>
-              <span class="emoji-bounce delay-2">👑</span>
-            </div>
-            <h3>Шашки</h3>
-            <p>Русские шашки 8×8</p>
           </div>
         </div>
       </div>
@@ -592,27 +592,6 @@
         <h2>🏁 Шашки - Настройка</h2>
       </div>
       <div class="setup-content">
-        <div class="setup-section">
-          <h3>⏱️ Таймер:</h3>
-          <div class="mode-selector">
-            <button class="mode-btn selected" data-timer="0" onclick="selectCheckersTimer(this, 0)">
-              <span>♾️</span>
-              <strong>Без таймера</strong>
-            </button>
-            <button class="mode-btn" data-timer="5" onclick="selectCheckersTimer(this, 5)">
-              <span>⚡</span>
-              <strong>5 мин</strong>
-            </button>
-            <button class="mode-btn" data-timer="10" onclick="selectCheckersTimer(this, 10)">
-              <span>⏰</span>
-              <strong>10 мин</strong>
-            </button>
-            <button class="mode-btn" data-timer="15" onclick="selectCheckersTimer(this, 15)">
-              <span>🕐</span>
-              <strong>15 мин</strong>
-            </button>
-          </div>
-        </div>
         <div class="setup-section">
           <div class="room-type-toggle">
             <label class="toggle-label">
