@@ -56,7 +56,9 @@ const App = {
             'durak': '🃏 Дурак',
             'uno': '🎴 UNO',
             'monopoly': '🎲 Монополия',
-            'mafia': '🎭 Мафия'
+            'mafia': '🎭 Мафия',
+            'chess': '♟️ Шахматы',
+            'checkers': '🏁 Шашки'
         };
 
         // Games with setup screens
@@ -78,6 +80,14 @@ const App = {
         }
         if (gameType === 'rps') {
             this.showScreen('rps-setup');
+            return;
+        }
+        if (gameType === 'chess') {
+            this.showScreen('chess-setup');
+            return;
+        }
+        if (gameType === 'checkers') {
+            this.showScreen('checkers-setup');
             return;
         }
 

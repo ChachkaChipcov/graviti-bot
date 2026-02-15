@@ -222,6 +222,26 @@
             <p data-i18n="monopoly_desc">Классическая настольная игра</p>
             <span class="beta-badge" data-i18n="beta">БЕТА</span>
           </div>
+
+          <div class="game-card" onclick="selectGame('chess')">
+            <div class="game-icon">
+              <span class="emoji-bounce">♟️</span>
+              <span class="emoji-bounce delay-1">♚</span>
+              <span class="emoji-bounce delay-2">♛</span>
+            </div>
+            <h3>Шахматы</h3>
+            <p>Классическая стратегия</p>
+          </div>
+
+          <div class="game-card" onclick="selectGame('checkers')">
+            <div class="game-icon">
+              <span class="emoji-bounce">⚫</span>
+              <span class="emoji-bounce delay-1">⚪</span>
+              <span class="emoji-bounce delay-2">👑</span>
+            </div>
+            <h3>Шашки</h3>
+            <p>Русские шашки 8×8</p>
+          </div>
         </div>
       </div>
 
@@ -516,6 +536,101 @@
     </div>
 
     <!-- RPS Room Setup Screen -->
+    <!-- Chess Setup Screen -->
+    <div id="chess-setup" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2>♟️ Шахматы - Настройка</h2>
+      </div>
+      <div class="setup-content">
+        <div class="setup-section">
+          <h3>⏱️ Таймер:</h3>
+          <div class="mode-selector">
+            <button class="mode-btn selected" data-timer="0" onclick="selectChessTimer(this, 0)">
+              <span>♾️</span>
+              <strong>Без таймера</strong>
+            </button>
+            <button class="mode-btn" data-timer="5" onclick="selectChessTimer(this, 5)">
+              <span>⚡</span>
+              <strong>5 мин</strong>
+              <small>Блиц</small>
+            </button>
+            <button class="mode-btn" data-timer="10" onclick="selectChessTimer(this, 10)">
+              <span>⏰</span>
+              <strong>10 мин</strong>
+              <small>Рапид</small>
+            </button>
+            <button class="mode-btn" data-timer="15" onclick="selectChessTimer(this, 15)">
+              <span>🕐</span>
+              <strong>15 мин</strong>
+              <small>Классика</small>
+            </button>
+          </div>
+        </div>
+        <div class="setup-section">
+          <div class="room-type-toggle">
+            <label class="toggle-label">
+              <span>🔒 Закрытая комната</span>
+              <input type="checkbox" id="chess-private-toggle" onchange="toggleSetupPassword('chess')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <input type="text" id="chess-password" class="setup-password hidden" placeholder="Пароль для входа"
+            maxlength="20">
+        </div>
+        <div class="setup-actions">
+          <button class="btn primary" onclick="createChessRoom()">🎮 Создать комнату</button>
+          <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkers Setup Screen -->
+    <div id="checkers-setup" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h2>🏁 Шашки - Настройка</h2>
+      </div>
+      <div class="setup-content">
+        <div class="setup-section">
+          <h3>⏱️ Таймер:</h3>
+          <div class="mode-selector">
+            <button class="mode-btn selected" data-timer="0" onclick="selectCheckersTimer(this, 0)">
+              <span>♾️</span>
+              <strong>Без таймера</strong>
+            </button>
+            <button class="mode-btn" data-timer="5" onclick="selectCheckersTimer(this, 5)">
+              <span>⚡</span>
+              <strong>5 мин</strong>
+            </button>
+            <button class="mode-btn" data-timer="10" onclick="selectCheckersTimer(this, 10)">
+              <span>⏰</span>
+              <strong>10 мин</strong>
+            </button>
+            <button class="mode-btn" data-timer="15" onclick="selectCheckersTimer(this, 15)">
+              <span>🕐</span>
+              <strong>15 мин</strong>
+            </button>
+          </div>
+        </div>
+        <div class="setup-section">
+          <div class="room-type-toggle">
+            <label class="toggle-label">
+              <span>🔒 Закрытая комната</span>
+              <input type="checkbox" id="checkers-private-toggle" onchange="toggleSetupPassword('checkers')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <input type="text" id="checkers-password" class="setup-password hidden" placeholder="Пароль для входа"
+            maxlength="20">
+        </div>
+        <div class="setup-actions">
+          <button class="btn primary" onclick="createCheckersRoom()">🎮 Создать комнату</button>
+          <button class="btn secondary" onclick="showJoinView()">🔗 Присоединиться</button>
+        </div>
+      </div>
+    </div>
+
     <div id="rps-setup" class="screen">
       <div class="room-header">
         <button class="back-btn" onclick="goBack()">←</button>
@@ -982,6 +1097,68 @@
         </div>
       </div>
     </div>
+
+    <!-- Chess Screen -->
+    <div id="chess-game" class="screen">
+      <div class="game-header">
+        <button class="back-btn" onclick="goBackToLobby()">←</button>
+        <h2>♟️ Шахматы</h2>
+      </div>
+      <div class="chess-players">
+        <div class="chess-pinfo opp">
+          <span id="chess-player2">Соперник</span>
+          <span id="chess-timer2" class="chess-timer"></span>
+          <div id="chess-captured2" class="chess-captured"></div>
+        </div>
+      </div>
+      <div id="chess-turn" class="turn-indicator">Ожидание...</div>
+      <div id="chess-board" class="chess-board"></div>
+      <div class="chess-players">
+        <div class="chess-pinfo me">
+          <span id="chess-player1">Вы</span>
+          <span id="chess-timer1" class="chess-timer"></span>
+          <div id="chess-captured1" class="chess-captured"></div>
+        </div>
+      </div>
+      <div class="chess-actions">
+        <button class="btn secondary" onclick="Chess.resign()">🏳️ Сдаться</button>
+      </div>
+      <div id="chess-promotion" class="chess-promotion hidden"></div>
+      <div id="chess-result" class="game-result hidden">
+        <h2 id="chess-result-title"></h2>
+        <p id="chess-result-text"></p>
+        <button id="chess-rematch" class="btn primary hidden" onclick="requestRematch()">🔄 Реванш</button>
+      </div>
+    </div>
+
+    <!-- Checkers Screen -->
+    <div id="checkers-game" class="screen">
+      <div class="game-header">
+        <button class="back-btn" onclick="goBackToLobby()">←</button>
+        <h2>🏁 Шашки</h2>
+      </div>
+      <div class="chess-players">
+        <div class="chess-pinfo opp">
+          <span id="ck-player2">Соперник</span>
+          <span id="ck-timer2" class="chess-timer"></span>
+          <span id="ck-captured2" class="chess-captured"></span>
+        </div>
+      </div>
+      <div id="ck-turn" class="turn-indicator">Ожидание...</div>
+      <div id="checkers-board" class="chess-board"></div>
+      <div class="chess-players">
+        <div class="chess-pinfo me">
+          <span id="ck-player1">Вы</span>
+          <span id="ck-timer1" class="chess-timer"></span>
+          <span id="ck-captured1" class="chess-captured"></span>
+        </div>
+      </div>
+      <div id="ck-result" class="game-result hidden">
+        <h2 id="ck-result-title"></h2>
+        <p id="ck-result-text"></p>
+        <button id="ck-rematch" class="btn primary hidden" onclick="requestRematch()">🔄 Реванш</button>
+      </div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -997,6 +1174,8 @@
   <script src="/js/snake.js?v=34"></script>
   <script src="/js/mafia.js?v=34"></script>
   <script src="/js/match3.js?v=34"></script>
+  <script src="/js/chess.js?v=34"></script>
+  <script src="/js/checkers.js?v=34"></script>
 </body>
 
 </html>

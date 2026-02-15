@@ -243,6 +243,12 @@ io.on('connection', (socket) => {
       } else if (room.gameType === 'monopoly') {
         initMonopolyGame(room);
         // monopoly_start is emitted inside initMonopolyGame
+      } else if (room.gameType === 'chess') {
+        initChessRoom(room);
+        io.to(roomId).emit('chess_start', { room });
+      } else if (room.gameType === 'checkers') {
+        initCheckersRoom(room);
+        io.to(roomId).emit('checkers_start', { room });
       }
 
       console.log(`Game started in room ${roomId}`);
@@ -336,6 +342,12 @@ io.on('connection', (socket) => {
         initUnoGame(room);
       } else if (room.gameType === 'monopoly') {
         initMonopolyGame(room);
+      } else if (room.gameType === 'chess') {
+        initChessRoom(room);
+        io.to(room.id).emit('chess_start', { room });
+      } else if (room.gameType === 'checkers') {
+        initCheckersRoom(room);
+        io.to(room.id).emit('checkers_start', { room });
       }
 
       console.log(`Rematch started in room ${room.id}`);
@@ -454,6 +466,202 @@ io.on('connection', (socket) => {
       sunkShip,
       winner: allShipsSunk ? odId : null,
       currentTurn: room.currentTurn
+    });
+  });
+
+  // ========== CHESS GAME ==========
+
+  socket.on('chess_move', ({ odId, fr, fc, tr, tc, promotion }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'chess') return;
+    if (room.currentTurn !== odId) return;
+
+    const cs = room.state; // chess state
+    const board = cs.board;
+    const piece = board[fr][fc];
+    if (!piece) return;
+
+    const pIdx = room.players.findIndex(p => p.odId === odId);
+    const myColor = pIdx === 0 ? 'w' : 'b';
+    if (piece.color !== myColor) return;
+
+    const moveData = { fr, fc, tr, tc };
+
+    // Capture
+    const target = board[tr][tc];
+    if (target) cs.captured[target.color].push(target.type);
+
+    // En passant capture
+    if (piece.type === 'P' && cs.enPassant && tr === cs.enPassant.r && tc === cs.enPassant.c) {
+      const epRow = myColor === 'w' ? tr + 1 : tr - 1;
+      const ep = board[epRow][tc];
+      if (ep) cs.captured[ep.color].push(ep.type);
+      board[epRow][tc] = null;
+      moveData.enPassantCapture = { r: epRow, c: tc };
+    }
+
+    // Set en passant target for next move
+    cs.enPassant = null;
+    if (piece.type === 'P' && Math.abs(tr - fr) === 2) {
+      cs.enPassant = { r: (fr + tr) / 2, c: fc };
+    }
+    moveData.enPassantTarget = cs.enPassant;
+
+    // Castling
+    if (piece.type === 'K') {
+      const dc = tc - fc;
+      if (Math.abs(dc) === 2) {
+        if (dc > 0) {
+          // Kingside
+          board[tr][5] = board[tr][7]; board[tr][7] = null;
+          moveData.castling = 'K';
+        } else {
+          // Queenside
+          board[tr][3] = board[tr][0]; board[tr][0] = null;
+          moveData.castling = 'Q';
+        }
+      }
+      cs.castlingRights[myColor + 'K'] = false;
+      cs.castlingRights[myColor + 'Q'] = false;
+    }
+    if (piece.type === 'R') {
+      if (fc === 0) cs.castlingRights[myColor + 'Q'] = false;
+      if (fc === 7) cs.castlingRights[myColor + 'K'] = false;
+    }
+    // If rook captured, disable castling
+    if (target && target.type === 'R') {
+      const tColor = target.color;
+      if (tc === 0) cs.castlingRights[tColor + 'Q'] = false;
+      if (tc === 7) cs.castlingRights[tColor + 'K'] = false;
+    }
+    moveData.castlingRights = { ...cs.castlingRights };
+
+    // Move piece
+    board[tr][tc] = piece;
+    board[fr][fc] = null;
+
+    // Promotion
+    if (promotion && piece.type === 'P' && (tr === 0 || tr === 7)) {
+      board[tr][tc] = { type: promotion, color: myColor };
+      moveData.promotion = promotion;
+    }
+
+    // Timer increment
+    if (cs.timers) {
+      cs.timers[myColor] += cs.timers.increment || 2000;
+    }
+    moveData.timers = cs.timers ? { w: cs.timers.w, b: cs.timers.b } : null;
+
+    // Switch turn
+    const oppColor = myColor === 'w' ? 'b' : 'w';
+    const oppId = room.players.find(p => p.odId !== odId).odId;
+    room.currentTurn = oppId;
+    moveData.currentTurn = oppColor;
+
+    // Check for check/mate/stalemate
+    const oppInCheck = chessIsKingInCheck(oppColor, board);
+    const oppHasMoves = chessHasLegalMoves(oppColor, board, cs);
+
+    let gameOverData = null;
+    if (!oppHasMoves) {
+      if (oppInCheck) {
+        gameOverData = { gameOver: true, winner: odId, reason: 'Шах и мат!' };
+      } else {
+        gameOverData = { gameOver: true, winner: 'draw', reason: 'Пат — ничья' };
+      }
+    }
+
+    io.to(socket.roomId).emit('chess_update', {
+      move: moveData,
+      check: oppInCheck,
+      ...gameOverData
+    });
+  });
+
+  socket.on('chess_resign', ({ odId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'chess') return;
+    const winnerId = room.players.find(p => p.odId !== odId)?.odId;
+    io.to(socket.roomId).emit('chess_update', {
+      gameOver: true, winner: winnerId, reason: 'Соперник сдался'
+    });
+  });
+
+  // ========== CHECKERS GAME ==========
+
+  socket.on('checkers_move', ({ odId, fr, fc, tr, tc, captured }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room || room.gameType !== 'checkers') return;
+    if (room.currentTurn !== odId) return;
+
+    const cs = room.state;
+    const board = cs.board;
+    const piece = board[fr][fc];
+    if (!piece) return;
+
+    const pIdx = room.players.findIndex(p => p.odId === odId);
+    const myColor = pIdx === 0 ? 'w' : 'b';
+    if (piece.color !== myColor) return;
+
+    const moveData = { fr, fc, tr, tc };
+
+    // Move piece
+    board[tr][tc] = piece;
+    board[fr][fc] = null;
+
+    // Capture
+    if (captured) {
+      board[captured.r][captured.c] = null;
+      cs.captured[myColor]++;
+      moveData.captured = captured;
+    }
+
+    // Crown (become king)
+    if (!piece.king && ((myColor === 'w' && tr === 0) || (myColor === 'b' && tr === 7))) {
+      board[tr][tc] = { color: myColor, king: true };
+      moveData.crowned = true;
+    }
+
+    // Timer increment
+    if (cs.timers) {
+      cs.timers[myColor] += cs.timers.increment || 2000;
+    }
+    moveData.timers = cs.timers ? { w: cs.timers.w, b: cs.timers.b } : null;
+
+    // Check for chain capture
+    let chainContinue = false;
+    if (captured) {
+      const moreCaps = checkersGetCaptures(tr, tc, board);
+      if (moreCaps.length > 0 && !moveData.crowned) {
+        chainContinue = true;
+        moveData.chainContinue = true;
+        moveData.currentTurn = myColor;
+      }
+    }
+
+    if (!chainContinue) {
+      const oppColor = myColor === 'w' ? 'b' : 'w';
+      const oppId = room.players.find(p => p.odId !== odId).odId;
+      room.currentTurn = oppId;
+      moveData.currentTurn = oppColor;
+    }
+
+    // Win condition
+    let gameOverData = null;
+    if (!chainContinue) {
+      const oppColor = myColor === 'w' ? 'b' : 'w';
+      const oppPieces = checkersCountPieces(oppColor, board);
+      const oppMoves = checkersHasMoves(oppColor, board);
+      if (oppPieces === 0) {
+        gameOverData = { gameOver: true, winner: odId, reason: 'Все шашки взяты!' };
+      } else if (!oppMoves) {
+        gameOverData = { gameOver: true, winner: odId, reason: 'Нет ходов!' };
+      }
+    }
+
+    io.to(socket.roomId).emit('checkers_update', {
+      move: moveData,
+      ...gameOverData
     });
   });
 
@@ -1760,6 +1968,273 @@ io.on('connection', (socket) => {
 });
 
 // ========== NEW GAMES INITIALIZATION ==========
+
+// ========== CHESS HELPERS ==========
+
+function initChessRoom(room) {
+  const back = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
+  const board = [];
+  for (let r = 0; r < 8; r++) {
+    board[r] = [];
+    for (let c = 0; c < 8; c++) {
+      if (r === 0) board[r][c] = { type: back[c], color: 'b' };
+      else if (r === 1) board[r][c] = { type: 'P', color: 'b' };
+      else if (r === 6) board[r][c] = { type: 'P', color: 'w' };
+      else if (r === 7) board[r][c] = { type: back[c], color: 'w' };
+      else board[r][c] = null;
+    }
+  }
+
+  const settings = room.settings || {};
+  let timers = null;
+  if (settings.timer && settings.timer > 0) {
+    const ms = settings.timer * 60 * 1000;
+    timers = { w: ms, b: ms, increment: 2000 };
+  }
+
+  room.state = {
+    board,
+    castlingRights: { wK: true, wQ: true, bK: true, bQ: true },
+    enPassant: null,
+    captured: { w: [], b: [] },
+    timers
+  };
+  room.currentTurn = room.players[0].odId;
+}
+
+function chessFindKing(color, board) {
+  for (let r = 0; r < 8; r++)
+    for (let c = 0; c < 8; c++)
+      if (board[r][c]?.type === 'K' && board[r][c]?.color === color)
+        return { r, c };
+  return null;
+}
+
+function chessCanAttack(fr, fc, tr, tc, piece, board) {
+  const dr = tr - fr, dc = tc - fc;
+  switch (piece.type) {
+    case 'P': {
+      const dir = piece.color === 'w' ? -1 : 1;
+      return dr === dir && Math.abs(dc) === 1;
+    }
+    case 'N':
+      return (Math.abs(dr) === 2 && Math.abs(dc) === 1) || (Math.abs(dr) === 1 && Math.abs(dc) === 2);
+    case 'B':
+      if (Math.abs(dr) !== Math.abs(dc) || dr === 0) return false;
+      return chessIsPathClear(fr, fc, tr, tc, board);
+    case 'R':
+      if (dr !== 0 && dc !== 0) return false;
+      return chessIsPathClear(fr, fc, tr, tc, board);
+    case 'Q':
+      if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return false;
+      return chessIsPathClear(fr, fc, tr, tc, board);
+    case 'K':
+      return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+  }
+  return false;
+}
+
+function chessIsPathClear(fr, fc, tr, tc, board) {
+  const dr = Math.sign(tr - fr), dc = Math.sign(tc - fc);
+  let r = fr + dr, c = fc + dc;
+  while (r !== tr || c !== tc) {
+    if (board[r][c]) return false;
+    r += dr; c += dc;
+  }
+  return true;
+}
+
+function chessIsSquareAttacked(r, c, defenderColor, board) {
+  const attacker = defenderColor === 'w' ? 'b' : 'w';
+  for (let pr = 0; pr < 8; pr++) {
+    for (let pc = 0; pc < 8; pc++) {
+      const p = board[pr][pc];
+      if (!p || p.color !== attacker) continue;
+      if (chessCanAttack(pr, pc, r, c, p, board)) return true;
+    }
+  }
+  return false;
+}
+
+function chessIsKingInCheck(color, board) {
+  const king = chessFindKing(color, board);
+  if (!king) return false;
+  return chessIsSquareAttacked(king.r, king.c, color, board);
+}
+
+function chessGetPseudoMoves(r, c, piece, board, cs) {
+  const moves = [];
+  const color = piece.color;
+  const addIf = (tr, tc) => {
+    if (tr < 0 || tr >= 8 || tc < 0 || tc >= 8) return false;
+    const t = board[tr][tc];
+    if (t && t.color === color) return false;
+    moves.push({ r: tr, c: tc });
+    return !t;
+  };
+
+  switch (piece.type) {
+    case 'P': {
+      const dir = color === 'w' ? -1 : 1;
+      const startRow = color === 'w' ? 6 : 1;
+      if (!board[r + dir]?.[c]) {
+        moves.push({ r: r + dir, c });
+        if (r === startRow && !board[r + 2 * dir]?.[c]) {
+          moves.push({ r: r + 2 * dir, c });
+        }
+      }
+      for (const dc of [-1, 1]) {
+        const tr = r + dir, tc = c + dc;
+        if (tr < 0 || tr >= 8 || tc < 0 || tc >= 8) continue;
+        if (board[tr][tc] && board[tr][tc].color !== color) moves.push({ r: tr, c: tc });
+        if (cs?.enPassant && cs.enPassant.r === tr && cs.enPassant.c === tc) moves.push({ r: tr, c: tc });
+      }
+      break;
+    }
+    case 'N':
+      for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) addIf(r + dr, c + dc);
+      break;
+    case 'B':
+      for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]])
+        for (let i = 1; i < 8; i++) { if (!addIf(r + dr * i, c + dc * i)) break; }
+      break;
+    case 'R':
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]])
+        for (let i = 1; i < 8; i++) { if (!addIf(r + dr * i, c + dc * i)) break; }
+      break;
+    case 'Q':
+      for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]])
+        for (let i = 1; i < 8; i++) { if (!addIf(r + dr * i, c + dc * i)) break; }
+      break;
+    case 'K':
+      for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) addIf(r + dr, c + dc);
+      break;
+  }
+  return moves;
+}
+
+function chessSimulate(fr, fc, tr, tc, board) {
+  const sim = board.map(row => row.map(cell => cell ? { ...cell } : null));
+  sim[tr][tc] = sim[fr][fc];
+  sim[fr][fc] = null;
+  return sim;
+}
+
+function chessHasLegalMoves(color, board, cs) {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (!p || p.color !== color) continue;
+      const pseudo = chessGetPseudoMoves(r, c, p, board, cs);
+      for (const m of pseudo) {
+        const sim = chessSimulate(r, c, m.r, m.c, board);
+        if (!chessIsKingInCheck(color, sim)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ========== CHECKERS HELPERS ==========
+
+function initCheckersRoom(room) {
+  const board = [];
+  for (let r = 0; r < 8; r++) {
+    board[r] = [];
+    for (let c = 0; c < 8; c++) {
+      if ((r + c) % 2 === 1) {
+        if (r < 3) board[r][c] = { color: 'b', king: false };
+        else if (r > 4) board[r][c] = { color: 'w', king: false };
+        else board[r][c] = null;
+      } else {
+        board[r][c] = null;
+      }
+    }
+  }
+
+  const settings = room.settings || {};
+  let timers = null;
+  if (settings.timer && settings.timer > 0) {
+    const ms = settings.timer * 60 * 1000;
+    timers = { w: ms, b: ms, increment: 2000 };
+  }
+
+  room.state = {
+    board,
+    captured: { w: 0, b: 0 },
+    timers
+  };
+  room.currentTurn = room.players[0].odId;
+}
+
+function checkersGetCaptures(r, c, board) {
+  const piece = board[r][c];
+  if (!piece) return [];
+  const captures = [];
+  const enemy = piece.color === 'w' ? 'b' : 'w';
+
+  if (piece.king) {
+    for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+      let er = r + dr, ec = c + dc;
+      while (er >= 0 && er < 8 && ec >= 0 && ec < 8) {
+        if (board[er][ec]) {
+          if (board[er][ec].color === enemy) {
+            let lr = er + dr, lc = ec + dc;
+            while (lr >= 0 && lr < 8 && lc >= 0 && lc < 8 && !board[lr][lc]) {
+              captures.push({ r: lr, c: lc });
+              lr += dr; lc += dc;
+            }
+          }
+          break;
+        }
+        er += dr; ec += dc;
+      }
+    }
+  } else {
+    for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+      const mr = r + dr, mc = c + dc;
+      const lr = r + 2 * dr, lc = c + 2 * dc;
+      if (lr < 0 || lr >= 8 || lc < 0 || lc >= 8) continue;
+      if (board[mr]?.[mc]?.color === enemy && !board[lr][lc]) {
+        captures.push({ r: lr, c: lc });
+      }
+    }
+  }
+  return captures;
+}
+
+function checkersCountPieces(color, board) {
+  let count = 0;
+  for (let r = 0; r < 8; r++)
+    for (let c = 0; c < 8; c++)
+      if (board[r][c]?.color === color) count++;
+  return count;
+}
+
+function checkersHasMoves(color, board) {
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (!p || p.color !== color) continue;
+      // Check captures
+      if (checkersGetCaptures(r, c, board).length > 0) return true;
+      // Check simple moves
+      if (p.king) {
+        for (const [dr, dc] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+          const tr = r + dr, tc = c + dc;
+          if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8 && !board[tr][tc]) return true;
+        }
+      } else {
+        const dirs = p.color === 'w' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+        for (const [dr, dc] of dirs) {
+          const tr = r + dr, tc = c + dc;
+          if (tr >= 0 && tr < 8 && tc >= 0 && tc < 8 && !board[tr][tc]) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
 
 // Durak card game initialization
 function initDurakGame(room) {

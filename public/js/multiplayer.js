@@ -34,7 +34,9 @@ const Multiplayer = {
                 'battleship': '🚢 Морской Бой',
                 'durak': '🃏 Дурак',
                 'uno': '🎴 UNO',
-                'monopoly': '🎲 Монополия'
+                'monopoly': '🎲 Монополия',
+                'chess': '♟️ Шахматы',
+                'checkers': '🏁 Шашки'
             };
             document.getElementById('room-title').textContent = titles[room.gameType] || 'Игра';
 
@@ -75,7 +77,9 @@ const Multiplayer = {
             const gameScreens = {
                 'rps': 'rps-game',
                 'tictactoe': 'ttt-game',
-                'battleship': 'bs-game'
+                'battleship': 'bs-game',
+                'chess': 'chess-game',
+                'checkers': 'checkers-game'
             };
             App.startGame(gameScreens[room.gameType], room);
         });
@@ -233,6 +237,26 @@ const Multiplayer = {
         this.socket.on('monopoly_trade_complete', (data) => {
             MonopolyPlus.handleTradeComplete(data);
         });
+
+        // Chess Events
+        this.socket.on('chess_start', ({ room }) => {
+            App.showScreen('chess-game');
+            Chess.init(room);
+        });
+
+        this.socket.on('chess_update', (data) => {
+            Chess.update(data);
+        });
+
+        // Checkers Events
+        this.socket.on('checkers_start', ({ room }) => {
+            App.showScreen('checkers-game');
+            Checkers.init(room);
+        });
+
+        this.socket.on('checkers_update', (data) => {
+            Checkers.update(data);
+        });
     },
 
     createRoom(gameType, password = null, isPublic = true, settings = {}) {
@@ -293,6 +317,26 @@ const Multiplayer = {
             odId: App.userId,
             x,
             y
+        });
+    },
+
+    chessMove(move) {
+        this.socket.emit('chess_move', {
+            odId: App.userId,
+            ...move
+        });
+    },
+
+    chessResign() {
+        this.socket.emit('chess_resign', {
+            odId: App.userId
+        });
+    },
+
+    checkersMove(move) {
+        this.socket.emit('checkers_move', {
+            odId: App.userId,
+            ...move
         });
     }
 };
