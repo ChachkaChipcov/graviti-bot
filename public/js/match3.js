@@ -1,9 +1,13 @@
-// ==================== MATCH-3 (3 в ряд) — FULL VERSION v2 ====================
+// ==================== MATCH-3 (3 в ряд) — v3 OBSTACLES ====================
 const Match3Game = {
-    BOARD_SIZE: 8,
+    BS: 8,
     GEMS: ['🔴', '🟢', '🔵', '🟡', '🟣', '🟠'],
-    board: [],       // gem type index (-1 = empty)
-    chains: [],      // chain count per cell (0 = no chain)
+    // Per-cell data arrays
+    board: [],    // gem index (-1=empty, -2=stone)
+    chains: [],   // chain layers 0-2
+    ice: [],      // ice layers 0-2
+    box: [],      // box HP 0-2
+    // State
     selected: null,
     score: 0,
     moves: 0,
@@ -22,27 +26,24 @@ const Match3Game = {
     touchCell: null,
     tutorialShown: false,
     comboCount: 0,
-    cells: [],        // DOM references for smooth animation
+    cells: [],
 
+    // ==================== INIT ====================
     init() {
         this.loadProgress();
         this.tutorialShown = localStorage.getItem('m3_tutorial') === '1';
-        if (!this.tutorialShown) {
-            this.showTutorial();
-        } else {
-            this.showMap();
-        }
+        if (!this.tutorialShown) this.showTutorial();
+        else this.showMap();
     },
 
-    // ========== TUTORIAL ==========
+    // ==================== TUTORIAL ====================
     showTutorial() {
         const field = document.getElementById('m3-field');
         if (!field) return;
         this.showingMap = true;
-        const header = document.querySelector('.m3-info');
-        if (header) header.style.display = 'none';
+        const h = document.querySelector('.m3-info');
+        if (h) h.style.display = 'none';
         this.removeProgress();
-
         field.className = 'm3-tutorial';
         field.innerHTML = `
       <div class="m3-tut-slide active" data-slide="0">
@@ -53,17 +54,17 @@ const Match3Game = {
       <div class="m3-tut-slide" data-slide="1">
         <div class="m3-tut-emoji">👆</div>
         <h3>Управление</h3>
-        <p>Свайпай камни или нажимай на два соседних, чтобы поменять их местами.</p>
+        <p>Свайпай камни или нажимай на два соседних чтобы поменять местами</p>
       </div>
       <div class="m3-tut-slide" data-slide="2">
-        <div class="m3-tut-emoji">⛓️</div>
-        <h3>Цепи!</h3>
-        <p>Некоторые камни скованы цепями. Собери совпадение рядом, чтобы разбить цепь!</p>
+        <div class="m3-tut-emoji">🧊</div>
+        <h3>Препятствия!</h3>
+        <p>⛓️ Цепи · 🧊 Лёд · 📦 Коробки · 🪨 Камни<br>Собирай совпадения рядом чтобы уничтожить!</p>
       </div>
       <div class="m3-tut-slide" data-slide="3">
         <div class="m3-tut-emoji">🗺️</div>
         <h3>1000 уровней!</h3>
-        <p>Каждый уровень сложнее. Собирай звёзды!</p>
+        <p>Каждый уровень сложнее. Собирай ⭐!</p>
       </div>
       <div class="m3-tut-nav">
         <span class="m3-tut-dots">
@@ -73,8 +74,7 @@ const Match3Game = {
           <span class="m3-tut-dot" data-d="3"></span>
         </span>
         <button class="btn primary" onclick="Match3Game.nextTutSlide()">Далее ➡️</button>
-      </div>
-    `;
+      </div>`;
         this._tutSlide = 0;
     },
 
@@ -98,7 +98,7 @@ const Match3Game = {
         }
     },
 
-    // ========== SAVE / LOAD ==========
+    // ==================== SAVE / LOAD ====================
     loadProgress() {
         try {
             this.unlockedLevel = parseInt(localStorage.getItem('m3_unlocked') || '1');
@@ -111,31 +111,46 @@ const Match3Game = {
         localStorage.setItem('m3_stars', JSON.stringify(this.levelStars));
     },
 
-    // ========== LEVEL CONFIG ==========
+    // ==================== LEVEL CONFIG ====================
+    // Obstacle progression:
+    //  Lvl 1-4:   nothing
+    //  Lvl 5-14:  chains (1 layer)
+    //  Lvl 15-29: chains + ice (1 layer)
+    //  Lvl 30-49: chains(2) + ice(1) + boxes(1HP)
+    //  Lvl 50-99: chains(2) + ice(2) + boxes(2HP)
+    //  Lvl 100+:  all above + stones (permanent)
     getLevelConfig(lvl) {
         const moves = Math.max(12, 30 - Math.floor(lvl / 25));
         const target = 300 + (lvl - 1) * 80 + Math.floor(lvl / 10) * 50;
         const gemCount = lvl < 20 ? 5 : 6;
         const star2 = Math.floor(target * 1.3);
         const star3 = Math.floor(target * 1.7);
-        // Chain config: chains start at level 5
-        let chainCount = 0;
-        let maxChain = 0;
-        if (lvl >= 5) {
-            chainCount = Math.min(20, 2 + Math.floor(lvl / 5));
-            maxChain = lvl >= 30 ? 2 : 1;
-        }
-        return { moves, target, gemCount, star2, star3, level: lvl, chainCount, maxChain };
+
+        let chainCount = 0, maxChain = 0;
+        let iceCount = 0, maxIce = 0;
+        let boxCount = 0, maxBox = 0;
+        let stoneCount = 0;
+
+        if (lvl >= 5) { chainCount = Math.min(16, 2 + Math.floor(lvl / 6)); maxChain = 1; }
+        if (lvl >= 15) { iceCount = Math.min(12, 1 + Math.floor((lvl - 15) / 5)); maxIce = 1; }
+        if (lvl >= 30) { maxChain = 2; boxCount = Math.min(10, 1 + Math.floor((lvl - 30) / 8)); maxBox = 1; }
+        if (lvl >= 50) { maxIce = 2; maxBox = 2; }
+        if (lvl >= 100) { stoneCount = Math.min(6, 1 + Math.floor((lvl - 100) / 40)); }
+
+        return {
+            moves, target, gemCount, star2, star3, level: lvl,
+            chainCount, maxChain, iceCount, maxIce, boxCount, maxBox, stoneCount
+        };
     },
 
-    // ========== LEVEL MAP ==========
+    // ==================== MAP ====================
     showMap() {
         this.showingMap = true;
         this.mapPage = Math.floor((this.unlockedLevel - 1) / this.LEVELS_PER_PAGE);
         const result = document.getElementById('m3-result');
         if (result) result.classList.add('hidden');
-        const header = document.querySelector('.m3-info');
-        if (header) header.style.display = 'none';
+        const h = document.querySelector('.m3-info');
+        if (h) h.style.display = 'none';
         this.removeProgress();
         this.renderMap();
     },
@@ -170,9 +185,9 @@ const Match3Game = {
     },
 
     prevPage() { if (this.mapPage > 0) { this.mapPage--; this.renderMap(); } },
-    nextPage() { if (this.mapPage < Math.floor((this.maxLevel - 1) / this.LEVELS_PER_PAGE)) { this.mapPage++; this.renderMap(); } },
+    nextPage() { const max = Math.floor((this.maxLevel - 1) / this.LEVELS_PER_PAGE); if (this.mapPage < max) { this.mapPage++; this.renderMap(); } },
 
-    // ========== PLAY LEVEL ==========
+    // ==================== PLAY LEVEL ====================
     playLevel(lvl) {
         if (lvl > this.unlockedLevel) return;
         this.level = lvl;
@@ -186,8 +201,8 @@ const Match3Game = {
         this.selected = null;
         this.animating = false;
 
-        const header = document.querySelector('.m3-info');
-        if (header) header.style.display = 'flex';
+        const h = document.querySelector('.m3-info');
+        if (h) h.style.display = 'flex';
 
         this.generateBoard(config);
         const field = document.getElementById('m3-field');
@@ -204,8 +219,12 @@ const Match3Game = {
         if (!result) return;
         result.classList.remove('hidden');
         document.getElementById('m3-result-title').textContent = `🎯 Уровень ${this.level}`;
-        let extra = '';
-        if (config.chainCount > 0) extra = `<br>⛓️ Разбей цепи!`;
+        let extras = [];
+        if (config.chainCount > 0) extras.push('⛓️ Цепи');
+        if (config.iceCount > 0) extras.push('🧊 Лёд');
+        if (config.boxCount > 0) extras.push('📦 Коробки');
+        if (config.stoneCount > 0) extras.push('🪨 Камни');
+        const extra = extras.length > 0 ? '<br>' + extras.join(' · ') : '';
         document.getElementById('m3-result-text').innerHTML =
             `Набери <b>${config.target}</b> очков за <b>${config.moves}</b> ходов!${extra}`
             + `<br><small>⭐${config.target} · ⭐⭐${config.star2} · ⭐⭐⭐${config.star3}</small>`;
@@ -216,7 +235,7 @@ const Match3Game = {
         }
     },
 
-    // ========== TOUCH / SWIPE ==========
+    // ==================== TOUCH / SWIPE ====================
     setupTouch() {
         const field = document.getElementById('m3-field');
         if (!field || field._m3touch) return;
@@ -231,10 +250,7 @@ const Match3Game = {
             const el = document.elementFromPoint(t.clientX, t.clientY);
             if (el) {
                 const cell = el.closest('.m3-cell');
-                if (cell) {
-                    this.touchCell = { r: parseInt(cell.dataset.r), c: parseInt(cell.dataset.c) };
-                    return;
-                }
+                if (cell) { this.touchCell = { r: +cell.dataset.r, c: +cell.dataset.c }; return; }
             }
             this.touchCell = null;
         }, { passive: false });
@@ -257,58 +273,91 @@ const Match3Game = {
             } else {
                 tr = this.touchCell.r + (dy > 0 ? 1 : -1); tc = this.touchCell.c;
             }
-            if (tr < 0 || tr >= this.BOARD_SIZE || tc < 0 || tc >= this.BOARD_SIZE) return;
+            if (tr < 0 || tr >= this.BS || tc < 0 || tc >= this.BS) return;
             this.selected = { r: this.touchCell.r, c: this.touchCell.c };
             this.onCellClick(tr, tc);
         }, { passive: false });
     },
 
-    // ========== BOARD GENERATION ==========
+    // ==================== BOARD GEN ====================
+    isBlocker(r, c) {
+        // Can't be swapped: stone, box
+        return this.board[r][c] === -2 || this.box[r][c] > 0;
+    },
+
     generateBoard(config) {
         const gc = config.gemCount || 6;
-        this.board = [];
-        this.chains = [];
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            this.board[r] = [];
-            this.chains[r] = [];
-            for (let c = 0; c < this.BOARD_SIZE; c++) {
+        this.board = []; this.chains = []; this.ice = []; this.box = [];
+        for (let r = 0; r < this.BS; r++) {
+            this.board[r] = []; this.chains[r] = []; this.ice[r] = []; this.box[r] = [];
+            for (let c = 0; c < this.BS; c++) {
                 let gem;
-                do {
-                    gem = Math.floor(Math.random() * gc);
-                } while (
+                do { gem = Math.floor(Math.random() * gc); } while (
                     (c >= 2 && this.board[r][c - 1] === gem && this.board[r][c - 2] === gem) ||
                     (r >= 2 && this.board[r - 1][c] === gem && this.board[r - 2][c] === gem)
                 );
                 this.board[r][c] = gem;
                 this.chains[r][c] = 0;
+                this.ice[r][c] = 0;
+                this.box[r][c] = 0;
             }
         }
-        // Place chains
-        if (config.chainCount > 0) {
-            let placed = 0;
-            const maxAttempts = 200;
-            let attempts = 0;
-            while (placed < config.chainCount && attempts < maxAttempts) {
-                const r = Math.floor(Math.random() * this.BOARD_SIZE);
-                const c = Math.floor(Math.random() * this.BOARD_SIZE);
-                if (this.chains[r][c] === 0) {
-                    this.chains[r][c] = 1 + Math.floor(Math.random() * config.maxChain);
+        // Place obstacles
+        this._placeObstacles(config, 'chains', config.chainCount, config.maxChain);
+        this._placeObstacles(config, 'ice', config.iceCount, config.maxIce);
+        // Boxes: set board to -1 and box HP
+        if (config.boxCount > 0) {
+            let placed = 0, att = 0;
+            while (placed < config.boxCount && att < 300) {
+                const r = Math.floor(Math.random() * this.BS);
+                const c = Math.floor(Math.random() * this.BS);
+                if (this.box[r][c] === 0 && this.board[r][c] !== -2) {
+                    this.box[r][c] = 1 + Math.floor(Math.random() * config.maxBox);
+                    this.board[r][c] = -1; // no gem under box
                     placed++;
                 }
-                attempts++;
+                att++;
+            }
+        }
+        // Stones: permanent blockers
+        if (config.stoneCount > 0) {
+            let placed = 0, att = 0;
+            while (placed < config.stoneCount && att < 300) {
+                const r = 1 + Math.floor(Math.random() * (this.BS - 2)); // avoid edges
+                const c = 1 + Math.floor(Math.random() * (this.BS - 2));
+                if (this.board[r][c] !== -2 && this.box[r][c] === 0) {
+                    this.board[r][c] = -2; // stone
+                    this.chains[r][c] = 0; this.ice[r][c] = 0;
+                    placed++;
+                }
+                att++;
             }
         }
     },
 
-    // ========== DOM-BASED RENDERING ==========
+    _placeObstacles(config, arr, count, maxLvl) {
+        if (count <= 0 || maxLvl <= 0) return;
+        let placed = 0, att = 0;
+        while (placed < count && att < 300) {
+            const r = Math.floor(Math.random() * this.BS);
+            const c = Math.floor(Math.random() * this.BS);
+            if (this[arr][r][c] === 0 && this.board[r][c] >= 0 && this.box[r][c] === 0) {
+                this[arr][r][c] = 1 + Math.floor(Math.random() * maxLvl);
+                placed++;
+            }
+            att++;
+        }
+    },
+
+    // ==================== DOM ====================
     buildDOM() {
         const field = document.getElementById('m3-field');
         if (!field || this.showingMap) return;
         field.innerHTML = '';
         this.cells = [];
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
+        for (let r = 0; r < this.BS; r++) {
             this.cells[r] = [];
-            for (let c = 0; c < this.BOARD_SIZE; c++) {
+            for (let c = 0; c < this.BS; c++) {
                 const cell = document.createElement('div');
                 cell.className = 'm3-cell';
                 cell.dataset.r = r;
@@ -316,42 +365,77 @@ const Match3Game = {
                 cell.addEventListener('click', () => this.onCellClick(r, c));
                 this.cells[r][c] = cell;
                 field.appendChild(cell);
-                this.updateCell(r, c);
+                this.renderCell(r, c);
             }
         }
     },
 
-    updateCell(r, c) {
+    renderCell(r, c) {
         const cell = this.cells[r] && this.cells[r][c];
         if (!cell) return;
         const gem = this.board[r][c];
         const chain = this.chains[r][c];
+        const iceL = this.ice[r][c];
+        const boxHP = this.box[r][c];
         cell.className = 'm3-cell';
-        if (gem === -1) {
+
+        // Stone
+        if (gem === -2) {
+            cell.classList.add('stone');
+            cell.innerHTML = '<span class="m3-gem">🪨</span>';
+            return;
+        }
+
+        // Box (no gem underneath)
+        if (boxHP > 0) {
+            cell.classList.add('blocker-box');
+            if (boxHP > 1) cell.classList.add('box-strong');
+            cell.innerHTML = `<span class="m3-gem">${boxHP > 1 ? '📦' : '📦'}</span>`
+                + (boxHP > 1 ? '<span class="m3-box-hp">×2</span>' : '');
+            return;
+        }
+
+        // Empty
+        if (gem < 0) {
             cell.classList.add('empty');
             cell.innerHTML = '';
             return;
         }
+
+        // Selection
         if (this.selected && this.selected.r === r && this.selected.c === c) {
             cell.classList.add('selected');
         }
+
         let html = `<span class="m3-gem">${this.GEMS[gem]}</span>`;
+
+        // Chain overlay
         if (chain > 0) {
             cell.classList.add('chained');
             html += `<span class="m3-chain">${chain > 1 ? '⛓️⛓️' : '⛓️'}</span>`;
         }
+
+        // Ice overlay
+        if (iceL > 0) {
+            cell.classList.add('iced');
+            if (iceL > 1) cell.classList.add('ice-thick');
+        }
+
         cell.innerHTML = html;
     },
 
     updateAllCells() {
-        for (let r = 0; r < this.BOARD_SIZE; r++)
-            for (let c = 0; c < this.BOARD_SIZE; c++)
-                this.updateCell(r, c);
+        for (let r = 0; r < this.BS; r++)
+            for (let c = 0; c < this.BS; c++)
+                this.renderCell(r, c);
     },
 
-    // ========== GAME LOGIC ==========
+    // ==================== GAME LOGIC ====================
     onCellClick(r, c) {
-        if (this.animating || this.board[r][c] === -1 || this.showingMap) return;
+        if (this.animating || this.showingMap) return;
+        // Can't select blockers
+        if (this.isBlocker(r, c)) return;
+        if (this.board[r][c] < 0) return;
 
         if (!this.selected) {
             this.selected = { r, c };
@@ -363,8 +447,9 @@ const Match3Game = {
         if (sr === r && sc === c) { this.selected = null; this.updateAllCells(); return; }
         const isAdj = (Math.abs(sr - r) + Math.abs(sc - c)) === 1;
         if (!isAdj) { this.selected = { r, c }; this.updateAllCells(); return; }
+        // Can't swap if target is a blocker
+        if (this.isBlocker(r, c)) { this.selected = { r, c }; this.updateAllCells(); return; }
 
-        // Animate swap
         this.animating = true;
         this.animateSwap(sr, sc, r, c, () => {
             this.swap(sr, sc, r, c);
@@ -375,7 +460,6 @@ const Match3Game = {
                     this.selected = null;
                     this.updateAllCells();
                     this.animating = false;
-                    // Shake both cells
                     this.shakeCell(sr, sc);
                     this.shakeCell(r, c);
                 });
@@ -399,60 +483,59 @@ const Match3Game = {
         const cell1 = this.cells[r1] && this.cells[r1][c1];
         const cell2 = this.cells[r2] && this.cells[r2][c2];
         if (!cell1 || !cell2) { cb(); return; }
-        const size = cell1.offsetWidth + 3; // cell size + gap
-        const dx = (c2 - c1) * size;
-        const dy = (r2 - r1) * size;
+        const size = cell1.offsetWidth + 3;
+        const dx = (c2 - c1) * size, dy = (r2 - r1) * size;
         cell1.style.transition = 'transform 0.2s ease';
         cell2.style.transition = 'transform 0.2s ease';
-        cell1.style.transform = `translate(${dx}px, ${dy}px)`;
-        cell2.style.transform = `translate(${-dx}px, ${-dy}px)`;
+        cell1.style.transform = `translate(${dx}px,${dy}px)`;
+        cell2.style.transform = `translate(${-dx}px,${-dy}px)`;
         cell1.style.zIndex = '5';
         setTimeout(() => {
-            cell1.style.transition = '';
-            cell2.style.transition = '';
-            cell1.style.transform = '';
-            cell2.style.transform = '';
+            cell1.style.transition = ''; cell2.style.transition = '';
+            cell1.style.transform = ''; cell2.style.transform = '';
             cell1.style.zIndex = '';
             cb();
         }, 220);
     },
 
     swap(r1, c1, r2, c2) {
-        let t = this.board[r1][c1]; this.board[r1][c1] = this.board[r2][c2]; this.board[r2][c2] = t;
+        let t;
+        t = this.board[r1][c1]; this.board[r1][c1] = this.board[r2][c2]; this.board[r2][c2] = t;
         t = this.chains[r1][c1]; this.chains[r1][c1] = this.chains[r2][c2]; this.chains[r2][c2] = t;
+        t = this.ice[r1][c1]; this.ice[r1][c1] = this.ice[r2][c2]; this.ice[r2][c2] = t;
     },
 
     findMatches() {
         const matches = new Set();
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            for (let c = 0; c < this.BOARD_SIZE - 2; c++) {
+        for (let r = 0; r < this.BS; r++) {
+            for (let c = 0; c < this.BS - 2; c++) {
                 const g = this.board[r][c]; if (g < 0) continue;
                 if (g === this.board[r][c + 1] && g === this.board[r][c + 2]) {
                     matches.add(`${r},${c}`); matches.add(`${r},${c + 1}`); matches.add(`${r},${c + 2}`);
-                    let e = c + 3; while (e < this.BOARD_SIZE && this.board[r][e] === g) { matches.add(`${r},${e}`); e++; }
+                    let e = c + 3; while (e < this.BS && this.board[r][e] === g) { matches.add(`${r},${e}`); e++; }
                 }
             }
         }
-        for (let c = 0; c < this.BOARD_SIZE; c++) {
-            for (let r = 0; r < this.BOARD_SIZE - 2; r++) {
+        for (let c = 0; c < this.BS; c++) {
+            for (let r = 0; r < this.BS - 2; r++) {
                 const g = this.board[r][c]; if (g < 0) continue;
                 if (g === this.board[r + 1][c] && g === this.board[r + 2][c]) {
                     matches.add(`${r},${c}`); matches.add(`${r + 1},${c}`); matches.add(`${r + 2},${c}`);
-                    let e = r + 3; while (e < this.BOARD_SIZE && this.board[e][c] === g) { matches.add(`${e},${c}`); e++; }
+                    let e = r + 3; while (e < this.BS && this.board[e][c] === g) { matches.add(`${e},${c}`); e++; }
                 }
             }
         }
-        return [...matches].map(s => { const [r, c] = s.split(',').map(Number); return { r, c }; });
+        return [...matches].map(s => { const p = s.split(',').map(Number); return { r: p[0], c: p[1] }; });
     },
 
+    // ==================== PROCESS MATCHES ====================
     processMatches(matches) {
         this.comboCount++;
         const combo = this.comboCount;
-
-        // Separate: chained gems lose a chain, unchained gems are removed
         const toRemove = [];
         const toUnchain = [];
-        const chainNeighbors = new Set();
+        const toMeltIce = new Set();
+        const toHitBox = new Set();
 
         matches.forEach(({ r, c }) => {
             if (this.chains[r][c] > 0) {
@@ -460,34 +543,36 @@ const Match3Game = {
             } else {
                 toRemove.push({ r, c });
             }
-            // Mark neighbors of matches for chain-breaking
+            // Check neighbors for obstacle damage
             [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([nr, nc]) => {
-                if (nr >= 0 && nr < this.BOARD_SIZE && nc >= 0 && nc < this.BOARD_SIZE) {
-                    if (this.chains[nr][nc] > 0) {
-                        chainNeighbors.add(`${nr},${nc}`);
-                    }
-                }
+                if (nr < 0 || nr >= this.BS || nc < 0 || nc >= this.BS) return;
+                // Neighbor chains
+                if (this.chains[nr][nc] > 0) toUnchain.push({ r: nr, c: nc });
+                // Neighbor ice
+                if (this.ice[nr][nc] > 0) toMeltIce.add(`${nr},${nc}`);
+                // Neighbor box
+                if (this.box[nr][nc] > 0) toHitBox.add(`${nr},${nc}`);
             });
         });
 
-        // Also break chains on neighboring cells that weren't in the match
-        chainNeighbors.forEach(key => {
-            const [r, c] = key.split(',').map(Number);
-            const already = toUnchain.find(u => u.r === r && u.c === c) || toRemove.find(u => u.r === r && u.c === c);
-            if (!already) {
-                toUnchain.push({ r, c });
-            }
+        // Also melt ice on matched cells themselves
+        matches.forEach(({ r, c }) => {
+            if (this.ice[r][c] > 0) toMeltIce.add(`${r},${c}`);
         });
+
+        // Dedup unchains
+        const unchainMap = {};
+        toUnchain.forEach(({ r, c }) => { unchainMap[`${r},${c}`] = { r, c }; });
+        const uniqueUnchain = Object.values(unchainMap);
 
         // Calculate points
         const pts = toRemove.length * 10 * combo * (toRemove.length > 3 ? 2 : 1);
         this.score += pts;
 
-        // Animate burst on removed gems
+        // ---- Animate burst ----
         toRemove.forEach(({ r, c }) => {
             const cell = this.cells[r][c];
             cell.classList.add('burst');
-            // Add particles
             for (let i = 0; i < 6; i++) {
                 const p = document.createElement('span');
                 p.className = 'm3-particle';
@@ -497,7 +582,7 @@ const Match3Game = {
             }
         });
 
-        // Show floating score
+        // Floating score
         if (toRemove.length > 0) {
             const mid = toRemove[Math.floor(toRemove.length / 2)];
             const cell = this.cells[mid.r][mid.c];
@@ -507,109 +592,117 @@ const Match3Game = {
             cell.appendChild(pop);
         }
 
-        // Animate chain-break on unchained gems
-        toUnchain.forEach(({ r, c }) => {
+        // ---- Chain break animation ----
+        uniqueUnchain.forEach(({ r, c }) => {
             this.chains[r][c] = Math.max(0, this.chains[r][c] - 1);
-            const cell = this.cells[r][c];
-            cell.classList.add('chain-break');
+            this.cells[r][c].classList.add('chain-break');
         });
 
-        // After burst animation → drop & fill
+        // ---- Ice melt animation ----
+        toMeltIce.forEach(key => {
+            const [r, c] = key.split(',').map(Number);
+            this.ice[r][c] = Math.max(0, this.ice[r][c] - 1);
+            this.cells[r][c].classList.add('ice-melt');
+        });
+
+        // ---- Box hit animation ----
+        toHitBox.forEach(key => {
+            const [r, c] = key.split(',').map(Number);
+            this.box[r][c] = Math.max(0, this.box[r][c] - 1);
+            this.cells[r][c].classList.add('box-hit');
+            if (this.box[r][c] <= 0) {
+                // Box destroyed — cell becomes empty, new gem will fall in
+                this.board[r][c] = -1;
+                this.score += 20 * combo;
+            }
+        });
+
+        // After burst → drop
         setTimeout(() => {
-            // Remove matched gems from board
             toRemove.forEach(({ r, c }) => { this.board[r][c] = -1; });
             this.updateAllCells();
-
-            // Chain break animation done - update those cells
-            toUnchain.forEach(({ r, c }) => {
-                const cell = this.cells[r][c];
-                cell.classList.remove('chain-break');
+            uniqueUnchain.forEach(({ r, c }) => this.cells[r][c].classList.remove('chain-break'));
+            toMeltIce.forEach(key => {
+                const [r, c] = key.split(',').map(Number);
+                this.cells[r][c].classList.remove('ice-melt');
             });
-
-            // Now animate drop
-            setTimeout(() => {
-                this.animateDrop();
-            }, 50);
+            toHitBox.forEach(key => {
+                const [r, c] = key.split(',').map(Number);
+                this.cells[r][c].classList.remove('box-hit');
+            });
+            setTimeout(() => this.animateDrop(), 50);
         }, 400);
     },
 
+    // ==================== DROP ====================
     animateDrop() {
         const config = this.getLevelConfig(this.level);
-        // Calculate how far each cell needs to drop
-        const dropDistances = [];
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            dropDistances[r] = [];
-            for (let c = 0; c < this.BOARD_SIZE; c++) {
-                dropDistances[r][c] = 0;
-            }
-        }
+        const newCellRows = [];
 
-        // Process drops column by column
-        for (let c = 0; c < this.BOARD_SIZE; c++) {
-            let emptyCount = 0;
-            for (let r = this.BOARD_SIZE - 1; r >= 0; r--) {
-                if (this.board[r][c] === -1) {
-                    emptyCount++;
-                } else if (emptyCount > 0) {
-                    dropDistances[r][c] = emptyCount;
+        // Drop column by column, skip stones & boxes
+        for (let c = 0; c < this.BS; c++) {
+            let writePos = this.BS - 1;
+            // Move existing gems down, skipping blockers
+            for (let r = this.BS - 1; r >= 0; r--) {
+                if (this.board[r][c] === -2) {
+                    // Stone: don't move, reset writePos above it
+                    if (writePos === r) writePos = r - 1;
+                    continue;
                 }
-            }
-        }
-
-        // Do the actual drop in the data
-        for (let c = 0; c < this.BOARD_SIZE; c++) {
-            let writePos = this.BOARD_SIZE - 1;
-            for (let r = this.BOARD_SIZE - 1; r >= 0; r--) {
-                if (this.board[r][c] !== -1) {
-                    this.board[writePos][c] = this.board[r][c];
-                    this.chains[writePos][c] = this.chains[r][c];
-                    if (writePos !== r) { this.board[r][c] = -1; this.chains[r][c] = 0; }
+                if (this.box[r][c] > 0) {
+                    if (writePos === r) writePos = r - 1;
+                    continue;
+                }
+                if (this.board[r][c] >= 0) {
+                    // Skip if writePos points to a blocker
+                    while (writePos >= 0 && (this.board[writePos][c] === -2 || this.box[writePos][c] > 0)) writePos--;
+                    if (writePos < 0) break;
+                    if (writePos !== r) {
+                        this.board[writePos][c] = this.board[r][c];
+                        this.chains[writePos][c] = this.chains[r][c];
+                        this.ice[writePos][c] = this.ice[r][c];
+                        this.board[r][c] = -1;
+                        this.chains[r][c] = 0;
+                        this.ice[r][c] = 0;
+                    }
                     writePos--;
                 }
             }
-            // Fill empty spaces at top with new gems
+            // Fill empty cells from top, skip blockers
             for (let r = writePos; r >= 0; r--) {
-                this.board[r][c] = Math.floor(Math.random() * (config.gemCount || 6));
-                this.chains[r][c] = 0;
+                if (this.board[r][c] === -2 || this.box[r][c] > 0) continue;
+                if (this.board[r][c] < 0) {
+                    this.board[r][c] = Math.floor(Math.random() * (config.gemCount || 6));
+                    this.chains[r][c] = 0;
+                    this.ice[r][c] = 0;
+                    if (!newCellRows[c]) newCellRows[c] = [];
+                    newCellRows[c].push(r);
+                }
             }
         }
 
-        // Update all cells
+        // Update DOM
         this.updateAllCells();
 
-        // Animate: cells that moved down get a drop animation
-        for (let c = 0; c < this.BOARD_SIZE; c++) {
-            let emptyBelow = 0;
-            // Count from bottom - find first non-dropping position
-            for (let r = 0; r < this.BOARD_SIZE; r++) {
-                const cell = this.cells[r][c];
-                // All cells in top portion that were filled get drop-in animation
-                if (r <= this.findTopEmpty(c, dropDistances)) {
-                    const delay = r * 30;
+        // Animate new/dropped cells
+        for (let c = 0; c < this.BS; c++) {
+            if (newCellRows[c]) {
+                newCellRows[c].forEach((r, idx) => {
+                    const cell = this.cells[r][c];
+                    const delay = idx * 40;
                     cell.style.animation = 'none';
-                    cell.offsetHeight; // force reflow
+                    cell.offsetHeight;
                     cell.style.animation = `m3-drop-smooth 0.35s ease-out ${delay}ms both`;
-                }
-            }
-        }
-
-        // Apply drop animation to cells that fell down
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            for (let c = 0; c < this.BOARD_SIZE; c++) {
-                if (dropDistances[r][c] > 0) {
-                    const cell = this.cells[r + dropDistances[r][c]] && this.cells[r + dropDistances[r][c]][c];
-                    // Already handled via the new positions
-                }
+                });
             }
         }
 
         this.updateUI();
 
-        // Check for cascading matches
         setTimeout(() => {
-            // Clean up animations
-            for (let r = 0; r < this.BOARD_SIZE; r++)
-                for (let c = 0; c < this.BOARD_SIZE; c++)
+            // Clean animations
+            for (let r = 0; r < this.BS; r++)
+                for (let c = 0; c < this.BS; c++)
                     this.cells[r][c].style.animation = '';
 
             const newMatches = this.findMatches();
@@ -621,33 +714,26 @@ const Match3Game = {
                 if (!this.hasValidMoves(config.gemCount)) {
                     this.shuffleBoard(config.gemCount);
                 }
-                if (this.score >= this.targetScore) {
-                    this.levelWin();
-                } else if (this.moves <= 0) {
-                    this.levelLose();
-                }
+                this.checkWinLose();
             }
         }, 450);
     },
 
-    findTopEmpty(c, dropDistances) {
-        // Find the highest row that had drop distances > 0 or was empty
-        for (let r = this.BOARD_SIZE - 1; r >= 0; r--) {
-            if (dropDistances[r] && dropDistances[r][c] > 0) return r + dropDistances[r][c];
-        }
-        // Find first row that was -1 before drop
-        return -1;
+    checkWinLose() {
+        if (this.score >= this.targetScore) this.levelWin();
+        else if (this.moves <= 0) this.levelLose();
     },
 
     hasValidMoves(gc) {
-        for (let r = 0; r < this.BOARD_SIZE; r++) {
-            for (let c = 0; c < this.BOARD_SIZE; c++) {
-                if (c < this.BOARD_SIZE - 1) {
+        for (let r = 0; r < this.BS; r++) {
+            for (let c = 0; c < this.BS; c++) {
+                if (this.board[r][c] < 0 || this.isBlocker(r, c)) continue;
+                if (c < this.BS - 1 && !this.isBlocker(r, c + 1) && this.board[r][c + 1] >= 0) {
                     this.swap(r, c, r, c + 1);
                     if (this.findMatches().length > 0) { this.swap(r, c, r, c + 1); return true; }
                     this.swap(r, c, r, c + 1);
                 }
-                if (r < this.BOARD_SIZE - 1) {
+                if (r < this.BS - 1 && !this.isBlocker(r + 1, c) && this.board[r + 1][c] >= 0) {
                     this.swap(r, c, r + 1, c);
                     if (this.findMatches().length > 0) { this.swap(r, c, r + 1, c); return true; }
                     this.swap(r, c, r + 1, c);
@@ -659,21 +745,23 @@ const Match3Game = {
 
     shuffleBoard(gc) {
         const gems = [];
-        for (let r = 0; r < this.BOARD_SIZE; r++)
-            for (let c = 0; c < this.BOARD_SIZE; c++) gems.push(this.board[r][c]);
+        for (let r = 0; r < this.BS; r++)
+            for (let c = 0; c < this.BS; c++)
+                if (this.board[r][c] >= 0 && !this.isBlocker(r, c)) gems.push(this.board[r][c]);
         for (let i = gems.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [gems[i], gems[j]] = [gems[j], gems[i]];
         }
         let idx = 0;
-        for (let r = 0; r < this.BOARD_SIZE; r++)
-            for (let c = 0; c < this.BOARD_SIZE; c++) this.board[r][c] = gems[idx++];
+        for (let r = 0; r < this.BS; r++)
+            for (let c = 0; c < this.BS; c++)
+                if (this.board[r][c] >= 0 && !this.isBlocker(r, c)) this.board[r][c] = gems[idx++];
         const m = this.findMatches();
         if (m.length > 0) { m.forEach(({ r, c }) => { this.board[r][c] = -1; }); this.animateDrop(); return; }
         this.updateAllCells();
     },
 
-    // ========== WIN / LOSE ==========
+    // ==================== WIN / LOSE ====================
     levelWin() {
         const config = this.getLevelConfig(this.level);
         let stars = 1;
@@ -689,11 +777,11 @@ const Match3Game = {
         if (result) result.classList.remove('hidden');
         document.getElementById('m3-result-title').textContent = '🎉 Уровень пройден!';
         document.getElementById('m3-result-text').innerHTML =
-            `${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}<br>Очки: ${this.score} / ${config.target}`;
+            `${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}<br>Очки: ${this.score}/${this.targetScore}`;
         const btn = result.querySelector('.btn');
         if (btn) {
             if (this.level < this.maxLevel) {
-                btn.textContent = '▶ Следующий уровень';
+                btn.textContent = '▶ Следующий';
                 btn.onclick = () => Match3Game.playLevel(Match3Game.level + 1);
             } else {
                 btn.textContent = '🏆 Все уровни!';
@@ -707,12 +795,12 @@ const Match3Game = {
         if (result) result.classList.remove('hidden');
         document.getElementById('m3-result-title').textContent = '😔 Не хватило ходов';
         document.getElementById('m3-result-text').innerHTML =
-            `Очки: ${this.score} / ${this.targetScore}<br>Попробуй ещё!`;
+            `Очки: ${this.score}/${this.targetScore}<br>Попробуй ещё!`;
         const btn = result.querySelector('.btn');
         if (btn) { btn.textContent = '🔄 Заново'; btn.onclick = () => Match3Game.playLevel(Match3Game.level); }
     },
 
-    // ========== UI ==========
+    // ==================== UI ====================
     removeProgress() {
         const bar = document.getElementById('m3-progress');
         if (bar) bar.remove();
@@ -728,7 +816,7 @@ const Match3Game = {
             if (this.moves <= 5) movesEl.classList.add('low');
             else movesEl.classList.remove('low');
         }
-        if (bestEl) bestEl.textContent = `📍 Ур. ${this.level}`;
+        if (bestEl) bestEl.textContent = `📍 Ур.${this.level}`;
 
         const pct = Math.min(100, Math.round((this.score / this.targetScore) * 100));
         let bar = document.getElementById('m3-progress');

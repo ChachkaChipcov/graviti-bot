@@ -5726,6 +5726,117 @@ body.light-theme .hamburger-btn span {
   }
 }
 
+/* ---- Ice overlay ---- */
+.m3-cell.iced {
+  border: 2px solid rgba(130, 210, 255, 0.5);
+  background: rgba(130, 210, 255, 0.15);
+  box-shadow: inset 0 0 8px rgba(130, 210, 255, 0.3);
+}
+
+.m3-cell.iced::after {
+  content: '❄';
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  font-size: 0.45rem;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.m3-cell.ice-thick {
+  border-color: rgba(80, 180, 255, 0.8);
+  background: rgba(80, 180, 255, 0.3);
+  box-shadow: inset 0 0 12px rgba(80, 180, 255, 0.5);
+}
+
+.m3-cell.ice-thick::after {
+  content: '❄❄';
+}
+
+.m3-cell.iced .m3-gem {
+  filter: brightness(0.9) saturate(0.8);
+}
+
+.m3-cell.ice-melt {
+  animation: m3-ice-melt 0.4s ease;
+}
+
+@keyframes m3-ice-melt {
+  0% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.1);
+    box-shadow: inset 0 0 20px rgba(130, 210, 255, 0.8);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ---- Box blocker ---- */
+.m3-cell.blocker-box {
+  background: rgba(180, 130, 70, 0.3);
+  border: 2px solid rgba(180, 130, 70, 0.6);
+  border-radius: 6px;
+}
+
+.m3-cell.blocker-box .m3-gem {
+  filter: none;
+}
+
+.m3-cell.box-strong {
+  background: rgba(150, 100, 50, 0.4);
+  border-color: rgba(150, 100, 50, 0.8);
+  box-shadow: inset 0 0 6px rgba(150, 100, 50, 0.3);
+}
+
+.m3-box-hp {
+  position: absolute;
+  bottom: 0;
+  right: 2px;
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: #daa520;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.m3-cell.box-hit {
+  animation: m3-box-hit 0.4s ease;
+}
+
+@keyframes m3-box-hit {
+  0% {
+    transform: scale(1);
+  }
+
+  20% {
+    transform: scale(0.85) rotate(-5deg);
+  }
+
+  50% {
+    transform: scale(1.1) rotate(3deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ---- Stone blocker ---- */
+.m3-cell.stone {
+  background: rgba(100, 100, 110, 0.3);
+  border: 2px solid rgba(100, 100, 110, 0.5);
+  cursor: default;
+}
+
+.m3-cell.stone .m3-gem {
+  filter: grayscale(0.3);
+}
+
 /* ---- Score popup ---- */
 .m3-score-pop {
   position: absolute;
