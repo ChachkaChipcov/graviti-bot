@@ -47,10 +47,8 @@ const UNO = {
         // Match by color (including chosen color for wild)
         const matchColor = this.chosenColor || this.currentCard.color;
         if (card.color === matchColor) return true;
-        // Match by value (number or action) - this allows same number different color
+        // Match by value (number or action) - only for non-wild currentCard
         if (this.currentCard.color !== 'wild' && card.value === this.currentCard.value) return true;
-        // Also allow matching value after wild card
-        if (this.chosenColor && card.value === this.currentCard.value) return true;
         return false;
     },
 

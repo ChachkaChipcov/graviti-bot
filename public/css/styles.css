@@ -1730,6 +1730,25 @@ body.light-theme .hamburger-btn span {
   background: var(--accent-gradient);
 }
 
+.setup-notice {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+}
+
+.setup-notice p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+}
+
+.setup-notice strong {
+  color: #ffc107;
+}
+
 .setup-actions {
   display: flex;
   flex-direction: column;
@@ -6177,6 +6196,10 @@ body.light-theme .hamburger-btn span {
   line-height: 1;
   user-select: none;
   transition: transform 0.2s ease, filter 0.2s;
+}
+
+.chess-piece.piece-new,
+.ck-piece.piece-new {
   animation: piece-appear 0.3s ease-out;
 }
 
@@ -6214,7 +6237,6 @@ body.light-theme .hamburger-btn span {
   font-size: clamp(1.3rem, 5vw, 2.2rem);
   user-select: none;
   transition: transform 0.2s ease, filter 0.2s;
-  animation: piece-appear 0.3s ease-out;
 }
 
 .ck-piece.w {

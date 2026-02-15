@@ -874,11 +874,13 @@ io.on('connection', (socket) => {
     // Draw cards
     drawCardsForPlayers(room);
 
-    // Next round - same attacker, next defender
-    const players = room.players;
+    // After take: attacker = player AFTER defender, defender = next after that
+    const players = room.players.filter(p => room.state.hands[p.odId]?.length > 0 || room.state.deck.length > 0);
     const defenderIdx = players.findIndex(p => p.odId === odId);
-    const nextDefenderIdx = (defenderIdx + 1) % players.length;
+    const nextAttackerIdx = (defenderIdx + 1) % players.length;
+    const nextDefenderIdx = (nextAttackerIdx + 1) % players.length;
 
+    room.state.currentAttacker = players[nextAttackerIdx].odId;
     room.state.currentDefender = players[nextDefenderIdx].odId;
     room.state.phase = 'attack';
 
@@ -886,7 +888,7 @@ io.on('connection', (socket) => {
     checkDurakWinner(room);
 
     io.to(socket.roomId).emit('durak_round_end', {
-      message: 'Защитник забрал карты',
+      message: '📥 Защитник забрал карты',
       tookCards: true,
       deckCount: room.state.deck.length
     });
@@ -2511,7 +2513,12 @@ function sendDurakUpdate(room) {
         defender: room.state.currentDefender,
         phase: room.state.phase,
         deckCount: room.state.deck.length,
-        hand: room.state.hands[player.odId]
+        hand: room.state.hands[player.odId],
+        players: room.players.map(p => ({
+          name: p.name,
+          odId: p.odId,
+          cardCount: room.state.hands[p.odId]?.length || 0
+        }))
       });
     }
   });
