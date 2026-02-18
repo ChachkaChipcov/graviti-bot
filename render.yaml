@@ -7,6 +7,8 @@ services:
     envVars:
       - key: BOT_TOKEN
         sync: false
+      - key: MONGODB_URI
+        sync: false
       - key: PORT
         value: 3000
       - key: WEBAPP_URL
