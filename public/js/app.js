@@ -732,6 +732,18 @@ const translations = {
         uno_desc: 'Цветные карты 2-7 игроков',
         monopoly_title: 'Монополия',
         monopoly_desc: 'Классическая настольная игра',
+        mafia_title: 'Мафия',
+        mafia_desc: 'Социальная игра 5-12 игроков',
+        ms_title: 'Сапёр',
+        ms_desc: 'Найди все мины!',
+        snake_title: 'Змейка',
+        snake_desc: 'Классическая аркада',
+        m3_title: '3 в ряд',
+        m3_desc: 'Собирай кристаллы!',
+
+        // Tabs
+        tab_friends: 'С друзьями',
+        tab_solo: 'Одному',
 
         // Common UI
         create_room: 'Создать комнату',
@@ -769,7 +781,121 @@ const translations = {
         info_text_4: '💜 Спасибо, что играете с нами!',
         close_settings: 'Закрыть настройки',
         help: 'Помощь',
-        contact_support: 'Связаться с поддержкой'
+        contact_support: 'Связаться с поддержкой',
+
+        // Minesweeper
+        ms_easy: 'Лёгкий',
+        ms_medium: 'Средний',
+        ms_hard: 'Сложный',
+        ms_restart: 'Ещё раз',
+
+        // Snake
+        snake_start: 'Нажмите чтобы начать',
+        snake_play: 'Играть',
+
+        // Mafia
+        mf_choose_mode: 'Выберите режим',
+        mf_bot_host: 'Бот-ведущий',
+        mf_bot_desc: 'Автоматические фазы и раздача ролей',
+        mf_human_host: 'Человек-ведущий',
+        mf_human_desc: 'Бросок кубиков, ведущий управляет',
+        mf_vote_title: '🗳 Голосование',
+        mf_dice_title: '🎲 Бросок кубиков',
+        mf_roll: 'Бросить'
+    },
+    zh: {
+        // Main
+        subtitle: '与朋友一起玩！',
+        settings: '设置',
+        language: '语言',
+        theme: '主题',
+        dark: '深色',
+        light: '浅色',
+        beta: '测试版',
+
+        // Games
+        rps_title: '石头剪刀布',
+        rps_desc: '经典运气游戏',
+        ttt_title: '井字棋',
+        ttt_desc: '3x3 策略对决',
+        bs_title: '战舰',
+        bs_desc: '击沉敌方舰队！',
+        durak_title: '杜拉克',
+        durak_desc: '2-7 人纸牌游戏',
+        uno_title: 'UNO',
+        uno_desc: '2-7 人彩色纸牌',
+        monopoly_title: '大富翁',
+        monopoly_desc: '经典棋盘游戏',
+        mafia_title: '黑手党',
+        mafia_desc: '社交游戏 5-12 人',
+        ms_title: '扫雷',
+        ms_desc: '找出所有地雷！',
+        snake_title: '贪吃蛇',
+        snake_desc: '经典街机游戏',
+        m3_title: '3 消',
+        m3_desc: '收集水晶！',
+
+        // Tabs
+        tab_friends: '多人游戏',
+        tab_solo: '单人游戏',
+
+        // Common UI
+        create_room: '创建房间',
+        join_room: '加入房间',
+        waiting: '等待中...',
+        your_turn: '你的回合！',
+        opponent_turn: '对手回合...',
+        you_win: '🎉 你赢了！',
+        you_lose: '😢 你输了',
+        draw: '🤝 平局！',
+        play_again: '再玩一次',
+        exit: '退出',
+        ready: '准备',
+        start: '开始',
+        cancel: '取消',
+        confirm: '确认',
+        invite_friend: '邀请朋友',
+        room_code: '房间代码',
+        players: '玩家',
+        password: '密码',
+        private_room: '私人房间',
+
+        // Support
+        support_dev: '支持开发者',
+        donate: '捐赠',
+        developer: '开发者',
+        version: '版本',
+
+        // Info
+        information: '信息',
+        about_project: '关于项目',
+        info_text_1: '🚀 Game Zone 开发始于<strong>2025 年 11 月 20 日</strong>。',
+        info_text_2: '📈 项目正在积极开发并将继续发展！',
+        info_text_3: '🎮 即将推出新游戏、改进和功能。',
+        info_text_4: '💜 感谢你和我们一起游戏！',
+        close_settings: '关闭设置',
+        help: '帮助',
+        contact_support: '联系支持',
+
+        // Minesweeper
+        ms_easy: '简单',
+        ms_medium: '中等',
+        ms_hard: '困难',
+        ms_restart: '再来一局',
+
+        // Snake
+        snake_start: '点击开始',
+        snake_play: '开始游戏',
+
+        // Mafia
+        mf_choose_mode: '选择模式',
+        mf_bot_host: '机器人主持',
+        mf_bot_desc: '自动阶段和角色分配',
+        mf_human_host: '真人主持',
+        mf_human_desc: '掷骰子，主持人控制',
+        mf_vote_title: '🗳 投票',
+        mf_dice_title: '🎲 掷骰子',
+        mf_roll: '投掷'
     },
     en: {
         // Main
@@ -794,6 +920,18 @@ const translations = {
         uno_desc: 'Color cards for 2-7 players',
         monopoly_title: 'Monopoly',
         monopoly_desc: 'Classic board game',
+        mafia_title: 'Mafia',
+        mafia_desc: 'Social game 5-12 players',
+        ms_title: 'Minesweeper',
+        ms_desc: 'Find all mines!',
+        snake_title: 'Snake',
+        snake_desc: 'Classic arcade game',
+        m3_title: 'Match 3',
+        m3_desc: 'Collect crystals!',
+
+        // Tabs
+        tab_friends: 'Multiplayer',
+        tab_solo: 'Solo',
 
         // Common UI
         create_room: 'Create Room',
@@ -831,7 +969,27 @@ const translations = {
         info_text_4: '💜 Thank you for playing with us!',
         close_settings: 'Close Settings',
         help: 'Help',
-        contact_support: 'Contact Support'
+        contact_support: 'Contact Support',
+
+        // Minesweeper
+        ms_easy: 'Easy',
+        ms_medium: 'Medium',
+        ms_hard: 'Hard',
+        ms_restart: 'Restart',
+
+        // Snake
+        snake_start: 'Tap to start',
+        snake_play: 'Play',
+
+        // Mafia
+        mf_choose_mode: 'Choose mode',
+        mf_bot_host: 'Bot Host',
+        mf_bot_desc: 'Auto phases and role dealing',
+        mf_human_host: 'Human Host',
+        mf_human_desc: 'Dice roll, host controls',
+        mf_vote_title: '🗳 Voting',
+        mf_dice_title: '🎲 Dice Roll',
+        mf_roll: 'Roll'
     }
 };
 
