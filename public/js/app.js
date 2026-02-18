@@ -805,7 +805,11 @@ const translations = {
         mf_human_desc: 'Бросок кубиков, ведущий управляет',
         mf_vote_title: '🗳 Голосование',
         mf_dice_title: '🎲 Бросок кубиков',
-        mf_roll: 'Бросить'
+        mf_roll: 'Бросить',
+
+        // Leaderboard
+        leaderboard: 'Топ игроков',
+        view_leaderboard: 'Посмотреть рейтинг'
     },
     zh: {
         // Main
@@ -903,7 +907,11 @@ const translations = {
         mf_human_desc: '掷骰子，主持人控制',
         mf_vote_title: '🗳 投票',
         mf_dice_title: '🎲 掷骰子',
-        mf_roll: '投掷'
+        mf_roll: '投掷',
+
+        // Leaderboard
+        leaderboard: '玩家排行榜',
+        view_leaderboard: '查看排行榜'
     },
     en: {
         // Main
@@ -1001,7 +1009,11 @@ const translations = {
         mf_human_desc: 'Dice roll, host controls',
         mf_vote_title: '🗳 Voting',
         mf_dice_title: '🎲 Dice Roll',
-        mf_roll: 'Roll'
+        mf_roll: 'Roll',
+
+        // Leaderboard
+        leaderboard: 'Leaderboard',
+        view_leaderboard: 'View Ranking'
     }
 };
 
@@ -1127,4 +1139,106 @@ function startSoloGame(gameType) {
 
 function goBackToLobby() {
     App.goBack();
+}
+
+// ========== LEADERBOARD FUNCTIONS ==========
+let currentLeaderboardGame = 'all';
+
+function openLeaderboard() {
+    App.showScreen('leaderboard-screen');
+    loadLeaderboard('all');
+    App.haptic('light');
+}
+
+function closeLeaderboard() {
+    App.showScreen('lobby');
+    App.haptic('light');
+}
+
+function switchLeaderboardTab(game) {
+    currentLeaderboardGame = game;
+    
+    document.querySelectorAll('.lb-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.game === game);
+    });
+    
+    loadLeaderboard(game);
+    App.haptic('light');
+}
+
+async function loadLeaderboard(gameType) {
+    const listEl = document.getElementById('leaderboard-list');
+    if (!listEl) return;
+    
+    listEl.innerHTML = '<div class="leaderboard-loading">⏳ Загрузка...</div>';
+    
+    try {
+        const url = gameType === 'all' 
+            ? '/api/top-players?limit=10' 
+            : `/api/leaderboard/${gameType}?limit=10`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (!data.success || !data.players || data.players.length === 0) {
+            listEl.innerHTML = '<div class="leaderboard-empty">📭 Пока нет игроков</div>';
+            return;
+        }
+        
+        renderLeaderboard(data.players, gameType);
+    } catch (error) {
+        console.error('Leaderboard error:', error);
+        listEl.innerHTML = '<div class="leaderboard-empty">❌ Ошибка загрузки</div>';
+    }
+}
+
+function renderLeaderboard(players, gameType) {
+    const listEl = document.getElementById('leaderboard-list');
+    if (!listEl) return;
+    
+    const gameNames = {
+        all: 'Общий зачёт',
+        rps: 'Камень-Ножницы-Бумага',
+        tictactoe: 'Крестики-Нолики',
+        snake: 'Змейка',
+        minesweeper: 'Сапёр'
+    };
+    
+    listEl.innerHTML = players.map((player, index) => {
+        const rank = index + 1;
+        const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+        
+        const avatar = player.avatar_url 
+            ? `<img src="${player.avatar_url}" alt="${player.first_name}">`
+            : '👤';
+        
+        let statsText = '';
+        if (gameType === 'all') {
+            statsText = `🎮 ${player.total_played || 0} игр | 🏆 ${player.total_wins || 0} побед`;
+        } else if (gameType === 'snake' || gameType === 'match3') {
+            statsText = `🏆 Рекорд: ${player.best_score || 0}`;
+        } else if (gameType === 'minesweeper') {
+            statsText = `⏱️ Лучшее время: ${player.best_time ? formatTime(player.best_time) : '—'}`;
+        } else {
+            statsText = `🏆 ${player.wins || 0} побед | 🎮 ${player.played || 0} игр`;
+        }
+        
+        return `
+            <div class="leaderboard-item">
+                <div class="lb-rank ${rankClass}">${rank}</div>
+                <div class="lb-avatar">${avatar}</div>
+                <div class="lb-info">
+                    <div class="lb-name">${player.first_name || player.username || 'Игрок'}</div>
+                    <div class="lb-stats">${statsText}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function formatTime(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs.toString().padStart(2, '0')} мин`;
 }

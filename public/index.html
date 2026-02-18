@@ -132,6 +132,16 @@
             </div>
           </div>
 
+          <!-- Leaderboard Button -->
+          <div class="settings-section">
+            <h4>🏆 <span data-i18n="leaderboard">Топ игроков</span></h4>
+            <button class="leaderboard-btn" onclick="openLeaderboard()">
+              <span class="leaderboard-icon">📊</span>
+              <span data-i18n="view_leaderboard">Посмотреть рейтинг</span>
+              <span class="leaderboard-arrow">→</span>
+            </button>
+          </div>
+
           <!-- Close Button -->
           <button class="settings-close-btn" onclick="toggleSettings()">
             <span data-i18n="close_settings">Закрыть настройки</span>
@@ -1147,6 +1157,38 @@
         <h2 id="ck-result-title"></h2>
         <p id="ck-result-text"></p>
         <button id="ck-rematch" class="btn primary hidden" onclick="requestRematch()">🔄 Реванш</button>
+      </div>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="leaderboard-screen" class="screen">
+      <div class="room-header">
+        <button class="back-btn" onclick="closeLeaderboard()">←</button>
+        <h2>🏆 Топ игроков</h2>
+      </div>
+
+      <div class="leaderboard-tabs">
+        <button class="lb-tab active" data-game="all" onclick="switchLeaderboardTab('all')">
+          👑 Общий
+        </button>
+        <button class="lb-tab" data-game="rps" onclick="switchLeaderboardTab('rps')">
+          ✊ КНБ
+        </button>
+        <button class="lb-tab" data-game="tictactoe" onclick="switchLeaderboardTab('tictactoe')">
+          ❌⭕ Крестики
+        </button>
+        <button class="lb-tab" data-game="snake" onclick="switchLeaderboardTab('snake')">
+          🐍 Змейка
+        </button>
+        <button class="lb-tab" data-game="minesweeper" onclick="switchLeaderboardTab('minesweeper')">
+          💣 Сапёр
+        </button>
+      </div>
+
+      <div class="leaderboard-content">
+        <div id="leaderboard-list" class="leaderboard-list">
+          <div class="leaderboard-loading">⏳ Загрузка...</div>
+        </div>
       </div>
     </div>
   </div>
