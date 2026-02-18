@@ -28,3 +28,4 @@ Thumbs.db
 # Build tools
 ngrok.exe
 bore.exe
+"game_stats.db"  

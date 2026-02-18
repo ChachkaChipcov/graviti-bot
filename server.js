@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const { Telegraf } = require('telegraf');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { mongoose, Player } = require('./database');
+const { Player } = require('./database');
 
 const app = express();
 const httpServer = createServer(app);
@@ -37,7 +37,7 @@ const rooms = new Map();
 // Get player profile
 app.get('/api/player/:tgId', async (req, res) => {
   try {
-    const player = await Player.getPlayerProfile(req.params.tgId);
+    const player = Player.getProfile(req.params.tgId);
     if (!player) {
       return res.json({ success: false, message: 'Player not found' });
     }
@@ -51,7 +51,7 @@ app.get('/api/player/:tgId', async (req, res) => {
 app.get('/api/leaderboard/:gameType', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
-    const players = await Player.getLeaderboard(req.params.gameType, limit);
+    const players = Player.getLeaderboard(req.params.gameType, limit);
     res.json({ success: true, players });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -62,10 +62,7 @@ app.get('/api/leaderboard/:gameType', async (req, res) => {
 app.get('/api/top-players', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
-    const players = await Player.find({ 'stats.totalWins': { $gt: 0 } })
-      .sort({ 'stats.totalWins': -1 })
-      .limit(limit)
-      .select('tgId username firstName avatarUrl stats');
+    const players = Player.getTopPlayers(limit);
     res.json({ success: true, players });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -76,21 +73,14 @@ app.get('/api/top-players', async (req, res) => {
 app.post('/api/player/:tgId/update-stats', async (req, res) => {
   try {
     const { tgId } = req.params;
-    const { gameType, result, opponent, score, streak, difficulty, time } = req.body;
+    const { gameType, result, opponent, score, streak, difficulty, time, firstName, username, avatarUrl } = req.body;
     
-    let player = await Player.findOne({ tgId });
-    
-    if (!player) {
-      // Create new player if not exists
-      player = new Player({
-        tgId,
-        firstName: req.body.firstName || 'Игрок',
-        username: req.body.username,
-        avatarUrl: req.body.avatarUrl
-      });
+    // Sync player info first
+    if (firstName) {
+      Player.sync(tgId, { firstName, username, avatarUrl });
     }
     
-    await player.updateGameStats(gameType, result, {
+    const player = await Player.updateGameStats(tgId, gameType, result, {
       opponent,
       score,
       streak,
@@ -108,27 +98,7 @@ app.post('/api/player/:tgId/update-stats', async (req, res) => {
 app.post('/api/player/sync', async (req, res) => {
   try {
     const { tgId, username, firstName, lastName, avatarUrl } = req.body;
-    
-    let player = await Player.findOne({ tgId });
-    
-    if (!player) {
-      player = new Player({
-        tgId,
-        username,
-        firstName: firstName || 'Игрок',
-        lastName,
-        avatarUrl
-      });
-      await player.save();
-    } else {
-      // Update info if changed
-      player.username = username || player.username;
-      player.firstName = firstName || player.firstName;
-      player.lastName = lastName || player.lastName;
-      player.avatarUrl = avatarUrl || player.avatarUrl;
-      await player.save();
-    }
-    
+    const player = Player.sync(tgId, { username, firstName, lastName, avatarUrl });
     res.json({ success: true, player });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
