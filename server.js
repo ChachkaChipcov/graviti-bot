@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const { Telegraf } = require('telegraf');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const { mongoose, Player } = require('./database');
 
 const app = express();
 const httpServer = createServer(app);
@@ -25,8 +26,114 @@ app.use((req, res, next) => {
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// JSON parser for API routes
+app.use(express.json());
+
 // Game rooms storage
 const rooms = new Map();
+
+// ==================== API ROUTES FOR STATS ====================
+
+// Get player profile
+app.get('/api/player/:tgId', async (req, res) => {
+  try {
+    const player = await Player.getPlayerProfile(req.params.tgId);
+    if (!player) {
+      return res.json({ success: false, message: 'Player not found' });
+    }
+    res.json({ success: true, player });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get leaderboard for specific game
+app.get('/api/leaderboard/:gameType', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const players = await Player.getLeaderboard(req.params.gameType, limit);
+    res.json({ success: true, players });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get top players by total wins
+app.get('/api/top-players', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const players = await Player.find({ 'stats.totalWins': { $gt: 0 } })
+      .sort({ 'stats.totalWins': -1 })
+      .limit(limit)
+      .select('tgId username firstName avatarUrl stats');
+    res.json({ success: true, players });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Update player stats (called from socket events)
+app.post('/api/player/:tgId/update-stats', async (req, res) => {
+  try {
+    const { tgId } = req.params;
+    const { gameType, result, opponent, score, streak, difficulty, time } = req.body;
+    
+    let player = await Player.findOne({ tgId });
+    
+    if (!player) {
+      // Create new player if not exists
+      player = new Player({
+        tgId,
+        firstName: req.body.firstName || 'Игрок',
+        username: req.body.username,
+        avatarUrl: req.body.avatarUrl
+      });
+    }
+    
+    await player.updateGameStats(gameType, result, {
+      opponent,
+      score,
+      streak,
+      difficulty,
+      time
+    });
+    
+    res.json({ success: true, player });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Sync player info from Telegram
+app.post('/api/player/sync', async (req, res) => {
+  try {
+    const { tgId, username, firstName, lastName, avatarUrl } = req.body;
+    
+    let player = await Player.findOne({ tgId });
+    
+    if (!player) {
+      player = new Player({
+        tgId,
+        username,
+        firstName: firstName || 'Игрок',
+        lastName,
+        avatarUrl
+      });
+      await player.save();
+    } else {
+      // Update info if changed
+      player.username = username || player.username;
+      player.firstName = firstName || player.firstName;
+      player.lastName = lastName || player.lastName;
+      player.avatarUrl = avatarUrl || player.avatarUrl;
+      await player.save();
+    }
+    
+    res.json({ success: true, player });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // ========== BOT COMMANDS ==========
 
@@ -296,11 +403,44 @@ io.on('connection', (socket) => {
       // Check if someone won the game
       if (winner && room.state.scores[winner] >= winsToWin) {
         const winnerPlayer = room.players.find(p => p.odId === winner);
+        const loserPlayer = room.players.find(p => p.odId !== winner);
+        const loserId = loserPlayer?.odId;
+        
         io.to(socket.roomId).emit('rps_game_over', {
           winner,
           winnerName: winnerPlayer?.name || 'Игрок',
           scores: room.state.scores
         });
+        
+        // Save stats to database
+        const scoreStr = `${room.state.scores[winner]}-${room.state.scores[loserId] || 0}`;
+        
+        // Update winner stats
+        fetch(`${process.env.WEBAPP_URL || 'http://localhost:3000'}/api/player/${winner}/update-stats`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameType: 'rps',
+            result: 'win',
+            opponent: loserPlayer?.name || 'Игрок',
+            score: scoreStr
+          })
+        }).catch(console.error);
+        
+        // Update loser stats
+        if (loserId) {
+          fetch(`${process.env.WEBAPP_URL || 'http://localhost:3000'}/api/player/${loserId}/update-stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              gameType: 'rps',
+              result: 'loss',
+              opponent: winnerPlayer?.name || 'Игрок',
+              score: scoreStr
+            })
+          }).catch(console.error);
+        }
+        
         return;
       }
 
@@ -402,6 +542,59 @@ io.on('connection', (socket) => {
       winLine,
       isDraw
     });
+    
+    // Save stats if game is over
+    if (winner || isDraw) {
+      const p1 = room.players[0];
+      const p2 = room.players[1];
+      const winnerId = winner;
+      const isDrawGame = isDraw;
+      
+      if (winnerId) {
+        const winnerPlayer = room.players.find(p => p.odId === winnerId);
+        const loserPlayer = room.players.find(p => p.odId !== winnerId);
+        
+        // Update winner stats
+        fetch(`${process.env.WEBAPP_URL || 'http://localhost:3000'}/api/player/${winnerId}/update-stats`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gameType: 'tictactoe',
+            result: 'win',
+            opponent: loserPlayer?.name || 'Игрок',
+            score: '1-0'
+          })
+        }).catch(console.error);
+        
+        // Update loser stats
+        if (loserPlayer) {
+          fetch(`${process.env.WEBAPP_URL || 'http://localhost:3000'}/api/player/${loserPlayer.odId}/update-stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              gameType: 'tictactoe',
+              result: 'loss',
+              opponent: winnerPlayer?.name || 'Игрок',
+              score: '0-1'
+            })
+          }).catch(console.error);
+        }
+      } else if (isDrawGame) {
+        // Update both players with draw
+        room.players.forEach(p => {
+          fetch(`${process.env.WEBAPP_URL || 'http://localhost:3000'}/api/player/${p.odId}/update-stats`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              gameType: 'tictactoe',
+              result: 'draw',
+              opponent: room.players.find(pl => pl.odId !== p.odId)?.name || 'Игрок',
+              score: '0-0'
+            })
+          }).catch(console.error);
+        });
+      }
+    }
   });
 
   // Battleship: Place ships
