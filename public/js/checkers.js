@@ -259,19 +259,15 @@ const Checkers = {
             return;
         }
 
-        // Must capture check
-        if (this.mustCapture.length > 0 && !this.mustCapture.find(p => p.r === r && p.c === c)) {
-            // Can only select pieces that must capture
-            this.selected = null;
-            this.validMoves = [];
-            this.render();
-            return;
-        }
-
+        // Select the piece and show available moves
         this.selected = { r, c };
-        if (this.mustCapture.length > 0) {
-            this.validMoves = this.getCapturesFrom(r, c);
+        // Always show captures first if available for this piece
+        const captures = this.getCapturesFrom(r, c);
+        if (captures.length > 0) {
+            this.validMoves = captures;
         } else {
+            // If there are captures elsewhere, still allow selecting this piece
+            // Server will reject non-capture moves if captures are available
             this.validMoves = this.getSimpleMoves(r, c);
         }
         this.render();
