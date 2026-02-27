@@ -613,6 +613,8 @@ async function submitScore(game, score, level) {
 async function showLeaderboard(game) {
     const modal = document.getElementById('leaderboard-modal');
     const list = document.getElementById('lb-list');
+    const tabs = document.getElementById('lb-tabs');
+    if (tabs) tabs.classList.add('hidden');
 
     // Show modal & loader
     modal.classList.remove('hidden');
@@ -658,8 +660,25 @@ async function showLeaderboard(game) {
         }
     } catch (err) {
         console.error('Leaderboard error:', err);
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b">Ошибка загрузки</div>';
+        list.innerHTML = `<div style="text-align:center;padding:20px;opacity:0.5" data-i18n="lb_empty">Пока нет результатов</div>`;
     }
+}
+
+function showAllLeaderboards() {
+    switchLeaderboardTab('match3');
+}
+
+function switchLeaderboardTab(game) {
+    showLeaderboard(game).then(() => {
+        const tabs = document.getElementById('lb-tabs');
+        if (tabs) tabs.classList.remove('hidden');
+
+        // Выделение активного таба
+        document.querySelectorAll('#lb-tabs button').forEach(btn => {
+            btn.style.opacity = btn.getAttribute('onclick').includes(`'${game}'`) ? '1' : '0.5';
+            btn.style.background = btn.getAttribute('onclick').includes(`'${game}'`) ? 'var(--primary)' : 'var(--bg-secondary)';
+        });
+    });
 }
 
 function hideLeaderboard() {
@@ -980,10 +999,10 @@ function startSoloGame(gameType) {
         if (typeof Tetris !== 'undefined') Tetris.start();
     } else if (gameType === 'memory') {
         App.showScreen('memory-game');
-        if (typeof MemoryGame !== 'undefined') MemoryGame.init();
+        if (typeof MemoryGame !== 'undefined') MemoryGame.start();
     } else if (gameType === 'sudoku') {
         App.showScreen('sudoku-game');
-        if (typeof Sudoku !== 'undefined') Sudoku.init();
+        if (typeof Sudoku !== 'undefined') Sudoku.start();
     }
 }
 

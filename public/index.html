@@ -149,7 +149,7 @@
             <div class="about-item">
               <span>📱</span>
               <span data-i18n="version">Версия</span>
-              <span class="about-value">1.3.0</span>
+              <span class="about-value">1.3.1</span>
             </div>
           </div>
 
@@ -270,6 +270,15 @@
       <!-- Solo Games -->
       <div class="tab-content" data-tab="solo">
         <div class="games-grid">
+          <!-- All Leaderboards -->
+          <div class="game-card" onclick="showAllLeaderboards()">
+            <div class="game-icon">
+              <span class="emoji-bounce">🏆</span>
+            </div>
+            <h3 data-i18n="all_leaderboards_title">Все Топы</h3>
+            <p data-i18n="all_leaderboards_desc">Рейтинги всех игр</p>
+          </div>
+
           <div class="game-card" onclick="startSoloGame('minesweeper')">
             <div class="game-icon">
               <span class="emoji-bounce">💣</span>
@@ -1128,6 +1137,7 @@
           <span id="m3-moves">🔄 30</span>
           <span id="m3-best">📍 Ур. 1</span>
         </div>
+        <button class="btn small" onclick="showLeaderboard('match3')">🏆 Топ</button>
       </div>
       <div id="m3-field" class="m3-field"></div>
       <div id="m3-result" class="m3-result hidden">
@@ -1224,7 +1234,7 @@
             <button class="t-btn" onclick="Tetris.move(-1)">⬅️</button>
             <button class="t-btn" onclick="Tetris.rotate()">🔄</button>
             <button class="t-btn" onclick="Tetris.move(1)">➡️</button>
-            <button class="t-btn" onclick="Tetris.drop()">⬇️</button>
+            <button class="t-btn" onclick="Tetris.move(0, 1)">⬇️</button>
           </div>
         </div>
       </div>
@@ -1301,6 +1311,21 @@
           <button class="close-btn" onclick="hideLeaderboard()">×</button>
         </div>
         <div class="modal-body">
+          <div id="lb-tabs" class="lb-tabs hidden"
+            style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto; padding-bottom:5px;">
+            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
+              onclick="switchLeaderboardTab('match3')">💎 3 в ряд</button>
+            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
+              onclick="switchLeaderboardTab('tetris')">🧱 Тетрис</button>
+            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
+              onclick="switchLeaderboardTab('snake')">🐍 Змейка</button>
+            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
+              onclick="switchLeaderboardTab('minesweeper')">💣 Сапёр</button>
+            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
+              onclick="switchLeaderboardTab('memory')">🃏 Память</button>
+            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
+              onclick="switchLeaderboardTab('sudoku')">🔢 Судоку</button>
+          </div>
           <div class="lb-header">
             <span class="lb-rank">#</span>
             <span class="lb-name">Игрок</span>
