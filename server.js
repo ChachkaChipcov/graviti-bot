@@ -6,9 +6,15 @@ const { Telegraf } = require('telegraf');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 
 // ========== DATABASE ==========
-const dbPath = path.join(__dirname, 'data', 'game.db');
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const dbPath = path.join(dataDir, 'game.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Database connection error:', err.message);
