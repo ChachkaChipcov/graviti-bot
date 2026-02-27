@@ -975,6 +975,15 @@ function startSoloGame(gameType) {
     } else if (gameType === 'match3') {
         App.showScreen('match3-game');
         if (typeof Match3Game !== 'undefined') Match3Game.init();
+    } else if (gameType === 'tetris') {
+        App.showScreen('tetris-game');
+        if (typeof Tetris !== 'undefined') Tetris.start();
+    } else if (gameType === 'memory') {
+        App.showScreen('memory-game');
+        if (typeof MemoryGame !== 'undefined') MemoryGame.init();
+    } else if (gameType === 'sudoku') {
+        App.showScreen('sudoku-game');
+        if (typeof Sudoku !== 'undefined') Sudoku.init();
     }
 }
 

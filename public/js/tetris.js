@@ -255,16 +255,3 @@ const Tetris = {
         hideLeaderboard();
     }
 };
-
-window.startSoloGame = window.startSoloGame || function (game) {
-    App.showScreen(`${game}-game`);
-};
-
-// Global intercept for startSoloGame to initialize correctly
-const originalStartSoloGame = window.startSoloGame;
-window.startSoloGame = function (game) {
-    if (game === 'tetris') Tetris.start();
-    if (game === 'memory') MemoryGame.start();
-    if (game === 'sudoku') Sudoku.start();
-    originalStartSoloGame(game);
-};
