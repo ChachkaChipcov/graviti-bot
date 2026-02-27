@@ -137,7 +137,8 @@ const Match3Game = {
     //  Lvl 100+:  all above + stones (permanent)
     getLevelConfig(lvl) {
         const moves = Math.max(12, 30 - Math.floor(lvl / 25));
-        const target = 300 + (lvl - 1) * 80 + Math.floor(lvl / 10) * 50;
+        // Увеличиваем сложность: базовые очки 500, +150 за каждый уровень
+        const target = 500 + (lvl - 1) * 150 + Math.floor(lvl / 10) * 100;
         const gemCount = lvl < 20 ? 5 : 6;
         const star2 = Math.floor(target * 1.3);
         const star3 = Math.floor(target * 1.7);
@@ -174,7 +175,11 @@ const Match3Game = {
     renderMap() {
         const field = document.getElementById('m3-field');
         if (!field) return;
+
+        // Исправление бага с прыжками размера: убираем класс сетки 8x8
         field.className = 'm3-level-map';
+        field.style.gridTemplateColumns = ''; // Сброс inline стилей если есть
+
         const start = this.mapPage * this.LEVELS_PER_PAGE + 1;
         const end = Math.min(start + this.LEVELS_PER_PAGE - 1, this.maxLevel);
         let html = '<div class="m3-map-header">';
@@ -987,6 +992,7 @@ const Match3Game = {
                 btn.onclick = () => Match3Game.showMap();
             }
         }
+        if (window.submitScore) window.submitScore('match3', this.score, this.level);
     },
 
     levelLose() {

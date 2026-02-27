@@ -589,6 +589,84 @@ function playAgain() {
     App.haptic('medium');
 }
 
+// ========== LEADERBOARD API ==========
+async function submitScore(game, score, level) {
+    if (!App.userId) return;
+    try {
+        await fetch('/api/score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                game,
+                score,
+                level,
+                telegramId: String(App.userId),
+                username: App.tg?.initDataUnsafe?.user?.username || '',
+                firstName: App.userName
+            })
+        });
+    } catch (err) {
+        console.error('Submit score error:', err);
+    }
+}
+
+async function showLeaderboard(game) {
+    const modal = document.getElementById('leaderboard-modal');
+    const list = document.getElementById('lb-list');
+
+    // Show modal & loader
+    modal.classList.remove('hidden');
+    list.innerHTML = '<div class="loader"></div>';
+    App.haptic('light');
+
+    try {
+        const res = await fetch(`/api/leaderboard/${game}`);
+        const data = await res.json();
+
+        list.innerHTML = '';
+        if (data.leaderboard && data.leaderboard.length > 0) {
+            data.leaderboard.forEach((user, idx) => {
+                const isMe = String(user.username) === String(App.tg?.initDataUnsafe?.user?.username) && user.username;
+                const row = document.createElement('div');
+                row.className = `lb-item ${isMe ? 'lb-me' : ''}`;
+
+                let rankEmoji = `${idx + 1}`;
+                if (idx === 0) rankEmoji = '🥇';
+                if (idx === 1) rankEmoji = '🥈';
+                if (idx === 2) rankEmoji = '🥉';
+
+                // Show level for match3 and tetris
+                let scoreText = user.best_score;
+                if (game === 'match3' || game === 'tetris') {
+                    scoreText = `${user.best_score} <span style="opacity:0.6;font-size:0.8em">(Ур.${user.best_level})</span>`;
+                }
+
+                let nameHtml = user.first_name;
+                if (user.username) {
+                    nameHtml += ` <span style="opacity:0.5;font-size:0.8em">@${user.username}</span>`;
+                }
+
+                row.innerHTML = `
+                    <div class="lb-rank">${rankEmoji}</div>
+                    <div class="lb-name">${nameHtml}</div>
+                    <div class="lb-score">${scoreText}</div>
+                `;
+                list.appendChild(row);
+            });
+        } else {
+            list.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5">Пока нет результатов</div>';
+        }
+    } catch (err) {
+        console.error('Leaderboard error:', err);
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:#ff6b6b">Ошибка загрузки</div>';
+    }
+}
+
+function hideLeaderboard() {
+    document.getElementById('leaderboard-modal').classList.add('hidden');
+    App.haptic('light');
+}
+
 function exitToMenu() {
     // Remove game over overlay
     const overlay = document.querySelector('.game-over-overlay');

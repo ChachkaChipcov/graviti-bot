@@ -275,6 +275,36 @@
             <h3 data-i18n="m3_title">3 в ряд</h3>
             <p data-i18n="m3_desc">Собирай кристаллы!</p>
           </div>
+
+          <div class="game-card" onclick="startSoloGame('tetris')">
+            <div class="game-icon">
+              <span class="emoji-bounce">🧱</span>
+              <span class="emoji-bounce delay-1">🟦</span>
+              <span class="emoji-bounce delay-2">🟥</span>
+            </div>
+            <h3 data-i18n="tetris_title">Тетрис</h3>
+            <p data-i18n="tetris_desc">Классика с ускорением</p>
+          </div>
+
+          <div class="game-card" onclick="startSoloGame('memory')">
+            <div class="game-icon">
+              <span class="emoji-bounce">🃏</span>
+              <span class="emoji-bounce delay-1">🧠</span>
+              <span class="emoji-bounce delay-2">🔍</span>
+            </div>
+            <h3 data-i18n="memory_title">Память</h3>
+            <p data-i18n="memory_desc">Найди пары всем картам</p>
+          </div>
+
+          <div class="game-card" onclick="startSoloGame('sudoku')">
+            <div class="game-icon">
+              <span class="emoji-bounce">🔢</span>
+              <span class="emoji-bounce delay-1">📝</span>
+              <span class="emoji-bounce delay-2">🧠</span>
+            </div>
+            <h3 data-i18n="sudoku_title">Судоку</h3>
+            <p data-i18n="sudoku_desc">Головоломка 9x9</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1146,6 +1176,118 @@
         <button id="ck-rematch" class="btn primary hidden" onclick="requestRematch()">🔄 Реванш</button>
       </div>
     </div>
+
+    <!-- Tetris Screen -->
+    <div id="tetris-game" class="screen">
+      <div class="m3-header">
+        <button class="back-btn"
+          onclick="Tetris.showingLeaderboard ? Tetris.hideLeaderboard() : goBackToLobby()">←</button>
+        <h2>🧱 <span data-i18n="tetris_title">Тетрис</span></h2>
+        <div class="m3-info">
+          <span id="tetris-score">🏆 0</span>
+          <span id="tetris-level">Ур. 1</span>
+        </div>
+        <button class="btn small" onclick="showLeaderboard('tetris')">🏆 Топ</button>
+      </div>
+      <div class="tetris-container">
+        <canvas id="tetris-canvas" width="200" height="400"></canvas>
+        <div class="tetris-side">
+          <div class="tetris-next">
+            <p>След:</p>
+            <canvas id="tetris-next-canvas" width="80" height="80"></canvas>
+          </div>
+          <div class="tetris-controls">
+            <button class="t-btn" onclick="Tetris.move(-1)">⬅️</button>
+            <button class="t-btn" onclick="Tetris.rotate()">🔄</button>
+            <button class="t-btn" onclick="Tetris.move(1)">➡️</button>
+            <button class="t-btn" onclick="Tetris.drop()">⬇️</button>
+          </div>
+        </div>
+      </div>
+      <div id="tetris-result" class="m3-result hidden">
+        <div class="m3-result-content">
+          <h2 id="tetris-result-title">Игра окончена</h2>
+          <p id="tetris-result-text"></p>
+          <button class="btn primary" onclick="Tetris.start()">▶ Играть снова</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory Screen -->
+    <div id="memory-game" class="screen">
+      <div class="m3-header">
+        <button class="back-btn"
+          onclick="MemoryGame.showingLeaderboard ? MemoryGame.hideLeaderboard() : goBackToLobby()">←</button>
+        <h2>🃏 <span data-i18n="memory_title">Память</span></h2>
+        <div class="m3-info">
+          <span id="memory-moves">🔄 0 ход</span>
+          <span id="memory-pairs">🔍 0/8</span>
+        </div>
+        <button class="btn small" onclick="showLeaderboard('memory')">🏆 Топ</button>
+      </div>
+      <div id="memory-board" class="memory-board"></div>
+      <div id="memory-result" class="m3-result hidden">
+        <div class="m3-result-content">
+          <h2 id="memory-result-title">Победа!</h2>
+          <p id="memory-result-text"></p>
+          <button class="btn primary" onclick="MemoryGame.start()">▶ Играть снова</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sudoku Screen -->
+    <div id="sudoku-game" class="screen">
+      <div class="m3-header">
+        <button class="back-btn"
+          onclick="Sudoku.showingLeaderboard ? Sudoku.hideLeaderboard() : goBackToLobby()">←</button>
+        <h2>🔢 <span data-i18n="sudoku_title">Судоку</span></h2>
+        <div class="m3-info">
+          <span id="sudoku-diff">Средне</span>
+          <span id="sudoku-time">⏱️ 00:00</span>
+        </div>
+        <button class="btn small" onclick="showLeaderboard('sudoku')">🏆 Топ</button>
+      </div>
+      <div id="sudoku-board" class="sudoku-board"></div>
+      <div class="sudoku-numpad">
+        <button class="s-btn" onclick="Sudoku.inputNum(1)">1</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(2)">2</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(3)">3</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(4)">4</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(5)">5</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(6)">6</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(7)">7</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(8)">8</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(9)">9</button>
+        <button class="s-btn" onclick="Sudoku.inputNum(0)">🗑️</button>
+      </div>
+      <div id="sudoku-result" class="m3-result hidden">
+        <div class="m3-result-content">
+          <h2 id="sudoku-result-title">Победа!</h2>
+          <p id="sudoku-result-text"></p>
+          <button class="btn primary" onclick="Sudoku.start()">▶ Новая игра</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>🏆 Таблица лидеров</h2>
+          <button class="close-btn" onclick="hideLeaderboard()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="lb-header">
+            <span class="lb-rank">#</span>
+            <span class="lb-name">Игрок</span>
+            <span class="lb-score">Очки</span>
+          </div>
+          <div id="lb-list" class="lb-list">
+            <div class="loader"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -1163,6 +1305,9 @@
   <script src="/js/match3.js?v=34"></script>
   <script src="/js/chess.js?v=34"></script>
   <script src="/js/checkers.js?v=34"></script>
+  <script src="/js/tetris.js?v=34"></script>
+  <script src="/js/memory.js?v=34"></script>
+  <script src="/js/sudoku.js?v=34"></script>
 </body>
 
 </html>

@@ -7057,3 +7057,343 @@ body.light-theme .hamburger-btn span {
 .m3-tut-dot.active {
   background: rgba(255, 215, 0, 0.9);
 }
+
+/* ==================== LEADERBOARD MODAL ==================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  background: var(--bg-surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.lb-header {
+  display: flex;
+  padding: 10px 20px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.lb-rank {
+  width: 40px;
+  text-align: center;
+}
+
+.lb-name {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.lb-score {
+  width: 80px;
+  text-align: right;
+}
+
+.lb-list {
+  padding-bottom: 10px;
+}
+
+.lb-item {
+  display: flex;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.lb-item:last-child {
+  border-bottom: none;
+}
+
+.lb-me {
+  background: rgba(255, 215, 0, 0.1);
+  font-weight: 700;
+}
+
+.lb-item .lb-rank {
+  font-size: 1.1rem;
+}
+
+/* ==================== TETRIS ==================== */
+.tetris-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+#tetris-canvas {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.tetris-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.tetris-next {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.tetris-next p {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+#tetris-next-canvas {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+}
+
+.tetris-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.t-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.t-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
+}
+
+.t-btn:nth-child(1) {
+  grid-column: 1 / 2;
+}
+
+.t-btn:nth-child(2) {
+  grid-column: 2 / 3;
+  grid-row: 1;
+}
+
+.t-btn:nth-child(3) {
+  grid-column: 3 / 4;
+}
+
+.t-btn:nth-child(4) {
+  grid-column: 2 / 3;
+  grid-row: 2;
+}
+
+/* ==================== MEMORY ==================== */
+.memory-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-width: 380px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  position: relative;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+
+.memory-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.memory-card.matched {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s 0.5s, transform 0.5s;
+  transform: rotateY(180deg) scale(0.5);
+}
+
+.mc-front,
+.mc-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+  font-size: 2.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mc-back {
+  background: linear-gradient(135deg, var(--accent-primary), #00b386);
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0, rgba(255, 255, 255, 0.1) 10px, transparent 10px, transparent 20px);
+}
+
+.mc-front {
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotateY(180deg);
+}
+
+@media (max-width: 400px) {
+  .memory-board {
+    gap: 4px;
+  }
+
+  .mc-front,
+  .mc-back {
+    font-size: 2rem;
+    border-radius: 8px;
+  }
+}
+
+/* ==================== SUDOKU ==================== */
+.sudoku-board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+  max-width: 360px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid white;
+  border-radius: 4px;
+}
+
+.sudoku-cell {
+  aspect-ratio: 1;
+  background: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+  transition: background 0.1s;
+}
+
+.sudoku-cell.fixed {
+  color: rgba(255, 255, 255, 0.5);
+  cursor: default;
+}
+
+.sudoku-cell.selected {
+  background: rgba(255, 215, 0, 0.3);
+}
+
+.sudoku-cell.highlight {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sudoku-cell.error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+/* Thicker borders for 3x3 grids */
+.sudoku-cell:nth-child(3n) {
+  border-right: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.sudoku-cell:nth-child(9n) {
+  border-right: none;
+}
+
+.sudoku-board>div:nth-child(n+19):nth-child(-n+27),
+.sudoku-board>div:nth-child(n+46):nth-child(-n+54) {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.sudoku-numpad {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  max-width: 360px;
+  margin: 16px auto 0;
+}
+
+.s-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.s-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(0.95);
+}

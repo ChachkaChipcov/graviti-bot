@@ -218,6 +218,12 @@ const Minesweeper = {
         document.getElementById('ms-result-text').textContent = won
             ? `Время: ${timeStr}`
             : `Вы наступили на мину! Время: ${timeStr}`;
+
+        if (won && window.submitScore) {
+            const diffMult = this.difficulty === 'hard' ? 3 : (this.difficulty === 'medium' ? 2 : 1);
+            const score = Math.max(10, 1000 * diffMult - this.seconds * 2);
+            window.submitScore('minesweeper', score, 0);
+        }
     },
 
     startTimer() {

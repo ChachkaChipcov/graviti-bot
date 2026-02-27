@@ -236,6 +236,7 @@ const SnakeGame = {
         }
         this.updateScore();
         this.showOverlay('💀 Game Over', `Счёт: ${this.score}`);
+        if (window.submitScore && this.score > 0) window.submitScore('snake', this.score, 0);
     },
 
     updateScore() {
