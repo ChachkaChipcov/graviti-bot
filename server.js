@@ -5,24 +5,34 @@ const { Server } = require('socket.io');
 const { Telegraf } = require('telegraf');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const Database = require('better-sqlite3');
+const sqlite3 = require('sqlite3').verbose();
 
 // ========== DATABASE ==========
-const db = new Database(path.join(__dirname, 'data', 'game.db'));
-db.pragma('journal_mode = WAL');
-db.exec(`
-  CREATE TABLE IF NOT EXISTS scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegram_id TEXT NOT NULL,
-    username TEXT DEFAULT '',
-    first_name TEXT NOT NULL,
-    game TEXT NOT NULL,
-    score INTEGER NOT NULL,
-    level INTEGER DEFAULT 0,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-  CREATE INDEX IF NOT EXISTS idx_game_score ON scores(game, score DESC);
-`);
+const dbPath = path.join(__dirname, 'data', 'game.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Database connection error:', err.message);
+  } else {
+    console.log('Connected to the SQLite database.');
+  }
+});
+
+db.serialize(() => {
+  db.run('PRAGMA journal_mode = WAL');
+  db.run(`
+    CREATE TABLE IF NOT EXISTS scores (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      telegram_id TEXT NOT NULL,
+      username TEXT DEFAULT '',
+      first_name TEXT NOT NULL,
+      game TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      level INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  db.run('CREATE INDEX IF NOT EXISTS idx_game_score ON scores(game, score DESC)');
+});
 
 const app = express();
 const httpServer = createServer(app);
@@ -49,11 +59,15 @@ app.post('/api/score', (req, res) => {
     if (!game || score == null || !telegramId || !firstName) {
       return res.status(400).json({ error: 'Missing fields' });
     }
-    const stmt = db.prepare(
-      'INSERT INTO scores (telegram_id, username, first_name, game, score, level) VALUES (?, ?, ?, ?, ?, ?)'
-    );
-    stmt.run(telegramId, username || '', firstName, game, score, level || 0);
-    res.json({ ok: true });
+
+    const stmt = 'INSERT INTO scores (telegram_id, username, first_name, game, score, level) VALUES (?, ?, ?, ?, ?, ?)';
+    db.run(stmt, [telegramId, username || '', firstName, game, score, level || 0], function (err) {
+      if (err) {
+        console.error('Score save DB error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json({ ok: true });
+    });
   } catch (e) {
     console.error('Score save error:', e);
     res.status(500).json({ error: 'Server error' });
@@ -64,15 +78,21 @@ app.get('/api/leaderboard/:game', (req, res) => {
   try {
     const { game } = req.params;
     // Get best score per user, top 50
-    const rows = db.prepare(`
+    const query = `
       SELECT first_name, username, MAX(score) as best_score, MAX(level) as best_level, COUNT(*) as games_played
       FROM scores
       WHERE game = ?
       GROUP BY telegram_id
       ORDER BY best_score DESC
       LIMIT 50
-    `).all(game);
-    res.json({ leaderboard: rows });
+    `;
+    db.all(query, [game], (err, rows) => {
+      if (err) {
+        console.error('Leaderboard DB error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json({ leaderboard: rows });
+    });
   } catch (e) {
     console.error('Leaderboard error:', e);
     res.status(500).json({ error: 'Server error' });
