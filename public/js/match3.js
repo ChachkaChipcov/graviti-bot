@@ -1,9 +1,19 @@
-// ==================== MATCH-3 (3 в ряд) — v3 OBSTACLES ====================
+// ==================== MATCH-3 (3 в ряд) — v4 SHAPES + POWER-UPS ====================
 const Match3Game = {
     BS: 8,
-    GEMS: ['🔴', '🟢', '🔵', '🟡', '🟣', '🟠'],
+    // Geometric shapes instead of colored circles
+    GEMS: ['🔺', '🟦', '⭐', '💎', '⬡', '●'],
+    GEM_NAMES: ['Треугольник', 'Квадрат', 'Звезда', 'Ромб', 'Шестиугольник', 'Круг'],
+    GEM_COLORS: ['#ff6b6b', '#74c0fc', '#ffd43b', '#da77f2', '#69db7c', '#ff922b'],
+    // Special types: 0=none, 1=bomb(3x3), 2=lightning(row+col), 3=rainbow(all of type)
+    SPECIAL_NONE: 0,
+    SPECIAL_BOMB: 1,
+    SPECIAL_LIGHTNING: 2,
+    SPECIAL_RAINBOW: 3,
+    SPECIAL_ICONS: { 1: '💣', 2: '⚡', 3: '🌈' },
     // Per-cell data arrays
     board: [],    // gem index (-1=empty, -2=stone)
+    special: [],  // special type per cell
     chains: [],   // chain layers 0-2
     ice: [],      // ice layers 0-2
     box: [],      // box HP 0-2
@@ -49,19 +59,24 @@ const Match3Game = {
       <div class="m3-tut-slide active" data-slide="0">
         <div class="m3-tut-emoji">💎</div>
         <h3>Добро пожаловать!</h3>
-        <p>Собирай 3 или больше одинаковых камней в ряд!</p>
+        <p>Собирай 3 или больше одинаковых фигур в ряд!<br>🔺🟦⭐💎⬡● — 6 фигур</p>
       </div>
       <div class="m3-tut-slide" data-slide="1">
         <div class="m3-tut-emoji">👆</div>
         <h3>Управление</h3>
-        <p>Свайпай камни или нажимай на два соседних чтобы поменять местами</p>
+        <p>Свайпай фигуры или нажимай на две соседние чтобы поменять местами</p>
       </div>
       <div class="m3-tut-slide" data-slide="2">
+        <div class="m3-tut-emoji">💣</div>
+        <h3>Бонусы!</h3>
+        <p>4 в ряд → 💣 Бомба (взрыв 3×3)<br>5 в ряд → ⚡ Молния (ряд + столбец)<br>L/T фигура → 🌈 Радуга (удаляет все одного типа)</p>
+      </div>
+      <div class="m3-tut-slide" data-slide="3">
         <div class="m3-tut-emoji">🧊</div>
         <h3>Препятствия!</h3>
         <p>⛓️ Цепи · 🧊 Лёд · 📦 Коробки · 🪨 Камни<br>Собирай совпадения рядом чтобы уничтожить!</p>
       </div>
-      <div class="m3-tut-slide" data-slide="3">
+      <div class="m3-tut-slide" data-slide="4">
         <div class="m3-tut-emoji">🗺️</div>
         <h3>1000 уровней!</h3>
         <p>Каждый уровень сложнее. Собирай ⭐!</p>
@@ -72,6 +87,7 @@ const Match3Game = {
           <span class="m3-tut-dot" data-d="1"></span>
           <span class="m3-tut-dot" data-d="2"></span>
           <span class="m3-tut-dot" data-d="3"></span>
+          <span class="m3-tut-dot" data-d="4"></span>
         </span>
         <button class="btn primary" onclick="Match3Game.nextTutSlide()">Далее ➡️</button>
       </div>`;
@@ -80,7 +96,7 @@ const Match3Game = {
 
     nextTutSlide() {
         this._tutSlide++;
-        if (this._tutSlide > 3) {
+        if (this._tutSlide > 4) {
             this.tutorialShown = true;
             localStorage.setItem('m3_tutorial', '1');
             this.showMap();
@@ -92,7 +108,7 @@ const Match3Game = {
         const d = document.querySelector(`.m3-tut-dot[data-d="${this._tutSlide}"]`);
         if (s) s.classList.add('active');
         if (d) d.classList.add('active');
-        if (this._tutSlide === 3) {
+        if (this._tutSlide === 4) {
             const btn = document.querySelector('.m3-tut-nav .btn');
             if (btn) btn.textContent = 'Начать! 🎮';
         }
@@ -281,15 +297,14 @@ const Match3Game = {
 
     // ==================== BOARD GEN ====================
     isBlocker(r, c) {
-        // Can't be swapped: stone, box
         return this.board[r][c] === -2 || this.box[r][c] > 0;
     },
 
     generateBoard(config) {
         const gc = config.gemCount || 6;
-        this.board = []; this.chains = []; this.ice = []; this.box = [];
+        this.board = []; this.special = []; this.chains = []; this.ice = []; this.box = [];
         for (let r = 0; r < this.BS; r++) {
-            this.board[r] = []; this.chains[r] = []; this.ice[r] = []; this.box[r] = [];
+            this.board[r] = []; this.special[r] = []; this.chains[r] = []; this.ice[r] = []; this.box[r] = [];
             for (let c = 0; c < this.BS; c++) {
                 let gem;
                 do { gem = Math.floor(Math.random() * gc); } while (
@@ -297,6 +312,7 @@ const Match3Game = {
                     (r >= 2 && this.board[r - 1][c] === gem && this.board[r - 2][c] === gem)
                 );
                 this.board[r][c] = gem;
+                this.special[r][c] = 0;
                 this.chains[r][c] = 0;
                 this.ice[r][c] = 0;
                 this.box[r][c] = 0;
@@ -305,7 +321,7 @@ const Match3Game = {
         // Place obstacles
         this._placeObstacles(config, 'chains', config.chainCount, config.maxChain);
         this._placeObstacles(config, 'ice', config.iceCount, config.maxIce);
-        // Boxes: set board to -1 and box HP
+        // Boxes
         if (config.boxCount > 0) {
             let placed = 0, att = 0;
             while (placed < config.boxCount && att < 300) {
@@ -313,20 +329,20 @@ const Match3Game = {
                 const c = Math.floor(Math.random() * this.BS);
                 if (this.box[r][c] === 0 && this.board[r][c] !== -2) {
                     this.box[r][c] = 1 + Math.floor(Math.random() * config.maxBox);
-                    this.board[r][c] = -1; // no gem under box
+                    this.board[r][c] = -1;
                     placed++;
                 }
                 att++;
             }
         }
-        // Stones: permanent blockers
+        // Stones
         if (config.stoneCount > 0) {
             let placed = 0, att = 0;
             while (placed < config.stoneCount && att < 300) {
-                const r = 1 + Math.floor(Math.random() * (this.BS - 2)); // avoid edges
+                const r = 1 + Math.floor(Math.random() * (this.BS - 2));
                 const c = 1 + Math.floor(Math.random() * (this.BS - 2));
                 if (this.board[r][c] !== -2 && this.box[r][c] === 0) {
-                    this.board[r][c] = -2; // stone
+                    this.board[r][c] = -2;
                     this.chains[r][c] = 0; this.ice[r][c] = 0;
                     placed++;
                 }
@@ -377,6 +393,7 @@ const Match3Game = {
         const chain = this.chains[r][c];
         const iceL = this.ice[r][c];
         const boxHP = this.box[r][c];
+        const spec = this.special[r][c];
         cell.className = 'm3-cell';
 
         // Stone
@@ -386,7 +403,7 @@ const Match3Game = {
             return;
         }
 
-        // Box (no gem underneath)
+        // Box
         if (boxHP > 0) {
             cell.classList.add('blocker-box');
             if (boxHP > 1) cell.classList.add('box-strong');
@@ -407,7 +424,24 @@ const Match3Game = {
             cell.classList.add('selected');
         }
 
-        let html = `<span class="m3-gem">${this.GEMS[gem]}</span>`;
+        // Add gem color class
+        cell.classList.add(`gem-${gem}`);
+
+        // Gem content with optional special indicator
+        let gemText = this.GEMS[gem];
+        let specialBadge = '';
+        if (spec === this.SPECIAL_BOMB) {
+            specialBadge = '<span class="m3-special-badge bomb">💣</span>';
+            cell.classList.add('has-bomb');
+        } else if (spec === this.SPECIAL_LIGHTNING) {
+            specialBadge = '<span class="m3-special-badge lightning">⚡</span>';
+            cell.classList.add('has-lightning');
+        } else if (spec === this.SPECIAL_RAINBOW) {
+            specialBadge = '<span class="m3-special-badge rainbow">🌈</span>';
+            cell.classList.add('has-rainbow');
+        }
+
+        let html = `<span class="m3-gem">${gemText}</span>${specialBadge}`;
 
         // Chain overlay
         if (chain > 0) {
@@ -433,7 +467,6 @@ const Match3Game = {
     // ==================== GAME LOGIC ====================
     onCellClick(r, c) {
         if (this.animating || this.showingMap) return;
-        // Can't select blockers
         if (this.isBlocker(r, c)) return;
         if (this.board[r][c] < 0) return;
 
@@ -447,7 +480,6 @@ const Match3Game = {
         if (sr === r && sc === c) { this.selected = null; this.updateAllCells(); return; }
         const isAdj = (Math.abs(sr - r) + Math.abs(sc - c)) === 1;
         if (!isAdj) { this.selected = { r, c }; this.updateAllCells(); return; }
-        // Can't swap if target is a blocker
         if (this.isBlocker(r, c)) { this.selected = { r, c }; this.updateAllCells(); return; }
 
         this.animating = true;
@@ -501,31 +533,168 @@ const Match3Game = {
     swap(r1, c1, r2, c2) {
         let t;
         t = this.board[r1][c1]; this.board[r1][c1] = this.board[r2][c2]; this.board[r2][c2] = t;
+        t = this.special[r1][c1]; this.special[r1][c1] = this.special[r2][c2]; this.special[r2][c2] = t;
         t = this.chains[r1][c1]; this.chains[r1][c1] = this.chains[r2][c2]; this.chains[r2][c2] = t;
         t = this.ice[r1][c1]; this.ice[r1][c1] = this.ice[r2][c2]; this.ice[r2][c2] = t;
     },
 
+    // ==================== FIND MATCHES ====================
     findMatches() {
-        const matches = new Set();
+        const matchSets = []; // Each element: { cells: [{r,c},...], isHoriz: bool }
+
+        // Horizontal
         for (let r = 0; r < this.BS; r++) {
-            for (let c = 0; c < this.BS - 2; c++) {
-                const g = this.board[r][c]; if (g < 0) continue;
-                if (g === this.board[r][c + 1] && g === this.board[r][c + 2]) {
-                    matches.add(`${r},${c}`); matches.add(`${r},${c + 1}`); matches.add(`${r},${c + 2}`);
-                    let e = c + 3; while (e < this.BS && this.board[r][e] === g) { matches.add(`${r},${e}`); e++; }
+            let c = 0;
+            while (c < this.BS) {
+                const g = this.board[r][c];
+                if (g < 0) { c++; continue; }
+                let end = c + 1;
+                while (end < this.BS && this.board[r][end] === g) end++;
+                if (end - c >= 3) {
+                    const cells = [];
+                    for (let i = c; i < end; i++) cells.push({ r, c: i });
+                    matchSets.push({ cells, isHoriz: true });
                 }
+                c = end;
             }
         }
+
+        // Vertical
         for (let c = 0; c < this.BS; c++) {
-            for (let r = 0; r < this.BS - 2; r++) {
-                const g = this.board[r][c]; if (g < 0) continue;
-                if (g === this.board[r + 1][c] && g === this.board[r + 2][c]) {
-                    matches.add(`${r},${c}`); matches.add(`${r + 1},${c}`); matches.add(`${r + 2},${c}`);
-                    let e = r + 3; while (e < this.BS && this.board[e][c] === g) { matches.add(`${e},${c}`); e++; }
+            let r = 0;
+            while (r < this.BS) {
+                const g = this.board[r][c];
+                if (g < 0) { r++; continue; }
+                let end = r + 1;
+                while (end < this.BS && this.board[end][c] === g) end++;
+                if (end - r >= 3) {
+                    const cells = [];
+                    for (let i = r; i < end; i++) cells.push({ r: i, c });
+                    matchSets.push({ cells, isHoriz: false });
+                }
+                r = end;
+            }
+        }
+
+        // Determine specials to create
+        this._pendingSpecials = [];
+        const allMatchCells = new Set();
+
+        // Check for L/T shapes (intersection of horiz + vert match)
+        const usedForLT = new Set();
+        for (let i = 0; i < matchSets.length; i++) {
+            for (let j = i + 1; j < matchSets.length; j++) {
+                if (matchSets[i].isHoriz === matchSets[j].isHoriz) continue;
+                // Find intersection
+                for (const a of matchSets[i].cells) {
+                    for (const b of matchSets[j].cells) {
+                        if (a.r === b.r && a.c === b.c) {
+                            // L/T intersection found → Rainbow
+                            this._pendingSpecials.push({
+                                r: a.r, c: a.c,
+                                type: this.SPECIAL_RAINBOW,
+                                gem: this.board[a.r][a.c]
+                            });
+                            usedForLT.add(i);
+                            usedForLT.add(j);
+                        }
+                    }
                 }
             }
         }
-        return [...matches].map(s => { const p = s.split(',').map(Number); return { r: p[0], c: p[1] }; });
+
+        // Check remaining match sets for 4-in-a-row and 5-in-a-row
+        for (let i = 0; i < matchSets.length; i++) {
+            if (usedForLT.has(i)) {
+                // Still add cells but no extra special
+                matchSets[i].cells.forEach(c => allMatchCells.add(`${c.r},${c.c}`));
+                continue;
+            }
+            const ms = matchSets[i];
+            ms.cells.forEach(c => allMatchCells.add(`${c.r},${c.c}`));
+
+            if (ms.cells.length >= 5) {
+                // Lightning
+                const mid = ms.cells[Math.floor(ms.cells.length / 2)];
+                this._pendingSpecials.push({
+                    r: mid.r, c: mid.c,
+                    type: this.SPECIAL_LIGHTNING,
+                    gem: this.board[mid.r][mid.c]
+                });
+            } else if (ms.cells.length === 4) {
+                // Bomb
+                const mid = ms.cells[1]; // second cell
+                this._pendingSpecials.push({
+                    r: mid.r, c: mid.c,
+                    type: this.SPECIAL_BOMB,
+                    gem: this.board[mid.r][mid.c]
+                });
+            }
+        }
+
+        // Also add L/T cells
+        for (const i of usedForLT) {
+            matchSets[i].cells.forEach(c => allMatchCells.add(`${c.r},${c.c}`));
+        }
+
+        return [...allMatchCells].map(s => {
+            const p = s.split(',').map(Number);
+            return { r: p[0], c: p[1] };
+        });
+    },
+
+    // ==================== ACTIVATE SPECIAL ====================
+    activateSpecial(r, c, extraRemove) {
+        const spec = this.special[r][c];
+        if (spec === 0) return;
+        this.special[r][c] = 0;
+
+        if (spec === this.SPECIAL_BOMB) {
+            // Explode 3x3 area
+            for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                    const nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < this.BS && nc >= 0 && nc < this.BS) {
+                        if (this.board[nr][nc] >= 0) {
+                            extraRemove.push({ r: nr, c: nc });
+                        }
+                        // Damage nearby obstacles
+                        if (this.chains[nr][nc] > 0) this.chains[nr][nc]--;
+                        if (this.ice[nr][nc] > 0) this.ice[nr][nc]--;
+                        if (this.box[nr][nc] > 0) {
+                            this.box[nr][nc]--;
+                            if (this.box[nr][nc] <= 0) this.board[nr][nc] = -1;
+                        }
+                    }
+                }
+            }
+            this.score += 50 * this.comboCount;
+        } else if (spec === this.SPECIAL_LIGHTNING) {
+            // Clear entire row + column
+            for (let i = 0; i < this.BS; i++) {
+                if (this.board[r][i] >= 0) extraRemove.push({ r, c: i });
+                if (this.board[i][c] >= 0) extraRemove.push({ r: i, c });
+                // Damage obstacles in row/col
+                if (this.chains[r][i] > 0) this.chains[r][i]--;
+                if (this.ice[r][i] > 0) this.ice[r][i]--;
+                if (this.chains[i][c] > 0) this.chains[i][c]--;
+                if (this.ice[i][c] > 0) this.ice[i][c]--;
+            }
+            this.score += 80 * this.comboCount;
+        } else if (spec === this.SPECIAL_RAINBOW) {
+            // Remove all gems of same type
+            const targetGem = this.board[r][c];
+            if (targetGem >= 0) {
+                for (let rr = 0; rr < this.BS; rr++) {
+                    for (let cc = 0; cc < this.BS; cc++) {
+                        if (this.board[rr][cc] === targetGem) {
+                            extraRemove.push({ r: rr, c: cc });
+                        }
+                    }
+                }
+            }
+            this.score += 100 * this.comboCount;
+        }
     },
 
     // ==================== PROCESS MATCHES ====================
@@ -546,16 +715,13 @@ const Match3Game = {
             // Check neighbors for obstacle damage
             [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([nr, nc]) => {
                 if (nr < 0 || nr >= this.BS || nc < 0 || nc >= this.BS) return;
-                // Neighbor chains
                 if (this.chains[nr][nc] > 0) toUnchain.push({ r: nr, c: nc });
-                // Neighbor ice
                 if (this.ice[nr][nc] > 0) toMeltIce.add(`${nr},${nc}`);
-                // Neighbor box
                 if (this.box[nr][nc] > 0) toHitBox.add(`${nr},${nc}`);
             });
         });
 
-        // Also melt ice on matched cells themselves
+        // Also melt ice on matched cells
         matches.forEach(({ r, c }) => {
             if (this.ice[r][c] > 0) toMeltIce.add(`${r},${c}`);
         });
@@ -565,6 +731,24 @@ const Match3Game = {
         toUnchain.forEach(({ r, c }) => { unchainMap[`${r},${c}`] = { r, c }; });
         const uniqueUnchain = Object.values(unchainMap);
 
+        // Activate specials on matched cells
+        const extraRemove = [];
+        toRemove.forEach(({ r, c }) => {
+            if (this.special[r][c] > 0) {
+                this.activateSpecial(r, c, extraRemove);
+            }
+        });
+
+        // Add extra removals from specials (dedup)
+        const removeSet = new Set(toRemove.map(p => `${p.r},${p.c}`));
+        extraRemove.forEach(p => {
+            const key = `${p.r},${p.c}`;
+            if (!removeSet.has(key)) {
+                removeSet.add(key);
+                toRemove.push(p);
+            }
+        });
+
         // Calculate points
         const pts = toRemove.length * 10 * combo * (toRemove.length > 3 ? 2 : 1);
         this.score += pts;
@@ -573,11 +757,14 @@ const Match3Game = {
         toRemove.forEach(({ r, c }) => {
             const cell = this.cells[r][c];
             cell.classList.add('burst');
+            const gemIdx = this.board[r][c];
+            const color = this.GEM_COLORS[gemIdx] || '#fff';
             for (let i = 0; i < 6; i++) {
                 const p = document.createElement('span');
                 p.className = 'm3-particle';
                 p.style.setProperty('--angle', `${i * 60}deg`);
-                p.textContent = this.GEMS[this.board[r][c]] || '✨';
+                p.style.setProperty('--color', color);
+                p.textContent = this.GEMS[gemIdx] || '✨';
                 cell.appendChild(p);
             }
         });
@@ -611,15 +798,32 @@ const Match3Game = {
             this.box[r][c] = Math.max(0, this.box[r][c] - 1);
             this.cells[r][c].classList.add('box-hit');
             if (this.box[r][c] <= 0) {
-                // Box destroyed — cell becomes empty, new gem will fall in
                 this.board[r][c] = -1;
                 this.score += 20 * combo;
             }
         });
 
+        // ---- Create pending specials (from findMatches) ----
+        // Place specials BEFORE removing matched cells
+        if (this._pendingSpecials) {
+            this._pendingSpecials.forEach(ps => {
+                // Don't place on cells that will be removed (except the special cell itself stays)
+                this.special[ps.r][ps.c] = ps.type;
+                // Keep the gem on this cell (don't remove it)
+                removeSet.delete(`${ps.r},${ps.c}`);
+                // Remove from toRemove array
+                const idx = toRemove.findIndex(p => p.r === ps.r && p.c === ps.c);
+                if (idx !== -1) toRemove.splice(idx, 1);
+            });
+            this._pendingSpecials = [];
+        }
+
         // After burst → drop
         setTimeout(() => {
-            toRemove.forEach(({ r, c }) => { this.board[r][c] = -1; });
+            toRemove.forEach(({ r, c }) => {
+                this.board[r][c] = -1;
+                this.special[r][c] = 0;
+            });
             this.updateAllCells();
             uniqueUnchain.forEach(({ r, c }) => this.cells[r][c].classList.remove('chain-break'));
             toMeltIce.forEach(key => {
@@ -639,13 +843,10 @@ const Match3Game = {
         const config = this.getLevelConfig(this.level);
         const newCellRows = [];
 
-        // Drop column by column, skip stones & boxes
         for (let c = 0; c < this.BS; c++) {
             let writePos = this.BS - 1;
-            // Move existing gems down, skipping blockers
             for (let r = this.BS - 1; r >= 0; r--) {
                 if (this.board[r][c] === -2) {
-                    // Stone: don't move, reset writePos above it
                     if (writePos === r) writePos = r - 1;
                     continue;
                 }
@@ -654,25 +855,26 @@ const Match3Game = {
                     continue;
                 }
                 if (this.board[r][c] >= 0) {
-                    // Skip if writePos points to a blocker
                     while (writePos >= 0 && (this.board[writePos][c] === -2 || this.box[writePos][c] > 0)) writePos--;
                     if (writePos < 0) break;
                     if (writePos !== r) {
                         this.board[writePos][c] = this.board[r][c];
+                        this.special[writePos][c] = this.special[r][c];
                         this.chains[writePos][c] = this.chains[r][c];
                         this.ice[writePos][c] = this.ice[r][c];
                         this.board[r][c] = -1;
+                        this.special[r][c] = 0;
                         this.chains[r][c] = 0;
                         this.ice[r][c] = 0;
                     }
                     writePos--;
                 }
             }
-            // Fill empty cells from top, skip blockers
             for (let r = writePos; r >= 0; r--) {
                 if (this.board[r][c] === -2 || this.box[r][c] > 0) continue;
                 if (this.board[r][c] < 0) {
                     this.board[r][c] = Math.floor(Math.random() * (config.gemCount || 6));
+                    this.special[r][c] = 0;
                     this.chains[r][c] = 0;
                     this.ice[r][c] = 0;
                     if (!newCellRows[c]) newCellRows[c] = [];
@@ -681,10 +883,8 @@ const Match3Game = {
             }
         }
 
-        // Update DOM
         this.updateAllCells();
 
-        // Animate new/dropped cells
         for (let c = 0; c < this.BS; c++) {
             if (newCellRows[c]) {
                 newCellRows[c].forEach((r, idx) => {
@@ -700,7 +900,6 @@ const Match3Game = {
         this.updateUI();
 
         setTimeout(() => {
-            // Clean animations
             for (let r = 0; r < this.BS; r++)
                 for (let c = 0; c < this.BS; c++)
                     this.cells[r][c].style.animation = '';
