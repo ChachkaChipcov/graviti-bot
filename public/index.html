@@ -232,6 +232,67 @@
         </div>
       </div>
 
+      <!-- Room Lobby Screen (New Multiplayer Flow) -->
+      <div id="room-lobby-screen" class="screen">
+        <div class="header">
+          <button class="back-btn" onclick="goBackToLobby()">←</button>
+          <h2 id="room-lobby-title">Название игры</h2>
+        </div>
+
+        <div class="lobby-options-container" style="padding: 20px;">
+          <!-- Random Opponent -->
+          <div class="settings-section" onclick="alert('Матчмейкинг в разработке')"
+            style="cursor:pointer; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <div style="font-size: 2rem; background:rgba(255,255,255,0.1); padding: 10px; border-radius:12px;">🌍</div>
+            <div style="flex:1;">
+              <h4 style="margin:0 0 4px 0;">Случайный противник</h4>
+              <p style="margin:0; font-size:0.8rem; color:var(--text-secondary);">Играть с кем угодно онлайн</p>
+            </div>
+            <div style="font-size:1.5rem; color:var(--text-secondary);">›</div>
+          </div>
+
+          <!-- Play with Friend -->
+          <div class="settings-section" onclick="showInviteFriendModal()"
+            style="cursor:pointer; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <div style="font-size: 2rem; background:rgba(0,136,204,0.2); padding: 10px; border-radius:12px;">🫂</div>
+            <div style="flex:1;">
+              <h4 style="margin:0 0 4px 0;">Играть с другом</h4>
+              <p style="margin:0; font-size:0.8rem; color:var(--text-secondary);">Пригласить из списка друзей</p>
+            </div>
+            <div style="font-size:1.5rem; color:var(--text-secondary);">›</div>
+          </div>
+
+          <h3 style="margin: 24px 0 12px; font-size:1.1rem; color:var(--text-secondary);">Комнаты по коду</h3>
+
+          <!-- Create Room -->
+          <button class="btn primary" style="width:100%; margin-bottom: 12px; padding: 16px; font-size:1.1rem;"
+            onclick="createRoomFromLobby()">
+            ➕ Создать новую комнату
+          </button>
+
+          <!-- Join Room -->
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="lobby-room-code" placeholder="Код комнаты (напр. abcd)"
+              style="flex:1; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:white; font-size:1rem; text-transform:lowercase;">
+            <button class="btn" style="background:var(--success); color:white; padding: 0 20px;"
+              onclick="joinRoomFromLobby()">Войти</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invite Friend to Game Modal -->
+      <div id="invite-friend-modal" class="modal-overlay hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Пригласить друга</h2>
+            <button class="close-btn" onclick="hideInviteFriendModal()">×</button>
+          </div>
+          <div class="modal-body" style="padding: 20px; max-height: 400px; overflow-y:auto;" id="invite-friend-list">
+            <p style="text-align:center; color:var(--text-secondary);">Загрузка друзей...</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Game Tabs -->
       <div class="game-tabs">
         <button class="tab-btn active" data-tab="multiplayer" onclick="switchTab('multiplayer')">

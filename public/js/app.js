@@ -84,48 +84,51 @@ const App = {
             'checkers': '🏁 Шашки'
         };
 
-        // Games with setup screens
-        if (gameType === 'durak') {
-            this.showScreen('durak-setup');
-            return;
+        // Open Room Lobby instead of direct game setup
+        this.showScreen('room-lobby-screen');
+        document.getElementById('room-lobby-title').textContent = titles[gameType] || 'Игра';
+    },
+
+    createRoomFromLobby() {
+        if (!this.currentGame) return;
+        // Proceed to game-specific setup or directly to room
+        if (['durak', 'uno', 'monopoly', 'mafia', 'rps', 'chess', 'checkers'].includes(this.currentGame)) {
+            // Need specific setup screen for these games
+            const setupScreenId = this.currentGame === 'mafia' ? 'mafia-screen' : `${this.currentGame}-setup`;
+            this.showScreen(setupScreenId);
+        } else {
+            // Simple generic room
+            this.showScreen('room');
+            document.getElementById('room-title').textContent = document.getElementById('room-lobby-title').textContent;
+            createRoom(); // Call global createRoom function
         }
-        if (gameType === 'uno') {
-            this.showScreen('uno-setup');
-            return;
-        }
-        if (gameType === 'monopoly') {
-            this.showScreen('monopoly-setup');
-            return;
-        }
-        if (gameType === 'mafia') {
-            this.showScreen('mafia-screen');
-            return;
-        }
-        if (gameType === 'rps') {
-            this.showScreen('rps-setup');
-            return;
-        }
-        if (gameType === 'chess') {
-            this.showScreen('chess-setup');
-            return;
-        }
-        if (gameType === 'checkers') {
-            this.showScreen('checkers-setup');
+    },
+
+    joinRoomFromLobby() {
+        const input = document.getElementById('lobby-room-code');
+        const code = input.value.trim().toLowerCase();
+        if (!code) {
+            if (this.tg) this.tg.showAlert('Введите код комнаты!');
+            else alert('Введите код комнаты!');
             return;
         }
 
-        // For simple games - show room screen with room browser
-        this.showScreen('room');
-        document.getElementById('room-title').textContent = titles[gameType];
+        if (!this.currentGame) return;
 
-        // Show room browser by default, hide waiting
-        document.getElementById('waiting-view').classList.add('hidden');
-        document.getElementById('join-view').classList.remove('hidden');
-        document.querySelector('.room-actions').classList.remove('hidden');
+        // For games with setup screens, we need to bypass setup when joining
+        if (['durak', 'uno', 'monopoly', 'mafia', 'rps', 'chess', 'checkers'].includes(this.currentGame)) {
+            // Set up room screen specifically for joining
+            this.showScreen('room');
+            document.getElementById('room-title').textContent = document.getElementById('room-lobby-title').textContent;
 
-        // Switch to room browser tab and load rooms
-        showRoomBrowser();
-        Multiplayer.getRooms(gameType);
+            // Re-use logic from showJoinView but auto-join
+            document.querySelector('.room-actions').classList.add('hidden');
+            document.getElementById('join-view').classList.add('hidden');
+            document.getElementById('waiting-view').classList.remove('hidden');
+            document.querySelector('#waiting-view p').textContent = 'Подключение к комнате...';
+        }
+
+        Multiplayer.joinRoom(code);
     },
 
     showScreen(screenId) {
@@ -153,21 +156,19 @@ const App = {
 
     goBack() {
         if (this.currentScreen === 'room') {
-            // From room screen - go back to lobby or setup screen
+            // From room screen - go back to setup screen or lobby
             Multiplayer.disconnect();
-            if (this.currentGame === 'durak') {
-                this.showScreen('durak-setup');
-            } else if (this.currentGame === 'uno') {
-                this.showScreen('uno-setup');
-            } else if (this.currentGame === 'monopoly') {
-                this.showScreen('monopoly-setup');
+            if (['durak', 'uno', 'monopoly', 'mafia', 'rps', 'chess', 'checkers'].includes(this.currentGame)) {
+                const setupScreenId = this.currentGame === 'mafia' ? 'mafia-screen' : `${this.currentGame}-setup`;
+                this.showScreen(setupScreenId);
             } else {
-                this.showScreen('lobby');
-                this.currentGame = null;
+                this.showScreen('room-lobby-screen');
             }
             this.roomId = null;
-        } else if (this.currentScreen.includes('-setup')) {
-            // From setup screens - go to lobby
+        } else if (this.currentScreen.includes('-setup') || this.currentScreen === 'mafia-screen') {
+            // From setup screens - go to room lobby screen
+            this.showScreen('room-lobby-screen');
+        } else if (this.currentScreen === 'room-lobby-screen') {
             this.showScreen('lobby');
             this.currentGame = null;
         } else if (this.currentScreen === 'minesweeper-game' || this.currentScreen === 'snake-game' || this.currentScreen === 'match3-game') {
@@ -179,9 +180,6 @@ const App = {
             if (this.currentScreen === 'minesweeper-game' && typeof Minesweeper !== 'undefined') {
                 clearInterval(Minesweeper.timerInterval);
             }
-            this.showScreen('lobby');
-            this.currentGame = null;
-        } else if (this.currentScreen === 'mafia-screen') {
             this.showScreen('lobby');
             this.currentGame = null;
         } else if (this.currentScreen.includes('-game')) {
@@ -216,18 +214,21 @@ const App = {
 
     showJoinView() {
         // If we're on a setup screen, switch to room screen first
-        if (this.currentScreen.includes('-setup')) {
-            // Determine which game based on current setup screen
-            if (this.currentScreen === 'durak-setup') {
-                this.currentGame = 'durak';
-                document.getElementById('room-title').textContent = '🃏 Дурак';
-            } else if (this.currentScreen === 'uno-setup') {
-                this.currentGame = 'uno';
-                document.getElementById('room-title').textContent = '🎴 UNO';
-            } else if (this.currentScreen === 'monopoly-setup') {
-                this.currentGame = 'monopoly';
-                document.getElementById('room-title').textContent = '🎲 Монополия';
-            }
+        if (this.currentScreen.includes('-setup') || this.currentScreen === 'mafia-screen') {
+            const setupTitles = {
+                'durak-setup': '🃏 Дурак',
+                'uno-setup': '🎴 UNO',
+                'monopoly-setup': '🎲 Монополия',
+                'mafia-screen': '🎭 Мафия',
+                'rps-setup': '✊ К-Н-Б',
+                'chess-setup': '♟️ Шахматы',
+                'checkers-setup': '🏁 Шашки'
+            };
+
+            this.currentGame = this.currentScreen.replace('-setup', '').replace('-screen', '');
+            if (this.currentGame === 'rps') this.currentGame = 'rps';
+
+            document.getElementById('room-title').textContent = setupTitles[this.currentScreen] || 'Игра';
             this.showScreen('room');
         }
 
@@ -1235,4 +1236,80 @@ async function removeFriend(targetId) {
         });
         loadFriends(); // Reload full list
     } catch (e) { console.error(e); }
+}
+
+// ========== GAME INVITES ==========
+
+function showInviteFriendModal() {
+    if (!App.currentGame) return;
+    document.getElementById('invite-friend-modal').classList.remove('hidden');
+    renderInviteFriendList();
+}
+
+function hideInviteFriendModal() {
+    document.getElementById('invite-friend-modal').classList.add('hidden');
+}
+
+async function renderInviteFriendList() {
+    const container = document.getElementById('invite-friend-list');
+    container.innerHTML = '<p style="text-align:center; color:var(--text-secondary);">Загрузка друзей...</p>';
+
+    if (!App.userId) return;
+
+    try {
+        // Refresh friends list before showing
+        const res = await fetch(`/api/friends/${App.userId}`);
+        const data = await res.json();
+        const friends = data.friends || [];
+
+        if (friends.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-secondary);">У вас пока нет друзей.<br>Добавьте их в Профиле!</p>`;
+            return;
+        }
+
+        let html = '';
+        friends.forEach(f => {
+            const avatar = f.photo_url || '/assets/default-avatar.png';
+            // In a real app we'd check socket online status here
+            // For now, just allow inviting anyone
+            html += `
+                <div class="friend-item" style="background:rgba(0,0,0,0.3);">
+                    <img class="friend-avatar" src="${avatar}" alt="👤" onerror="this.src=''">
+                    <div class="friend-info">
+                        <div class="friend-name">${f.first_name}</div>
+                        <div class="friend-username">${f.username ? '@' + f.username : ''}</div>
+                    </div>
+                    <button class="btn small primary" onclick="sendGameInvite('${f.telegram_id}')">Пригласить</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (e) {
+        console.error('Invite friend error', e);
+        container.innerHTML = '<p style="text-align:center; color:var(--danger);">Ошибка загрузки</p>';
+    }
+}
+
+function sendGameInvite(friendId) {
+    if (!App.currentGame) return;
+
+    // Create room first (to invite to)
+    const roomId = Multiplayer.generateRoomId();
+
+    // Instead of raw socket emit, use existing create room with generated ID, 
+    // but we need a specialized invite flow in server.js.
+    // For now, let's just alert since WebSockets invite needs server support
+    if (App.tg) {
+        // Fallback: Use Telegram Share link
+        const botUsername = 'graviti_games_bot'; // Replace with actual bot username
+        const inviteLink = `https://t.me/${botUsername}/app?startapp=room_${roomId}`;
+
+        App.tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent('Давай сыграем в ' + document.getElementById('room-lobby-title').textContent + '!')}`);
+
+        // Join the room ourselves
+        Multiplayer.joinRoom(roomId);
+        hideInviteFriendModal();
+    } else {
+        alert('Инвайты работают только внутри Telegram (Share Link)');
+    }
 }
