@@ -7127,41 +7127,33 @@ body.light-theme .hamburger-btn span {
 }
 
 .lb-tabs {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 12px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 12px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  scrollbar-width: none;
-  /* Firefox */
-  -webkit-overflow-scrolling: touch;
-}
-
-.lb-tabs::-webkit-scrollbar {
-  display: none;
-  /* Chrome/Safari */
 }
 
 .lb-tab-btn {
   background: rgba(255, 255, 255, 0.08);
-  /* Darker default */
   color: rgba(255, 255, 255, 0.6);
   border: none;
   border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 0.9rem;
+  padding: 10px 6px;
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
 }
 
-.lb-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
+.lb-tab-btn:active {
+  transform: scale(0.95);
 }
 
 .lb-tab-btn.active {
