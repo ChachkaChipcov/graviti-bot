@@ -349,131 +349,131 @@
       </div>
     </div>
 
-      <!-- Profile Screen -->
-      <div id="profile-screen" class="screen">
-        <div class="header" style="padding-bottom:10px;">
-          <button class="back-btn" onclick="App.showScreen('lobby')"
-            style="position:absolute; left:0; top:20px;">←</button>
-          <h2><span data-i18n="profile">Профиль</span></h2>
-        </div>
+    <!-- Profile Screen -->
+    <div id="profile-screen" class="screen">
+      <div class="header" style="padding-bottom:10px;">
+        <button class="back-btn" onclick="App.showScreen('lobby')"
+          style="position:absolute; left:0; top:20px;">←</button>
+        <h2><span data-i18n="profile">Профиль</span></h2>
+      </div>
 
-        <div class="profile-header">
-          <img id="profile-avatar" class="profile-avatar-large" src="" alt="👤">
-          <h3 id="profile-name">Имя</h3>
-          <p id="profile-username" class="subtitle">@username</p>
-        </div>
+      <div class="profile-header">
+        <img id="profile-avatar" class="profile-avatar-large" src="" alt="👤">
+        <h3 id="profile-name">Имя</h3>
+        <p id="profile-username" class="subtitle">@username</p>
+      </div>
 
-        <div class="profile-section">
-          <h4>📝 <span data-i18n="bio">О себе</span></h4>
-          <textarea id="profile-bio" placeholder="Напишите немного о себе..."></textarea>
-          <button class="btn small" style="margin-top:8px; width:100%;" onclick="saveBio()">💾 <span
-              data-i18n="save">Сохранить</span></button>
-        </div>
+      <div class="profile-section">
+        <h4>📝 <span data-i18n="bio">О себе</span></h4>
+        <textarea id="profile-bio" placeholder="Напишите немного о себе..."></textarea>
+        <button class="btn small" style="margin-top:8px; width:100%;" onclick="saveBio()">💾 <span
+            data-i18n="save">Сохранить</span></button>
+      </div>
 
-        <div class="profile-section">
-          <h4>📊 <span data-i18n="stats">Статистика</span></h4>
-          <div id="profile-stats" style="color:var(--text-secondary); font-size:0.9rem;">
-            Загрузка...
-          </div>
-        </div>
-
-        <div class="profile-section">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h4>🤝 <span data-i18n="friends">Друзья</span></h4>
-            <button class="btn small" onclick="showAddFriendModal()">➕ <span data-i18n="add">Добавить</span></button>
-          </div>
-
-          <div class="friends-tabs" style="display:flex; gap:8px; margin: 12px 0; overflow-x:auto;">
-            <button class="lb-tab-btn active" onclick="switchFriendsTab('list')" id="ftab-list">Все друзья</button>
-            <button class="lb-tab-btn" onclick="switchFriendsTab('incoming')" id="ftab-incoming">Входящие <span
-                id="inc-count"
-                style="display:none; background:red; padding:2px 6px; border-radius:10px; font-size:0.7rem;"></span></button>
-            <button class="lb-tab-btn" onclick="switchFriendsTab('outgoing')" id="ftab-outgoing">Исходящие</button>
-          </div>
-
-          <div id="friends-list" class="friends-list-container">
-            <p style="text-align:center; color:var(--text-secondary);">Здесь будут ваши друзья</p>
-          </div>
+      <div class="profile-section">
+        <h4>📊 <span data-i18n="stats">Статистика</span></h4>
+        <div id="profile-stats" style="color:var(--text-secondary); font-size:0.9rem;">
+          Загрузка...
         </div>
       </div>
 
-      <!-- Add Friend Modal -->
-      <div id="add-friend-modal" class="modal-overlay hidden">
-        <div class="modal">
-          <div class="modal-header">
-            <h2>Добавить друга</h2>
-            <button class="close-btn" onclick="hideAddFriendModal()">×</button>
-          </div>
-          <div class="modal-body" style="padding: 20px;">
-            <p style="margin-bottom:12px; font-size:0.9rem; color:var(--text-secondary);">Введите никнейм друга
-              (@username) чтобы отправить заявку:</p>
-            <input type="text" id="add-friend-input" placeholder="@username"
-              style="width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:white; margin-bottom:12px;">
-            <button class="btn primary" onclick="sendFriendRequest()">Отправить заявку</button>
-          </div>
+      <div class="profile-section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h4>🤝 <span data-i18n="friends">Друзья</span></h4>
+          <button class="btn small" onclick="showAddFriendModal()">➕ <span data-i18n="add">Добавить</span></button>
+        </div>
+
+        <div class="friends-tabs" style="display:flex; gap:8px; margin: 12px 0; overflow-x:auto;">
+          <button class="lb-tab-btn active" onclick="switchFriendsTab('list')" id="ftab-list">Все друзья</button>
+          <button class="lb-tab-btn" onclick="switchFriendsTab('incoming')" id="ftab-incoming">Входящие <span
+              id="inc-count"
+              style="display:none; background:red; padding:2px 6px; border-radius:10px; font-size:0.7rem;"></span></button>
+          <button class="lb-tab-btn" onclick="switchFriendsTab('outgoing')" id="ftab-outgoing">Исходящие</button>
+        </div>
+
+        <div id="friends-list" class="friends-list-container">
+          <p style="text-align:center; color:var(--text-secondary);">Здесь будут ваши друзья</p>
         </div>
       </div>
+    </div>
 
-      <!-- Room Lobby Screen (New Multiplayer Flow) -->
-      <div id="room-lobby-screen" class="screen">
-        <div class="header">
-          <button class="back-btn" onclick="goBackToLobby()">←</button>
-          <h2 id="room-lobby-title">Название игры</h2>
+    <!-- Add Friend Modal -->
+    <div id="add-friend-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Добавить друга</h2>
+          <button class="close-btn" onclick="hideAddFriendModal()">×</button>
         </div>
-
-        <div class="lobby-options-container" style="padding: 20px;">
-          <!-- Random Opponent -->
-          <div class="settings-section" onclick="alert('Матчмейкинг в разработке')"
-            style="cursor:pointer; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-            <div style="font-size: 2rem; background:rgba(255,255,255,0.1); padding: 10px; border-radius:12px;">🌍</div>
-            <div style="flex:1;">
-              <h4 style="margin:0 0 4px 0;">Случайный противник</h4>
-              <p style="margin:0; font-size:0.8rem; color:var(--text-secondary);">Играть с кем угодно онлайн</p>
-            </div>
-            <div style="font-size:1.5rem; color:var(--text-secondary);">›</div>
-          </div>
-
-          <!-- Play with Friend -->
-          <div class="settings-section" onclick="showInviteFriendModal()"
-            style="cursor:pointer; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
-            <div style="font-size: 2rem; background:rgba(0,136,204,0.2); padding: 10px; border-radius:12px;">🫂</div>
-            <div style="flex:1;">
-              <h4 style="margin:0 0 4px 0;">Играть с другом</h4>
-              <p style="margin:0; font-size:0.8rem; color:var(--text-secondary);">Пригласить из списка друзей</p>
-            </div>
-            <div style="font-size:1.5rem; color:var(--text-secondary);">›</div>
-          </div>
-
-          <h3 style="margin: 24px 0 12px; font-size:1.1rem; color:var(--text-secondary);">Комнаты по коду</h3>
-
-          <!-- Create Room -->
-          <button class="btn primary" style="width:100%; margin-bottom: 12px; padding: 16px; font-size:1.1rem;"
-            onclick="createRoomFromLobby()">
-            ➕ Создать новую комнату
-          </button>
-
-          <!-- Join Room -->
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="lobby-room-code" placeholder="Код комнаты (напр. abcd)"
-              style="flex:1; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:white; font-size:1rem; text-transform:lowercase;">
-            <button class="btn" style="background:var(--success); color:white; padding: 0 20px;"
-              onclick="joinRoomFromLobby()">Войти</button>
-          </div>
+        <div class="modal-body" style="padding: 20px;">
+          <p style="margin-bottom:12px; font-size:0.9rem; color:var(--text-secondary);">Введите никнейм друга
+            (@username) чтобы отправить заявку:</p>
+          <input type="text" id="add-friend-input" placeholder="@username"
+            style="width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:white; margin-bottom:12px;">
+          <button class="btn primary" onclick="sendFriendRequest()">Отправить заявку</button>
         </div>
       </div>
+    </div>
 
-      <!-- Invite Friend to Game Modal -->
-      <div id="invite-friend-modal" class="modal-overlay hidden">
-        <div class="modal">
-          <div class="modal-header">
-            <h2>Пригласить друга</h2>
-            <button class="close-btn" onclick="hideInviteFriendModal()">×</button>
+    <!-- Room Lobby Screen (New Multiplayer Flow) -->
+    <div id="room-lobby-screen" class="screen">
+      <div class="header">
+        <button class="back-btn" onclick="goBackToLobby()">←</button>
+        <h2 id="room-lobby-title">Название игры</h2>
+      </div>
+
+      <div class="lobby-options-container" style="padding: 20px;">
+        <!-- Random Opponent -->
+        <div class="settings-section" onclick="alert('Матчмейкинг в разработке')"
+          style="cursor:pointer; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="font-size: 2rem; background:rgba(255,255,255,0.1); padding: 10px; border-radius:12px;">🌍</div>
+          <div style="flex:1;">
+            <h4 style="margin:0 0 4px 0;">Случайный противник</h4>
+            <p style="margin:0; font-size:0.8rem; color:var(--text-secondary);">Играть с кем угодно онлайн</p>
           </div>
-          <div class="modal-body" style="padding: 20px; max-height: 400px; overflow-y:auto;" id="invite-friend-list">
-            <p style="text-align:center; color:var(--text-secondary);">Загрузка друзей...</p>
+          <div style="font-size:1.5rem; color:var(--text-secondary);">›</div>
+        </div>
+
+        <!-- Play with Friend -->
+        <div class="settings-section" onclick="showInviteFriendModal()"
+          style="cursor:pointer; display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+          <div style="font-size: 2rem; background:rgba(0,136,204,0.2); padding: 10px; border-radius:12px;">🫂</div>
+          <div style="flex:1;">
+            <h4 style="margin:0 0 4px 0;">Играть с другом</h4>
+            <p style="margin:0; font-size:0.8rem; color:var(--text-secondary);">Пригласить из списка друзей</p>
           </div>
+          <div style="font-size:1.5rem; color:var(--text-secondary);">›</div>
+        </div>
+
+        <h3 style="margin: 24px 0 12px; font-size:1.1rem; color:var(--text-secondary);">Комнаты по коду</h3>
+
+        <!-- Create Room -->
+        <button class="btn primary" style="width:100%; margin-bottom: 12px; padding: 16px; font-size:1.1rem;"
+          onclick="App.createRoomFromLobby()">
+          ➕ Создать новую комнату
+        </button>
+
+        <!-- Join Room -->
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="lobby-room-code" placeholder="Код комнаты (напр. abcd)"
+            style="flex:1; padding:12px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2); color:white; font-size:1rem; text-transform:lowercase;">
+          <button class="btn" style="background:var(--success); color:white; padding: 0 20px;"
+            onclick="App.joinRoomFromLobby()">Войти</button>
         </div>
       </div>
+    </div>
+
+    <!-- Invite Friend to Game Modal -->
+    <div id="invite-friend-modal" class="modal-overlay hidden">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Пригласить друга</h2>
+          <button class="close-btn" onclick="hideInviteFriendModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding: 20px; max-height: 400px; overflow-y:auto;" id="invite-friend-list">
+          <p style="text-align:center; color:var(--text-secondary);">Загрузка друзей...</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Room Screen -->
     <div id="room" class="screen">
