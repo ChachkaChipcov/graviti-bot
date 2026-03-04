@@ -1,6 +1,6 @@
 {
   "name": "telegram-games-miniapp",
-  "version": "1.2.1",
+  "version": "1.4.0",
   "description": "Telegram Mini App with multiplayer games",
   "main": "server.js",
   "scripts": {

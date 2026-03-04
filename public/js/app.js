@@ -1041,7 +1041,13 @@ async function loadProfile() {
 
     // Set basic info visually first
     document.getElementById('profile-avatar').src = App.photoUrl || '/assets/default-avatar.png';
-    document.getElementById('profile-name').textContent = App.userName;
+    document.getElementById('profile-name').innerHTML = App.userName;
+
+    // Creator verification badge
+    if (App.username === 'Chachka_Chipcov') {
+        document.getElementById('profile-name').innerHTML += ' <span style="color:#FFD700" title="Создатель">👑</span> <span style="font-size:0.8rem; background:linear-gradient(135deg, #FFD700 0%, #FFA500 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; vertical-align:middle; margin-left:4px;">Создатель</span>';
+    }
+
     document.getElementById('profile-username').textContent = App.username ? `@${App.username}` : 'Без @username';
 
     try {
