@@ -39,6 +39,31 @@ db.serialize(() => {
   `);
   db.run('CREATE INDEX IF NOT EXISTS idx_game_score ON scores(game, score DESC)');
   // Scores were reset on deploy f60000b (2026-03-04)
+
+  // Users Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      telegram_id TEXT PRIMARY KEY,
+      username TEXT,
+      first_name TEXT,
+      photo_url TEXT,
+      bio TEXT DEFAULT '',
+      last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Friends Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id_1 TEXT NOT NULL,
+      user_id_2 TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id_1, user_id_2)
+    )
+  `);
 });
 
 const app = express();
@@ -102,6 +127,190 @@ app.get('/api/leaderboard/:game', (req, res) => {
     });
   } catch (e) {
     console.error('Leaderboard error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ========== USER PROFILE API ==========
+
+app.post('/api/user/sync', (req, res) => {
+  try {
+    const { telegramId, username, firstName, photoUrl } = req.body;
+    if (!telegramId) return res.status(400).json({ error: 'Missing telegramId' });
+
+    const stmt = `
+      INSERT INTO users (telegram_id, username, first_name, photo_url, last_seen) 
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT(telegram_id) DO UPDATE SET 
+        username = excluded.username,
+        first_name = excluded.first_name,
+        photo_url = excluded.photo_url,
+        last_seen = CURRENT_TIMESTAMP
+    `;
+    db.run(stmt, [telegramId, username || '', firstName || '', photoUrl || ''], function (err) {
+      if (err) {
+        console.error('User sync error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json({ ok: true });
+    });
+  } catch (e) {
+    console.error('User sync exception:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/api/user/:id', (req, res) => {
+  try {
+    const telegramId = req.params.id;
+    // Get user info
+    db.get('SELECT * FROM users WHERE telegram_id = ?', [telegramId], (err, user) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      // Get stats
+      const statsQuery = `
+        SELECT game, COUNT(*) as matches, MAX(score) as best_score 
+        FROM scores 
+        WHERE telegram_id = ? 
+        GROUP BY game
+      `;
+      db.all(statsQuery, [telegramId], (err, stats) => {
+        if (err) stats = [];
+        res.json({ user, stats });
+      });
+    });
+  } catch (e) {
+    console.error('User fetch error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/user/bio', (req, res) => {
+  try {
+    const { telegramId, bio } = req.body;
+    if (!telegramId) return res.status(400).json({ error: 'Missing telegramId' });
+
+    db.run('UPDATE users SET bio = ? WHERE telegram_id = ?', [bio || '', telegramId], function (err) {
+      if (err) {
+        console.error('Bio update error:', err);
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json({ ok: true, success: this.changes > 0 });
+    });
+  } catch (e) {
+    console.error('Bio update exception:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ========== FRIENDS API ==========
+
+app.get('/api/friends/:id', (req, res) => {
+  try {
+    const telegramId = req.params.id;
+    // Get accepted friends
+    const friendsQuery = `
+      SELECT u.* FROM users u
+      JOIN friends f ON (u.telegram_id = f.user_id_1 OR u.telegram_id = f.user_id_2)
+      WHERE (f.user_id_1 = ? OR f.user_id_2 = ?) AND u.telegram_id != ? AND f.status = 'accepted'
+    `;
+
+    // Get pending incoming requests
+    const incomingQuery = `
+      SELECT u.*, f.id as request_id FROM users u
+      JOIN friends f ON u.telegram_id = f.user_id_1
+      WHERE f.user_id_2 = ? AND f.status = 'pending'
+    `;
+
+    // Get pending outgoing requests
+    const outgoingQuery = `
+      SELECT u.* FROM users u
+      JOIN friends f ON u.telegram_id = f.user_id_2
+      WHERE f.user_id_1 = ? AND f.status = 'pending'
+    `;
+
+    db.all(friendsQuery, [telegramId, telegramId, telegramId], (err1, friends) => {
+      if (err1) return res.status(500).json({ error: 'Database error' });
+      db.all(incomingQuery, [telegramId], (err2, incoming) => {
+        if (err2) return res.status(500).json({ error: 'Database error' });
+        db.all(outgoingQuery, [telegramId], (err3, outgoing) => {
+          if (err3) return res.status(500).json({ error: 'Database error' });
+          res.json({ friends, incoming, outgoing });
+        });
+      });
+    });
+  } catch (e) {
+    console.error('Friends fetch error:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/friends/request', (req, res) => {
+  try {
+    const { fromId, targetUsername } = req.body;
+    if (!fromId || !targetUsername) return res.status(400).json({ error: 'Missing fields' });
+
+    // Step 1: Find target user
+    const usernameClean = targetUsername.replace('@', '').toLowerCase();
+    db.get('SELECT telegram_id FROM users WHERE LOWER(username) = ?', [usernameClean], (err, targetUser) => {
+      if (err) return res.status(500).json({ error: 'Database error' });
+      if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+      const toId = targetUser.telegram_id;
+      if (fromId === toId) return res.status(400).json({ error: 'Cannot add yourself' });
+
+      // Step 2: Ensure request doesn't exist
+      db.get('SELECT * FROM friends WHERE (user_id_1 = ? AND user_id_2 = ?) OR (user_id_1 = ? AND user_id_2 = ?)',
+        [fromId, toId, toId, fromId], (err, existing) => {
+          if (err) return res.status(500).json({ error: 'Database error' });
+          if (existing) return res.status(400).json({ error: 'Request already exists or already friends' });
+
+          // Step 3: Insert request
+          db.run('INSERT INTO friends (user_id_1, user_id_2) VALUES (?, ?)', [fromId, toId], function (err) {
+            if (err) return res.status(500).json({ error: 'Database error' });
+            res.json({ ok: true });
+          });
+        });
+    });
+  } catch (e) {
+    console.error('Friend request exception:', e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/friends/accept', (req, res) => {
+  try {
+    const { requestId, accept } = req.body;
+    if (!requestId) return res.status(400).json({ error: 'Missing requestId' });
+
+    if (accept) {
+      db.run("UPDATE friends SET status = 'accepted' WHERE id = ?", [requestId], function (err) {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json({ ok: true });
+      });
+    } else {
+      db.run("DELETE FROM friends WHERE id = ?", [requestId], function (err) {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json({ ok: true });
+      });
+    }
+  } catch (e) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/api/friends/remove', (req, res) => {
+  try {
+    const { user1, user2 } = req.body;
+    if (!user1 || !user2) return res.status(400).json({ error: 'Missing fields' });
+
+    db.run("DELETE FROM friends WHERE (user_id_1 = ? AND user_id_2 = ?) OR (user_id_1 = ? AND user_id_2 = ?)",
+      [user1, user2, user2, user1], function (err) {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json({ ok: true });
+      });
+  } catch (e) {
     res.status(500).json({ error: 'Server error' });
   }
 });

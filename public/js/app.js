@@ -16,8 +16,31 @@ const App = {
 
             // Get user info
             if (this.tg.initDataUnsafe && this.tg.initDataUnsafe.user) {
-                this.userId = this.tg.initDataUnsafe.user.id;
-                this.userName = this.tg.initDataUnsafe.user.first_name || 'Игрок';
+                const u = this.tg.initDataUnsafe.user;
+                this.userId = u.id;
+                this.userName = u.first_name || 'Игрок';
+                this.username = u.username || '';
+                this.photoUrl = u.photo_url || '';
+
+                // Sync with server
+                fetch('/api/user/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId: this.userId,
+                        username: this.username,
+                        firstName: this.userName,
+                        photoUrl: this.photoUrl
+                    })
+                }).catch(e => console.error('Sync error:', e));
+
+                // Set lobby avatar
+                const lobbyAvatar = document.getElementById('lobby-avatar');
+                if (lobbyAvatar && this.photoUrl) {
+                    lobbyAvatar.src = this.photoUrl;
+                } else if (lobbyAvatar) {
+                    lobbyAvatar.style.display = 'none';
+                }
             }
 
             // Apply Telegram theme
@@ -1008,4 +1031,208 @@ function startSoloGame(gameType) {
 
 function goBackToLobby() {
     App.goBack();
+}
+
+// ========== PROFILE & FRIENDS ==========
+
+async function loadProfile() {
+    if (!App.userId) return;
+
+    // Set basic info visually first
+    document.getElementById('profile-avatar').src = App.photoUrl || '/assets/default-avatar.png';
+    document.getElementById('profile-name').textContent = App.userName;
+    document.getElementById('profile-username').textContent = App.username ? `@${App.username}` : 'Без @username';
+
+    try {
+        const res = await fetch(`/api/user/${App.userId}`);
+        const data = await res.json();
+
+        if (data.user) {
+            document.getElementById('profile-bio').value = data.user.bio || '';
+        }
+
+        if (data.stats) {
+            let statsHtml = '';
+            let totalGames = 0;
+            data.stats.forEach(s => {
+                totalGames += s.matches;
+                statsHtml += `<div><b>${s.game}</b>: Игр ${s.matches}, Рекорд ${s.best_score}</div>`;
+            });
+            if (statsHtml === '') statsHtml = 'Вы еще не играли в игры.';
+            else statsHtml = `<div><b>Всего игр:</b> ${totalGames}</div>` + statsHtml;
+
+            document.getElementById('profile-stats').innerHTML = statsHtml;
+        }
+
+        // Load friends (default to 'list' tab)
+        switchFriendsTab('list');
+
+    } catch (e) {
+        console.error('Failed to load profile', e);
+    }
+}
+
+async function saveBio() {
+    if (!App.userId) return;
+    const bioText = document.getElementById('profile-bio').value;
+
+    try {
+        const res = await fetch('/api/user/bio', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ telegramId: App.userId, bio: bioText })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            App.haptic('success');
+            const btn = document.querySelector('#profile-screen .btn.small');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '✅ Сохранено';
+            setTimeout(() => btn.innerHTML = orig, 1500);
+        }
+    } catch (e) {
+        console.error('Bio save error', e);
+    }
+}
+
+let friendsData = { list: [], incoming: [], outgoing: [] };
+
+async function loadFriends() {
+    if (!App.userId) return;
+    try {
+        const res = await fetch(`/api/friends/${App.userId}`);
+        const data = await res.json();
+
+        friendsData.list = data.friends || [];
+        friendsData.incoming = data.incoming || [];
+        friendsData.outgoing = data.outgoing || [];
+
+        // Update badge
+        const badge = document.getElementById('inc-count');
+        if (friendsData.incoming.length > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = friendsData.incoming.length;
+        } else {
+            badge.style.display = 'none';
+        }
+
+        // Re-render current tab
+        const activeTab = document.querySelector('.friends-tabs .active').id.replace('ftab-', '');
+        renderFriendsList(activeTab);
+    } catch (e) {
+        console.error('Friends load error', e);
+    }
+}
+
+function switchFriendsTab(tab) {
+    document.querySelectorAll('.friends-tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(`ftab-${tab}`).classList.add('active');
+
+    if (friendsData.list.length === 0 && friendsData.incoming.length === 0 && friendsData.outgoing.length === 0) {
+        // First load
+        loadFriends();
+    } else {
+        renderFriendsList(tab);
+    }
+}
+
+function renderFriendsList(tab) {
+    const container = document.getElementById('friends-list');
+    let list = friendsData[tab] || [];
+
+    if (list.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:var(--text-secondary); margin-top:20px;">Список пуст</p>`;
+        return;
+    }
+
+    let html = '';
+    list.forEach(u => {
+        let actionBtn = '';
+        if (tab === 'list') {
+            actionBtn = `<button class="btn small" style="background:var(--danger);" onclick="removeFriend('${u.telegram_id}')">Удалить</button>`;
+        } else if (tab === 'incoming') {
+            actionBtn = `
+                <button class="btn small" style="background:var(--success);" onclick="acceptFriend(${u.request_id}, true)">✔️</button>
+                <button class="btn small" style="background:var(--danger);" onclick="acceptFriend(${u.request_id}, false)">✖️</button>
+            `;
+        } else if (tab === 'outgoing') {
+            actionBtn = `<span style="font-size:0.8rem; color:var(--text-secondary);">Ожидает</span>`;
+        }
+
+        const avatar = u.photo_url || '/assets/default-avatar.png';
+        html += `
+            <div class="friend-item">
+                <img class="friend-avatar" src="${avatar}" alt="👤" onerror="this.src=''">
+                <div class="friend-info">
+                    <div class="friend-name">${u.first_name}</div>
+                    <div class="friend-username">${u.username ? '@' + u.username : ''}</div>
+                </div>
+                <div class="friend-actions">
+                    ${actionBtn}
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function showAddFriendModal() {
+    document.getElementById('add-friend-modal').classList.remove('hidden');
+    document.getElementById('add-friend-input').value = '';
+    document.getElementById('add-friend-input').focus();
+}
+
+function hideAddFriendModal() {
+    document.getElementById('add-friend-modal').classList.add('hidden');
+}
+
+async function sendFriendRequest() {
+    const targetUsername = document.getElementById('add-friend-input').value.trim();
+    if (!targetUsername) return;
+
+    try {
+        const res = await fetch('/api/friends/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromId: App.userId, targetUsername })
+        });
+        const data = await res.json();
+
+        hideAddFriendModal();
+        if (data.ok) {
+            App.haptic('success');
+            // Allow alert for feedback
+            if (App.tg) App.tg.showAlert('Заявка успешно отправлена!');
+            loadFriends();
+        } else {
+            App.haptic('error');
+            if (App.tg) App.tg.showAlert(data.error || 'Ошибка отправки заявки');
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function acceptFriend(requestId, accept) {
+    try {
+        await fetch('/api/friends/accept', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requestId, accept })
+        });
+        loadFriends(); // Reload full list
+    } catch (e) { console.error(e); }
+}
+
+async function removeFriend(targetId) {
+    if (!confirm('Точно удалить из друзей?')) return;
+    try {
+        await fetch('/api/friends/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user1: App.userId, user2: targetId })
+        });
+        loadFriends(); // Reload full list
+    } catch (e) { console.error(e); }
 }
