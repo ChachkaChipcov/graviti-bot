@@ -36,7 +36,7 @@ const MemoryGame = {
         // Render
         this.cards = deck.map((emoji, idx) => {
             const el = document.createElement('div');
-            el.className = 'memory-card w-full h-full';
+            el.className = 'memory-card';
             el.innerHTML = `
         <div class="mc-front">${emoji}</div>
         <div class="mc-back"></div>

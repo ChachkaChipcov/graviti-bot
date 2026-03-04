@@ -1311,20 +1311,13 @@
           <button class="close-btn" onclick="hideLeaderboard()">×</button>
         </div>
         <div class="modal-body">
-          <div id="lb-tabs" class="lb-tabs hidden"
-            style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto; padding-bottom:5px;">
-            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
-              onclick="switchLeaderboardTab('match3')">💎 3 в ряд</button>
-            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
-              onclick="switchLeaderboardTab('tetris')">🧱 Тетрис</button>
-            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
-              onclick="switchLeaderboardTab('snake')">🐍 Змейка</button>
-            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
-              onclick="switchLeaderboardTab('minesweeper')">💣 Сапёр</button>
-            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
-              onclick="switchLeaderboardTab('memory')">🃏 Память</button>
-            <button class="btn small" style="min-width:max-content; white-space:nowrap;"
-              onclick="switchLeaderboardTab('sudoku')">🔢 Судоку</button>
+          <div id="lb-tabs" class="lb-tabs hidden">
+            <button class="lb-tab-btn" onclick="switchLeaderboardTab('match3')">💎 3 в ряд</button>
+            <button class="lb-tab-btn" onclick="switchLeaderboardTab('tetris')">🧱 Тетрис</button>
+            <button class="lb-tab-btn" onclick="switchLeaderboardTab('snake')">🐍 Змейка</button>
+            <button class="lb-tab-btn" onclick="switchLeaderboardTab('minesweeper')">💣 Сапёр</button>
+            <button class="lb-tab-btn" onclick="switchLeaderboardTab('memory')">🃏 Память</button>
+            <button class="lb-tab-btn" onclick="switchLeaderboardTab('sudoku')">🔢 Судоку</button>
           </div>
           <div class="lb-header">
             <span class="lb-rank">#</span>
@@ -1340,23 +1333,23 @@
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/multiplayer.js?v=34"></script>
-  <script src="/js/app.js?v=34"></script>
-  <script src="/js/rps.js?v=34"></script>
-  <script src="/js/tictactoe.js?v=34"></script>
-  <script src="/js/battleship.js?v=34"></script>
-  <script src="/js/durak.js?v=34"></script>
-  <script src="/js/uno.js?v=34"></script>
-  <script src="/js/monopoly.js?v=34"></script>
-  <script src="/js/minesweeper.js?v=34"></script>
-  <script src="/js/snake.js?v=34"></script>
-  <script src="/js/mafia.js?v=34"></script>
-  <script src="/js/match3.js?v=34"></script>
-  <script src="/js/chess.js?v=34"></script>
-  <script src="/js/checkers.js?v=34"></script>
-  <script src="/js/tetris.js?v=34"></script>
-  <script src="/js/memory.js?v=34"></script>
-  <script src="/js/sudoku.js?v=34"></script>
+  <script src="/js/multiplayer.js?v=35"></script>
+  <script src="/js/app.js?v=35"></script>
+  <script src="/js/rps.js?v=35"></script>
+  <script src="/js/tictactoe.js?v=35"></script>
+  <script src="/js/battleship.js?v=35"></script>
+  <script src="/js/durak.js?v=35"></script>
+  <script src="/js/uno.js?v=35"></script>
+  <script src="/js/monopoly.js?v=35"></script>
+  <script src="/js/minesweeper.js?v=35"></script>
+  <script src="/js/snake.js?v=35"></script>
+  <script src="/js/mafia.js?v=35"></script>
+  <script src="/js/match3.js?v=35"></script>
+  <script src="/js/chess.js?v=35"></script>
+  <script src="/js/checkers.js?v=35"></script>
+  <script src="/js/tetris.js?v=35"></script>
+  <script src="/js/memory.js?v=35"></script>
+  <script src="/js/sudoku.js?v=35"></script>
 </body>
 
 </html>

@@ -673,10 +673,10 @@ function switchLeaderboardTab(game) {
         const tabs = document.getElementById('lb-tabs');
         if (tabs) tabs.classList.remove('hidden');
 
-        // Выделение активного таба
-        document.querySelectorAll('#lb-tabs button').forEach(btn => {
-            btn.style.opacity = btn.getAttribute('onclick').includes(`'${game}'`) ? '1' : '0.5';
-            btn.style.background = btn.getAttribute('onclick').includes(`'${game}'`) ? 'var(--primary)' : 'var(--bg-secondary)';
+        // Выделение активного таба через CSS-класс
+        document.querySelectorAll('#lb-tabs .lb-tab-btn').forEach(btn => {
+            const isActive = btn.getAttribute('onclick').includes("'" + game + "'");
+            btn.classList.toggle('active', isActive);
         });
     });
 }
