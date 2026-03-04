@@ -11,43 +11,54 @@ const MemoryGame = {
 
     init() {
         this.board = document.getElementById('memory-board');
+        console.log('[Memory] init, board:', this.board);
     },
 
     start() {
-        if (!this.board) this.init();
+        try {
+            // Always re-fetch the board element
+            this.board = document.getElementById('memory-board');
+            if (!this.board) {
+                console.error('[Memory] memory-board element not found!');
+                return;
+            }
 
-        document.getElementById('memory-result').classList.add('hidden');
-        this.board.innerHTML = '';
-        this.flipped = [];
-        this.matchedPairs = 0;
-        this.moves = 0;
-        this.isLocked = false;
-        this.updateStats();
+            const resultEl = document.getElementById('memory-result');
+            if (resultEl) resultEl.classList.add('hidden');
 
-        // Create deck (2 of each emoji)
-        const deck = [...this.EMOJIS, ...this.EMOJIS];
+            this.board.innerHTML = '';
+            this.flipped = [];
+            this.matchedPairs = 0;
+            this.moves = 0;
+            this.isLocked = false;
+            this.updateStats();
 
-        // Shuffle
-        for (let i = deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [deck[i], deck[j]] = [deck[j], deck[i]];
+            // Create deck (2 of each emoji)
+            const deck = [...this.EMOJIS, ...this.EMOJIS];
+
+            // Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+
+            // Render cards
+            this.cards = [];
+            deck.forEach((emoji, idx) => {
+                const el = document.createElement('div');
+                el.className = 'memory-card';
+                el.innerHTML = '<div class="mc-front">' + emoji + '</div><div class="mc-back"></div>';
+                el.dataset.emoji = emoji;
+                el.dataset.idx = idx;
+                el.addEventListener('click', () => this.flip(el));
+                this.board.appendChild(el);
+                this.cards.push(el);
+            });
+
+            console.log('[Memory] started, cards:', this.cards.length);
+        } catch (err) {
+            console.error('[Memory] start error:', err);
         }
-
-        // Render
-        this.cards = deck.map((emoji, idx) => {
-            const el = document.createElement('div');
-            el.className = 'memory-card';
-            el.innerHTML = `
-        <div class="mc-front">${emoji}</div>
-        <div class="mc-back"></div>
-      `;
-            el.dataset.emoji = emoji;
-            el.dataset.idx = idx;
-
-            el.addEventListener('click', () => this.flip(el));
-            this.board.appendChild(el);
-            return el;
-        });
     },
 
     flip(card) {

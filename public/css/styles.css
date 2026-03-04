@@ -7309,7 +7309,8 @@ body.light-theme .hamburger-btn span {
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   max-width: 380px;
-  margin: 0 auto;
+  margin: 16px auto 0;
+  padding: 0 8px;
   perspective: 1000px;
 }
 
@@ -7319,6 +7320,7 @@ body.light-theme .hamburger-btn span {
   cursor: pointer;
   transform-style: preserve-3d;
   transition: transform 0.5s;
+  min-height: 70px;
 }
 
 .memory-card.flipped {
