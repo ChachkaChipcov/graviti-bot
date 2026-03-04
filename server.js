@@ -38,15 +38,7 @@ db.serialize(() => {
     )
   `);
   db.run('CREATE INDEX IF NOT EXISTS idx_game_score ON scores(game, score DESC)');
-
-  // One-time reset: clear all scores on this deploy
-  db.run('DELETE FROM scores', [], function (err) {
-    if (err) {
-      console.error('Score reset error:', err);
-    } else {
-      console.log('All scores have been reset. Rows deleted:', this.changes);
-    }
-  });
+  // Scores were reset on deploy f60000b (2026-03-04)
 });
 
 const app = express();
